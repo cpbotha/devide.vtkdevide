@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.6 2003/04/08 15:55:22 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.7 2003/06/16 10:15:45 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #if !defined(WIN32)
@@ -702,9 +702,15 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
    }
 }
 
+int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
+{
+    this->UpdateInformation();
+    return series_instances.size() - 1;
+}
+
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.6 2003/04/08 15:55:22 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.7 2003/06/16 10:15:45 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.5 2003/04/08 15:55:22 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.6 2003/06/16 10:15:45 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /* TODO
@@ -180,6 +180,11 @@ public:
    const char *GetSeriesInstanceUID(void);
    const char *GetStudyDescription(void);
    const char *GetReferringPhysician(void);
+
+   /**
+    * Return the maximum SeriesInstanceIdx.
+    */
+   int GetMaximumSeriesInstanceIdx(void);
 };
 
 #endif
