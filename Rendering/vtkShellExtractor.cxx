@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.12 2004/06/29 15:44:56 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.13 2004/06/29 22:12:51 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -424,6 +424,54 @@ static void ExtractShell(T* data_ptr,
     } // for (int z = 0 ...
 
     // we're done, yahooooo!
+    // well not quite... let's build up the y and z Ps and Ds.
+
+    // we need a temporary pointer matrix so we can charge through Px
+    // and Dx to generate the others...
+    ShellVoxel **pointerWallZY = new ShellVoxel*[zdim * ydim];
+    ShellVoxel* tempDptr;
+    int tempDoffset;
+    
+    // P is Z * X
+    // 1. initialize pointerWallZY for the x -> y run
+    memset(pointerWallZY, 0, zdim * ydim * sizeof(ShellVoxel *));
+    for (int z = 0; z < zlen; z++)
+      {
+      for (int y = 0; y < ylen; y++)
+        {
+        // for each position in P we have an offset and a length!
+        tempDoffset = Px[(z*ydim + y) * 2];
+        if (tempDoffset >= 0)
+          {
+          pointerWall[z*ydim + y] = vectorDx(tempDoffset);
+          }
+        }
+      }
+    
+    for (int z = 0; z < zlen; z++)
+      {
+      for (int x = 0; x < xlen; x++)
+        {
+        for (int y = 0; y < ylen; y++)
+          {
+
+          // find the Dptr for this x,y,z if it exists
+          // arghhh... need maybe P-wall with also run-lengths so that
+          // we know when to stop for a particular z,y combo
+          // hmmmm, copy of P. at each successful Dptr access, we
+          // decrement the run-length.  When the run-length reaches
+          // zero, we're done.  The offset is obviously increased
+          // every time
+          Pidx = (z * ydim + y) * 2;
+          if (pWallZY[Pidx] >= 0)
+            {
+            // find and access, then decrement run-length
+            }
+          
+          
+          } // for (int y = 0 ...
+        } // for (int x = 0 ...
+      } // for (int z = 0 ...
 }
 
 
