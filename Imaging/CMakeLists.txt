@@ -5,6 +5,7 @@
 #
 
 SET (Imaging_SRCS
+     vtkImageBorderMask.cxx
      vtkImageGreyscaleReconstruct3D.cxx
      vtkImageHistogram2D.cxx
      vtkSelectConnectedComponents.cxx)
