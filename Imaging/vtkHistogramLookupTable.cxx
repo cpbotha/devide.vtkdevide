@@ -3,16 +3,12 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkHistogramLookupTable);
 
 //----------------------------------------------------------------------------
 vtkHistogramLookupTable::vtkHistogramLookupTable()
 {
-    this->SetInput1Bins(256);
-    this->SetInput2Bins(256);
-    this->SetMaxSamplesPerBin(512);
-    this->ClipSamplesOff();
 }
 
 
@@ -41,28 +37,17 @@ void vtkHistogramLookupTable::ExecuteInformation(
     return;
     }
   
+  // the output has type VTK_SIGNED_SHORT and has only one component,
+  // but otherwise looks the same as the input
+  outData->SetNumberOfScalarComponents(1);
+  outData->SetScalarType(VTK_SIGNED_SHORT);
   
-    outData->SetNumberOfScalarComponents(1);
-    outData->SetScalarType(VTK_DOUBLE);
-
+  outData->SetOrigin(inDatas[0]->GetOrigit());
+  outData->SetSpacing(inDatas[0]->GetSpacing());
     
-    // store these ranges in our own ivars as well!
-    double in1range[2], in2range[2];
-    inDatas[0]->GetScalarRange(in1range);
-    inDatas[1]->GetScalarRange(in2range);
+  outData->SetExtent(inDatas[0]->GetExtent());
+  outData->SetWholeExtent(inDatas[0]->GetWholeExtent());
 
-    int input1bins = this->GetInput1Bins();
-    int input2bins = this->GetInput2Bins();
-
-    double in1binWidth = (in1range[1] - in1range[0]) / input1bins;
-    double in2binWidth = (in2range[1] - in2range[0]) / input2bins;
-
-    outData->SetOrigin(in1range[0], in2range[0], 0);
-    outData->SetSpacing(in1binWidth, in2binWidth, 1);
-    
-    outData->SetExtent(0, this->Input1Bins - 1, 0, this->Input2Bins - 1, 0, 0);
-    outData->SetWholeExtent(0, this->Input1Bins - 1,
-                            0, this->Input2Bins - 1, 0, 0);
 }
 
 //----------------------------------------------------------------------------
@@ -70,8 +55,17 @@ void vtkHistogramLookupTable::ComputeInputUpdateExtent(int inExt[6],
                                                    int outExt[6],
                                                    int whichInput)
 {
-    // get the whole image for input 2
+  if (whichInput == 0)
+    {
+    // for every output voxel we need the corresponding input voxel
+    // neat huh?
+    memcpy(inExt,outExt,size(int)*6);
+    }
+  else
+    {
+    // we need the whole histogram input to lookup
     memcpy(inExt,this->GetInput(whichInput)->GetWholeExtent(),6*sizeof(int));
+    }
 }
 
 
@@ -80,9 +74,9 @@ void vtkHistogramLookupTable::ComputeInputUpdateExtent(int inExt[6],
 // Handles the two input operations
 template <class T>
 void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
-                                vtkImageData *in1Data, T *in1Ptr,
-                                vtkImageData *in2Data, T *in2Ptr,
-                                vtkImageData *outData, double *outPtr)
+                                    vtkImageData *in1Data, T *in1Ptr,
+                                    vtkImageData *in2Data, T *in2Ptr,
+                                    vtkImageData *outData, double *outPtr)
 {
     // store these ranges in our own ivars as well!
     double in1range[2], in2range[2];
@@ -154,7 +148,7 @@ void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
     vtkErrorMacro(<< "ExecuteData: Both inputs have to be set.");
     return;
     }
-  
+
   // Too many filters have floating point exceptions to execute
   // with empty input/ no request.
   if (this->UpdateExtentIsEmpty(out))
@@ -162,37 +156,12 @@ void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
     return;
     }
 
-  if (this->GetInput1()->GetScalarType() != this->GetInput2()->GetScalarType())
+  if (this->GetInput()->GetNumberOfScalarComponents() < 2)
     {
-    vtkErrorMacro(<< "Execute: input ScalarType, " <<
-    this->GetInput1()->GetScalarType() << " and input2 ScalarType " <<
-    this->GetInput2()->GetScalarType() << ", should match");
-    return;
+    vtkErrorMacro(<< "ExecuteData: The first input has to have at least "
+                  << "two components.");
+    return
     }
-
-  // check origin, dimensions, spacing equal
-  bool originEqual = true, spacingEqual = true, dimensionsEqual = true;
-  for (int i = 0; i < 3 && originEqual && spacingEqual && dimensionsEqual; i++)
-  {
-      originEqual =
-          this->GetInput1()->GetOrigin()[i] ==
-          this->GetInput2()->GetOrigin()[i];
-
-      spacingEqual =
-          this->GetInput1()->GetSpacing()[i] ==
-          this->GetInput2()->GetSpacing()[i];
-
-      dimensionsEqual = 
-          this->GetInput1()->GetDimensions()[i] ==
-          this->GetInput2()->GetDimensions()[i];
-      
-  }
-
-  if (! (originEqual && spacingEqual && dimensionsEqual))
-  {
-      vtkErrorMacro(<< "Execute: The two inputs have to match w.r.t. origin, "
-                    "spacing and dimensions.");
-  }
 
   // get metadata across
   this->ExecuteInformation();
@@ -233,8 +202,5 @@ void vtkHistogramLookupTable::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 
-  os << indent << "Input1Bins: " << this->Input1Bins << "\n";
-  os << indent << "Input2Bins: " << this->Input2Bins << "\n";  
-  
 }
 
