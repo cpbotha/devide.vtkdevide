@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.9 2003/11/26 21:53:33 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.10 2003/12/15 12:11:15 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -88,12 +88,12 @@ static void ExtractShell(T* data_ptr,
     int xlen = Input->GetDimensions()[0];
     int ylen = Input->GetDimensions()[1];
     int zlen = Input->GetDimensions()[2];
-    float x_spacing = Input->GetSpacing()[0];
-    float y_spacing = Input->GetSpacing()[1];
-    float z_spacing = Input->GetSpacing()[2];
-    float x_orig = Input->GetOrigin()[0];
-    float y_orig = Input->GetOrigin()[1];
-    float z_orig = Input->GetOrigin()[2];   
+    double x_spacing = Input->GetSpacing()[0];
+    double y_spacing = Input->GetSpacing()[1];
+    double z_spacing = Input->GetSpacing()[2];
+    double x_orig = Input->GetOrigin()[0];
+    double y_orig = Input->GetOrigin()[1];
+    double z_orig = Input->GetOrigin()[2];   
 
     //vector<ShellVoxel> vectorD;
     // initialise the D vector
@@ -108,11 +108,11 @@ static void ExtractShell(T* data_ptr,
     int ystep = xlen;
     int zstep = xlen * ylen;
 
-    float dxm2 = 2.0 * x_spacing;
-    float dym2 = 2.0 * y_spacing;
-    float dzm2 = 2.0 * z_spacing;
+    double dxm2 = 2.0 * x_spacing;
+    double dym2 = 2.0 * y_spacing;
+    double dzm2 = 2.0 * z_spacing;
  
-   float tempValue;
+   double tempValue;
 
     for (int z = 0; z < zlen; z++)
     {
@@ -121,7 +121,7 @@ static void ExtractShell(T* data_ptr,
             for (int x = 0; x < xlen; x++)
             {
                 //temp_sv.Value = (float)(*dptr);
-                tempValue = (float)(*dptr);
+                tempValue = (double)(*dptr);
                 // look the suxor up
                 temp_sv.Opacity = OpacityTF->GetValue(tempValue);
                 // first check if it's opaque enough
@@ -143,7 +143,7 @@ static void ExtractShell(T* data_ptr,
                     if (x > 0)
                     {
                         nbrs[0] = *(dptr - xstep);
-                        nbr_os[0] = OpacityTF->GetValue((float)(nbrs[0]));
+                        nbr_os[0] = OpacityTF->GetValue((double)(nbrs[0]));
                         if (nbr_os[0] >= OmegaH)
                             temp_sv.nbrOCode |= 0x1; // activate bit 0
                         if (nbr_os[0] <= OmegaH)
@@ -163,7 +163,7 @@ static void ExtractShell(T* data_ptr,
                     if (x < xlen - 1)
                     {
                         nbrs[1] = *(dptr + xstep);
-                        nbr_os[1] = OpacityTF->GetValue((float)(nbrs[1]));
+                        nbr_os[1] = OpacityTF->GetValue((double)(nbrs[1]));
                         if (nbr_os[1] >= OmegaH)
                             temp_sv.nbrOCode |= 0x2; // activate bit 1
                         if (nbr_os[1] <= OmegaH)
@@ -186,7 +186,7 @@ static void ExtractShell(T* data_ptr,
                     if (y > 0)
                     {
                         nbrs[2] = *(dptr - ystep);
-                        nbr_os[2] = OpacityTF->GetValue((float)(nbrs[2]));
+                        nbr_os[2] = OpacityTF->GetValue((double)(nbrs[2]));
                         if (nbr_os[2] >= OmegaH)
                             temp_sv.nbrOCode |= 0x4; // activate bit 2
                         if (nbr_os[2] <= OmegaH)
@@ -207,7 +207,7 @@ static void ExtractShell(T* data_ptr,
                     if (y < ylen - 1)
                     {
                         nbrs[3] = *(dptr + ystep);
-                        nbr_os[3] = OpacityTF->GetValue((float)(nbrs[3]));
+                        nbr_os[3] = OpacityTF->GetValue((double)(nbrs[3]));
                         if (nbr_os[3] >= OmegaH)
                             temp_sv.nbrOCode |= 0x8; // activate bit 3
                         if (nbr_os[3] <= OmegaH)
@@ -229,7 +229,7 @@ static void ExtractShell(T* data_ptr,
                     if (z > 0)
                     {
                         nbrs[4] = *(dptr - zstep);
-                        nbr_os[4] = OpacityTF->GetValue((float)(nbrs[4]));
+                        nbr_os[4] = OpacityTF->GetValue((double)(nbrs[4]));
                         if (nbr_os[4] >= OmegaH)
                             temp_sv.nbrOCode |= 0x10; // activate bit 4
                         if (nbr_os[4] <= OmegaH)
@@ -251,7 +251,7 @@ static void ExtractShell(T* data_ptr,
                     if (z < zlen - 1)
                     {
                         nbrs[5] = *(dptr + zstep);
-                        nbr_os[5] = OpacityTF->GetValue((float)(nbrs[5]));
+                        nbr_os[5] = OpacityTF->GetValue((double)(nbrs[5]));
                         if (nbr_os[5] >= OmegaH)
                             temp_sv.nbrOCode |= 0x20; // activate bit 5
                         if (nbr_os[5] <= OmegaH)
@@ -282,52 +282,52 @@ static void ExtractShell(T* data_ptr,
                             // NOTE: we are dividing by 2.0 * spacing as opengl wants
                             // these things to be NORMALISED in world space (although
                             // we'll be rendering in voxel space)
-                            temp_sv.Normal[0] = ((float)nbrs[0] - (float)nbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((float)nbrs[2] - (float)nbrs[3]) / dym2;
-                            temp_sv.Normal[2] = ((float)nbrs[4] - (float)nbrs[5]) / dzm2;
+                            temp_sv.Normal[0] = ((double)nbrs[0] - (double)nbrs[1]) / dxm2;
+                            temp_sv.Normal[1] = ((double)nbrs[2] - (double)nbrs[3]) / dym2;
+                            temp_sv.Normal[2] = ((double)nbrs[4] - (double)nbrs[5]) / dzm2;
                         }
                         else if (!GradientImageIsGradient)
                         {
                             // make use of the GradientImageVolume for calculating gradients
                             if (x > 0)
-                                gnbrs[0] = GradientImageData->GetScalarComponentAsFloat(x - 1, y, z, 0);
+                                gnbrs[0] = GradientImageData->GetScalarComponentAsDouble(x - 1, y, z, 0);
                             else
                                 gnbrs[0] = 0.0;
                             
                             if (x < xlen - 1)
-                                gnbrs[1] = GradientImageData->GetScalarComponentAsFloat(x + 1, y, z, 0);
+                                gnbrs[1] = GradientImageData->GetScalarComponentAsDouble(x + 1, y, z, 0);
                             else
                                 gnbrs[1] = 0.0;
 
                             if (y > 0)
-                                gnbrs[2] = GradientImageData->GetScalarComponentAsFloat(x, y - 1, z, 0);
+                                gnbrs[2] = GradientImageData->GetScalarComponentAsDouble(x, y - 1, z, 0);
                             else
                                 gnbrs[2] = 0.0;
                             
                             if (y < ylen - 1)
-                                gnbrs[3] = GradientImageData->GetScalarComponentAsFloat(x, y + 1, z, 0);
+                                gnbrs[3] = GradientImageData->GetScalarComponentAsDouble(x, y + 1, z, 0);
                             else
                                 gnbrs[3] = 0.0;
 
                             if (z > 0)
-                                gnbrs[4] = GradientImageData->GetScalarComponentAsFloat(x, y, z - 1, 0);
+                                gnbrs[4] = GradientImageData->GetScalarComponentAsDouble(x, y, z - 1, 0);
                             else
                                 gnbrs[4] = 0.0;
 
                             if (z < zlen - 1)
-                                gnbrs[5] = GradientImageData->GetScalarComponentAsFloat(x, y, z + 1, 0);
+                                gnbrs[5] = GradientImageData->GetScalarComponentAsDouble(x, y, z + 1, 0);
                             else
                                 gnbrs[5] = 0.0;
 
-                            temp_sv.Normal[0] = ((float)gnbrs[0] - (float)gnbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((float)gnbrs[2] - (float)gnbrs[3]) / dym2;
-                            temp_sv.Normal[2] = ((float)gnbrs[4] - (float)gnbrs[5]) / dzm2;
+                            temp_sv.Normal[0] = ((double)gnbrs[0] - (double)gnbrs[1]) / dxm2;
+                            temp_sv.Normal[1] = ((double)gnbrs[2] - (double)gnbrs[3]) / dym2;
+                            temp_sv.Normal[2] = ((double)gnbrs[4] - (double)gnbrs[5]) / dzm2;
                         }
 			else
 			{
-			  temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsFloat(x,y,z,0) / dxm2;
-			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsFloat(x,y,z,1) / dym2;
-			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsFloat(x,y,z,2) / dzm2;
+			  temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsDouble(x,y,z,0) / dxm2;
+			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsDouble(x,y,z,1) / dym2;
+			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsDouble(x,y,z,2) / dzm2;
 			}
 
                         t_gradmag = sqrt(temp_sv.Normal[0] * temp_sv.Normal[0] +
@@ -505,7 +505,7 @@ void vtkShellExtractor::Update(void)
 
         int idims[3];
         this->Input->GetDimensions(idims);
-        float ispacing[3];
+        double ispacing[3];
         this->Input->GetSpacing(ispacing);
 
         // do stuff here
@@ -522,7 +522,7 @@ void vtkShellExtractor::Update(void)
         this->P = new int[idims[1] * idims[2] * 2];
 
         vector<ShellVoxel> vectorD;
-        float min_gradmag = 0.0;
+        double min_gradmag = 0.0;
 
         switch (scalars->GetDataType())
         {
