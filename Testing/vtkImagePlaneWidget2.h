@@ -3,8 +3,8 @@
   Program:   Visualization Toolkit
   Module:    $RCSfile: vtkImagePlaneWidget2.h,v $
   Language:  C++
-  Date:      $Date: 2003/01/08 14:07:29 $
-  Version:   $Revision: 1.1 $
+  Date:      $Date: 2004/01/15 11:00:56 $
+  Version:   $Revision: 1.2 $
 
   Copyright (c) 1993-2002 Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -97,7 +97,7 @@
 #define __vtkImagePlaneWidget2_h
 
 #include "vtkPolyDataSourceWidget.h"
-#include "vtkdscasTestingWin32Header.h"
+#include "vtkdevideTestingWin32Header.h"
 
 class vtkActor;
 class vtkCellPicker;
@@ -127,7 +127,7 @@ class vtkUnstructuredGrid;
 #define VTK_LINEAR_RESLICE  1
 #define VTK_CUBIC_RESLICE   2
 
-class VTK_DSCAS_TESTING_EXPORT vtkImagePlaneWidget2 : public vtkPolyDataSourceWidget
+class VTK_DEVIDE_TESTING_EXPORT vtkImagePlaneWidget2 : public vtkPolyDataSourceWidget
 {
 public:
   // Description:

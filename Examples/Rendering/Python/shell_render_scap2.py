@@ -1,8 +1,8 @@
-# $Id: shell_render_scap2.py,v 1.1 2003/01/16 23:00:41 cpbotha Exp $
+# $Id: shell_render_scap2.py,v 1.2 2004/01/15 11:00:53 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtk import *
-from vtkdscas import *
+from vtkdevide import *
 import os
 import stat
 

@@ -11,7 +11,7 @@ ENDIF (HAS_DCMTK)
 # include vtkIVCONDriver.cxx
 #SET (IO_SRCS ${IO_SRCS} vtkIVCONDriver.cxx)
 
-#INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/IO/ivcon)
+#INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/IO/ivcon)
 #FILE(GLOB IVCON_SRCS ivcon/*.cpp)
 
 
@@ -19,80 +19,80 @@ ENDIF (HAS_DCMTK)
 # You probably do not need to modify anything below this line
 
 #
-# Create the vtkdscasIO C++ library
+# Create the vtkdevideIO C++ library
 #
 
 IF (WIN32)
-   ADD_LIBRARY (vtkdscasIO IO_SRCS)
+   ADD_LIBRARY (vtkdevideIO IO_SRCS)
 ELSE (WIN32)
    # under unix, we also want it to include a built-in dicom.dic
    # under windows, the Visual C++ builds already do this
-   ADD_LIBRARY (vtkdscasIO IO_SRCS dcdictzz)
+   ADD_LIBRARY (vtkdevideIO IO_SRCS dcdictzz)
 ENDIF (WIN32)
 
 
 #
-# Create the vtkdscasIO Tcl library
+# Create the vtkdevideIO Tcl library
 #
 
-IF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdscasIOTCL IOTCL_SRCS IO_SRCS)
-  ADD_LIBRARY (vtkdscasIOTCL SHARED IOTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasIOTCL
+  VTK_WRAP_TCL (vtkdevideIOTCL IOTCL_SRCS IO_SRCS)
+  ADD_LIBRARY (vtkdevideIOTCL SHARED IOTCL_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideIOTCL
                          vtkIOTCL 
                          ${TCL_LIBRARY})
 
-ENDIF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 #
-# Create the vtkdscasIO Python library
+# Create the vtkdevideIO Python library
 #
 
-IF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdscasIOPython IOPython_SRCS IO_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideIOPython IOPython_SRCS IO_SRCS)
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdscasIOPython MODULE IOPython_SRCS)
+    ADD_LIBRARY (vtkdevideIOPython MODULE IOPython_SRCS)
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdscasIOPython SHARED IOPython_SRCS)
-    TARGET_LINK_LIBRARIES (vtkdscasIOPython 
+    ADD_LIBRARY (vtkdevideIOPython SHARED IOPython_SRCS)
+    TARGET_LINK_LIBRARIES (vtkdevideIOPython 
 	                   vtkIOPython)
   ENDIF (APPLE)
 
   IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasIOPython 
+    TARGET_LINK_LIBRARIES (vtkdevideIOPython 
 	                   vtkIOPython
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasIOPython 
+    TARGET_LINK_LIBRARIES (vtkdevideIOPython 
 	                   vtkIOPython
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 
-ENDIF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 #
-# Create the vtkdscasIO Java library
+# Create the vtkdevideIO Java library
 #
 
-IF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdscasIOJava IOJava_SRCS IO_SRCS)
-  ADD_LIBRARY (vtkdscasIOJava SHARED IOJava_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasIOJava 
+  VTK_WRAP_JAVA (vtkdevideIOJava IOJava_SRCS IO_SRCS)
+  ADD_LIBRARY (vtkdevideIOJava SHARED IOJava_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideIOJava 
                          vtkIOJava)
 
-ENDIF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
 #
 # Link to VTK and local
 #
 
 LINK_LIBRARIES (
-  vtkdscasIO
+  vtkdevideIO
   vtkIO
 )
 

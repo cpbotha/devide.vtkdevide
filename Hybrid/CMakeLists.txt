@@ -11,78 +11,78 @@ SET (Hybrid_SRCS
 # You probably do not need to modify anything below this line
 
 #
-# Create the vtkdscasRendering C++ library
+# Create the vtkdevideRendering C++ library
 #
 
-ADD_LIBRARY (vtkdscasHybrid Hybrid_SRCS)
+ADD_LIBRARY (vtkdevideHybrid Hybrid_SRCS)
 
 #
-# Create the vtkdscasHybrid Tcl library
+# Create the vtkdevideHybrid Tcl library
 #
 
-IF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdscasHybridTCL HybridTCL_SRCS Hybrid_SRCS)
-  ADD_LIBRARY (vtkdscasHybridTCL SHARED HybridTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasHybridTCL 
+  VTK_WRAP_TCL (vtkdevideHybridTCL HybridTCL_SRCS Hybrid_SRCS)
+  ADD_LIBRARY (vtkdevideHybridTCL SHARED HybridTCL_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideHybridTCL 
                          vtkHybridTCL
 			 vtkCommonTCL
                          ${TCL_LIBRARY})
 
-ENDIF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 #
-# Create the vtkdscasHybrid Python library
+# Create the vtkdevideHybrid Python library
 #
 
-IF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdscasHybridPython HybridPython_SRCS Hybrid_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideHybridPython HybridPython_SRCS Hybrid_SRCS)
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdscasHybridPython MODULE HybridPython_SRCS)
+    ADD_LIBRARY (vtkdevideHybridPython MODULE HybridPython_SRCS)
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdscasHybridPython SHARED HybridPython_SRCS)
-    TARGET_LINK_LIBRARIES (vtkdscasHybridPython
+    ADD_LIBRARY (vtkdevideHybridPython SHARED HybridPython_SRCS)
+    TARGET_LINK_LIBRARIES (vtkdevideHybridPython
 	                   vtkHybridPython
 			   vtkCommonPython)
   ENDIF (APPLE)
 
   IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasHybridPython 
+    TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
 	                   vtkHybridPython
 			   vtkCommonPython
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasHybridPython 
+    TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
 	                   vtkHybridPython
 			   vtkCommonPython
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 
-ENDIF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 #
-# Create the vtkdscasHybrid Java library
+# Create the vtkdevideHybrid Java library
 #
 
-IF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdscasHybridJava HybridJava_SRCS Hybrid_SRCS)
-  ADD_LIBRARY (vtkdscasHybridJava SHARED HybridJava_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasHybridJava
+  VTK_WRAP_JAVA (vtkdevideHybridJava HybridJava_SRCS Hybrid_SRCS)
+  ADD_LIBRARY (vtkdevideHybridJava SHARED HybridJava_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideHybridJava
                          vtkHybridJava
 			 vtkCommonJava)
 
-ENDIF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
 #
 # Link to VTK and local
 #
 
 LINK_LIBRARIES (
-  vtkdscasHybrid
+  vtkdevideHybrid
   vtkHybrid
   vtkCommon
 )

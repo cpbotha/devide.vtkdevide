@@ -1,5 +1,5 @@
 // vtkEventOutputWindow.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkEventOutputWindow.h,v 1.1 2003/09/23 14:21:11 cpbotha Exp $
+// $Id: vtkEventOutputWindow.h,v 1.2 2004/01/15 11:00:51 cpbotha Exp $
 // vtkOutputWindow derivative that InvokeEvents instead of trying to display by itself
 
 #ifndef __vtkEventOutputWindow_h
@@ -16,9 +16,9 @@
 
 
 #include "vtkOutputWindow.h"
-#include "vtkdscasCommonWin32Header.h"
+#include "vtkdevideCommonWin32Header.h"
 
-class VTK_DSCAS_COMMON_EXPORT vtkEventOutputWindow : public vtkOutputWindow
+class VTK_DEVIDE_COMMON_EXPORT vtkEventOutputWindow : public vtkOutputWindow
 {
 public:
   static vtkEventOutputWindow *New();

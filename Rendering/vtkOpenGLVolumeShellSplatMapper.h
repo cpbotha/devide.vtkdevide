@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.7 2003/12/30 15:11:36 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.8 2004/01/15 11:00:55 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -30,7 +30,7 @@
 # include "vtkObject.h"
 #include "vtkImageData.h"
 # include "vtkVolumeMapper.h"
-# include "vtkdscasRenderingWin32Header.h"
+# include "vtkdevideRenderingWin32Header.h"
 
 class vtkImageData;
 class vtkMatrix4x4;
@@ -39,7 +39,7 @@ class vtkShellExtractor;
 struct ShellVoxel;
 class vtkVolume;
 
-class VTK_DSCAS_RENDERING_EXPORT vtkOpenGLVolumeShellSplatMapper : 
+class VTK_DEVIDE_RENDERING_EXPORT vtkOpenGLVolumeShellSplatMapper : 
 public vtkVolumeMapper
 {
  public:

@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.15 2003/10/07 16:40:48 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.16 2004/01/15 11:00:55 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -53,7 +53,7 @@
 #include <string>
 #include <vector>
 #include <vtkStructuredPointsSource.h>
-#include "vtkdscasIOWin32Header.h"
+#include "vtkdevideIOWin32Header.h"
 
 // we need this else Visual C++ doesn't like our STL thingies
 // in addition, this header should be included LAST in vtkDICOMVolumeReader.cxx
@@ -118,11 +118,11 @@ public:
 //ETX
 
 /**
- * VTK class that makes use of DCMTK to enable dscas1 to read DICOM medical
+ * VTK class that makes use of DCMTK to enable devide1 to read DICOM medical
  * volume data.
  * @author Charl P. Botha <cpbotha@ieee.org>
  */
-class VTK_DSCAS_IO_EXPORT vtkDICOMVolumeReader :
+class VTK_DEVIDE_IO_EXPORT vtkDICOMVolumeReader :
 public vtkStructuredPointsSource
 {
 protected:
@@ -199,7 +199,7 @@ public:
     * Remove all DICOM filenames from dicom_files_buffer and NOT the internal
     * list.  We also do not set the Modified time; this is so that if the user
     * clears the list and re-adds the same filenames, the reader will still be
-    * up to date.  This is (amongst other things) so that DSCAS3 doesn't let
+    * up to date.  This is (amongst other things) so that DEVIDE3 doesn't let
     * this reader re-read EVERY time that the user applies and the list of
     * filenames is re-initialised...  it also mimics the behaviour of a normal
     * Set*() call in that if the parameter is the same is the internal version,

@@ -2,7 +2,7 @@
 # Set the project name.
 #
 
-PROJECT (VTKDSCAS)
+PROJECT (VTKDEVIDE)
 
 #
 # Assume everything is set up correctly for build.
@@ -11,19 +11,19 @@ PROJECT (VTKDSCAS)
 # In that case, the build won't be done.
 #
 
-SET (VTKDSCAS_CAN_BUILD 1)
+SET (VTKDEVIDE_CAN_BUILD 1)
 
 #
 # Load CMake commands that you probably should not modify.
 #
 
-INCLUDE (${VTKDSCAS_SOURCE_DIR}/CMakeOptions.cmake)
+INCLUDE (${VTKDEVIDE_SOURCE_DIR}/CMakeOptions.cmake)
 
 #
 # If everything is OK, then go into the sub directories and build.
 #
 
-IF (VTKDSCAS_CAN_BUILD)
+IF (VTKDEVIDE_CAN_BUILD)
 
   #
   # Here is where you can list the sub-directories holding your local 
@@ -43,8 +43,8 @@ IF (VTKDSCAS_CAN_BUILD)
   # You can put your include path(s) here
   #
 
-  INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/IO)
-  INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/Testing)  
+  INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/IO)
+  INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Testing)  
   
   #
   # are we going to build the examples?
@@ -63,10 +63,10 @@ IF (VTKDSCAS_CAN_BUILD)
   #
 
   CONFIGURE_FILE(
-    ${VTKDSCAS_SOURCE_DIR}/vtkdscasConfigure.h.in
-    ${VTKDSCAS_BINARY_DIR}/vtkdscasConfigure.h
+    ${VTKDEVIDE_SOURCE_DIR}/vtkdevideConfigure.h.in
+    ${VTKDEVIDE_BINARY_DIR}/vtkdevideConfigure.h
   )
 
-  INCLUDE_DIRECTORIES(${VTKDSCAS_BINARY_DIR})
+  INCLUDE_DIRECTORIES(${VTKDEVIDE_BINARY_DIR})
 
-ENDIF (VTKDSCAS_CAN_BUILD)
+ENDIF (VTKDEVIDE_CAN_BUILD)

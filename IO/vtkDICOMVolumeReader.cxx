@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.17 2003/10/13 13:24:35 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.18 2004/01/15 11:00:55 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -583,7 +583,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
 
       // ---------------------------------------------------------------------------------------------
       // We extract WindowWidth and WindowCenter as well.  We don't need these for getting the HU values,
-      // but our vtkDSCASVolumeReader heritage requires that we have these available.
+      // but our vtkDEVIDEVolumeReader heritage requires that we have these available.
       // ---------------------------------------------------------------------------------------------
       DcmStack WindowCenter_stack, WindowWidth_stack;
       DcmElement* WindowCenter_obj = search_object(0x0028, 0x1050, *((*dicom_files_p)[i].fileformat), WindowCenter_stack);
@@ -803,7 +803,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.17 2003/10/13 13:24:35 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.18 2004/01/15 11:00:55 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

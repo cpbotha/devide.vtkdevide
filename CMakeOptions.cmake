@@ -7,7 +7,7 @@ INCLUDE (${CMAKE_ROOT}/Modules/FindVTK.cmake)
 IF (USE_VTK_FILE)
   INCLUDE (${USE_VTK_FILE})
 ELSE (USE_VTK_FILE)
-  SET (VTKDSCAS_CAN_BUILD 0)
+  SET (VTKDEVIDE_CAN_BUILD 0)
 ENDIF (USE_VTK_FILE)
 
 #
@@ -16,7 +16,7 @@ ENDIF (USE_VTK_FILE)
 #IF (USE_ITK_FILE)
 #  INCLUDE (${USE_ITK_FILE})
 #ELSE (USE_ITK_FILE)
-#  SET (VTKDSCAS_CAN_BUILD 0)
+#  SET (VTKDEVIDE_CAN_BUILD 0)
 #ENDIF (USE_ITK_FILE)
 
 #
@@ -35,17 +35,17 @@ IF (USE_VTK_FILE)
   # otherwise the BUILD_SHARED_LIB from VTK's vtkConfigure.h file is picked
   # first :(
 
-  SET(VTKDSCAS_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS} CACHE INTERNAL 
-      "Is this VTKDSCAS built with shared libraries.")
+  SET(VTKDEVIDE_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS} CACHE INTERNAL 
+      "Is this VTKDEVIDE built with shared libraries.")
       
   #
   # Output path(s)
   #
 
-  SET (LIBRARY_OUTPUT_PATH ${VTKDSCAS_BINARY_DIR}/bin/ CACHE PATH
+  SET (LIBRARY_OUTPUT_PATH ${VTKDEVIDE_BINARY_DIR}/bin/ CACHE PATH
        "Single output directory for building all libraries.")
 
-  SET (EXECUTABLE_OUTPUT_PATH ${VTKDSCAS_BINARY_DIR}/bin/ CACHE PATH 
+  SET (EXECUTABLE_OUTPUT_PATH ${VTKDEVIDE_BINARY_DIR}/bin/ CACHE PATH 
        "Single output directory for building all executables.")
        
   MARK_AS_ADVANCED (
@@ -70,21 +70,21 @@ ENDIF (USE_VTK_FILE)
 
 IF (VTK_WRAP_PYTHON)
 
-  OPTION(VTKDSCAS_WRAP_PYTHON 
+  OPTION(VTKDEVIDE_WRAP_PYTHON 
          "Wrap classes into the Python interpreted language." 
          ON)
          
-  IF (VTKDSCAS_WRAP_PYTHON)
+  IF (VTKDEVIDE_WRAP_PYTHON)
 
     IF (NOT VTK_WRAP_PYTHON_EXE)
 
       MESSAGE("Error. Unable to find VTK_WRAP_PYTHON_EXE, please edit this value to specify the correct location of the VTK Python wrapper.")
       MARK_AS_ADVANCED(CLEAR VTK_WRAP_PYTHON_EXE)
-      SET (VTKDSCAS_CAN_BUILD 0)
+      SET (VTKDEVIDE_CAN_BUILD 0)
 
     ELSE (NOT VTK_WRAP_PYTHON_EXE)
 
-      FIND_FILE(VTK_WRAP_HINTS hints ${VTKDSCAS_SOURCE_DIR}/Wrapping )
+      FIND_FILE(VTK_WRAP_HINTS hints ${VTKDEVIDE_SOURCE_DIR}/Wrapping )
       MARK_AS_ADVANCED(VTK_WRAP_HINTS)
 
       IF (USE_INSTALLED_VTK)
@@ -98,19 +98,19 @@ IF (VTK_WRAP_PYTHON)
       IF (WIN32)
         IF (NOT BUILD_SHARED_LIBS)
           MESSAGE("Error. Python support requires BUILD_SHARED_LIBS to be ON.")
-          SET (VTKDSCAS_CAN_BUILD 0)
+          SET (VTKDEVIDE_CAN_BUILD 0)
         ENDIF (NOT BUILD_SHARED_LIBS)  
       ENDIF (WIN32)
 
     ENDIF (NOT VTK_WRAP_PYTHON_EXE)
-  ENDIF (VTKDSCAS_WRAP_PYTHON)
+  ENDIF (VTKDEVIDE_WRAP_PYTHON)
 
 ELSE (VTK_WRAP_PYTHON)
 
-  IF (VTKDSCAS_WRAP_PYTHON)
-    MESSAGE("Warning. VTKDSCAS_WRAP_PYTHON is ON but the VTK version you have chosen has not support for Python (VTK_WRAP_PYTHON is OFF). Please set VTKDSCAS_WRAP_PYTHON to OFF.")
-    SET (VTKDSCAS_WRAP_PYTHON_OFF)
-  ENDIF (VTKDSCAS_WRAP_PYTHON)
+  IF (VTKDEVIDE_WRAP_PYTHON)
+    MESSAGE("Warning. VTKDEVIDE_WRAP_PYTHON is ON but the VTK version you have chosen has not support for Python (VTK_WRAP_PYTHON is OFF). Please set VTKDEVIDE_WRAP_PYTHON to OFF.")
+    SET (VTKDEVIDE_WRAP_PYTHON_OFF)
+  ENDIF (VTKDEVIDE_WRAP_PYTHON)
 
 ENDIF (VTK_WRAP_PYTHON)
 

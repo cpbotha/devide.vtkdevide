@@ -12,83 +12,83 @@ SOURCE_FILES (Testing_SRCS
 # You probably do not need to modify anything below this line
 
 #
-# Create the vtkdscasTesting C++ library
+# Create the vtkdevideTesting C++ library
 #
 
-ADD_LIBRARY (vtkdscasTesting Testing_SRCS)
+ADD_LIBRARY (vtkdevideTesting Testing_SRCS)
 
 #
-# Create the vtkdscasTesting Tcl library
+# Create the vtkdevideTesting Tcl library
 #
 
-IF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdscasTestingTCL TestingTCL_SRCS Testing_SRCS)
-  ADD_LIBRARY (vtkdscasTestingTCL SHARED TestingTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasTestingTCL 
+  VTK_WRAP_TCL (vtkdevideTestingTCL TestingTCL_SRCS Testing_SRCS)
+  ADD_LIBRARY (vtkdevideTestingTCL SHARED TestingTCL_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideTestingTCL 
                          vtkRenderingTCL
 			 vtkFilteringTCL
 			 vtkCommonTCL
                          ${TCL_LIBRARY})
 
-ENDIF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
+ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 #
-# Create the vtkdscasTesting Python library
+# Create the vtkdevideTesting Python library
 #
 
-IF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdscasTestingPython TestingPython_SRCS Testing_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideTestingPython TestingPython_SRCS Testing_SRCS)
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdscasTestingPython MODULE TestingPython_SRCS)
+    ADD_LIBRARY (vtkdevideTestingPython MODULE TestingPython_SRCS)
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdscasTestingPython SHARED TestingPython_SRCS)
-    TARGET_LINK_LIBRARIES (vtkdscasTestingPython
+    ADD_LIBRARY (vtkdevideTestingPython SHARED TestingPython_SRCS)
+    TARGET_LINK_LIBRARIES (vtkdevideTestingPython
 	                   vtkRenderingPython
 			   vtkFilteringPython
 			   vtkCommonPython)
   ENDIF (APPLE)
 
   IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasTestingPython 
+    TARGET_LINK_LIBRARIES (vtkdevideTestingPython 
 	                   vtkRenderingPython
 			   vtkFilteringPython
 			   vtkCommonPython
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdscasTestingPython 
+    TARGET_LINK_LIBRARIES (vtkdevideTestingPython 
 	                   vtkRenderingPython
 			   vtkFilteringPython
 			   vtkCommonPython
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 
-ENDIF (VTK_WRAP_PYTHON AND VTKDSCAS_WRAP_PYTHON)
+ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 #
-# Create the vtkdscasTesting Java library
+# Create the vtkdevideTesting Java library
 #
 
-IF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdscasTestingJava TestingJava_SRCS Testing_SRCS)
-  ADD_LIBRARY (vtkdscasTestingJava SHARED TestingJava_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasTestingJava
+  VTK_WRAP_JAVA (vtkdevideTestingJava TestingJava_SRCS Testing_SRCS)
+  ADD_LIBRARY (vtkdevideTestingJava SHARED TestingJava_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideTestingJava
                          vtkRenderingJava
 			 vtkFilteringJava
 			 vtkCommonJava)
 
-ENDIF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
+ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
 #
 # Link to VTK and local
 #
 
 LINK_LIBRARIES (
-  vtkdscasTesting
+  vtkdevideTesting
   vtkRendering
   vtkFiltering
   vtkCommon

@@ -1,5 +1,5 @@
 // vtkInteractorStyleTrackballActorConstrained copyright (c) 2003 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.4 2003/11/30 22:45:42 cpbotha Exp $
+// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.5 2004/01/15 11:00:55 cpbotha Exp $
 // interactorstyle that can constrain object manipulation to planes, lines and objects
 
 #ifndef __vtkInteractorStyleTrackballActorConstrained_h
@@ -8,11 +8,11 @@
 #include <vtkInteractorStyleTrackballActor.h>
 #include <vtkObjectFactory.h>
 #include <vtkstd/vector>
-#include "vtkdscasRenderingWin32Header.h"
+#include "vtkdevideRenderingWin32Header.h"
 
 class vtkProp3D;
 
-class VTK_DSCAS_RENDERING_EXPORT vtkInteractorStyleTrackballActorConstrained : public vtkInteractorStyleTrackballActor
+class VTK_DEVIDE_RENDERING_EXPORT vtkInteractorStyleTrackballActorConstrained : public vtkInteractorStyleTrackballActor
 {
 public:
    static vtkInteractorStyleTrackballActorConstrained *New();

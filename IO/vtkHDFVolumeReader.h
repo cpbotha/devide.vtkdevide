@@ -1,5 +1,5 @@
 // vtkHDFVolumeReader.h -- Charl P. Botha <c.p.botha@its.tudelft.nl>
-// $Id: vtkHDFVolumeReader.h,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkHDFVolumeReader.h,v 1.2 2004/01/15 11:00:55 cpbotha Exp $
 // vtk class for reading scalar volume data
 
 #ifndef vtkHDFVolumeReader_h
@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <vtkStructuredPointsSource.h>
 
-#include "vtkdscasIOWin32Header.h"
+#include "vtkdevideIOWin32Header.h"
 
 /**
  * Simple vtk class to read SDS HDF data.  It only reads the first SDS in
@@ -18,7 +18,7 @@
  * and that it has been stored as unsigned shorts.
  * @author Charl P. Botha <c.p.botha@its.tudelft.nl>
  */
-class VTK_DSCAS_IO_EXPORT vtkHDFVolumeReader : public vtkStructuredPointsSource
+class VTK_DEVIDE_IO_EXPORT vtkHDFVolumeReader : public vtkStructuredPointsSource
 {
 protected:
    float DataSpacing[3];

@@ -1,5 +1,5 @@
 // vtkHDFVolumeReader.cxx copyright 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkHDFVolumeReader.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkHDFVolumeReader.cxx,v 1.2 2004/01/15 11:00:55 cpbotha Exp $
 // vtk class for reading scalar volume data
 
 #include "vtkHDFVolumeReader.h"
@@ -93,7 +93,7 @@ void vtkHDFVolumeReader::ExecuteInformation(void)
       return;
    }
 
-   // now get our dscas1 specific attributes (we should abstract this and  move it out)
+   // now get our devide1 specific attributes (we should abstract this and  move it out)
    float data_spacing[3];
    bool attr_error = false;
    int attr_idx = SDfindattr(sds_id, DATA_SPACING_ATTR_NAME);
@@ -200,7 +200,7 @@ vtkHDFVolumeReader* vtkHDFVolumeReader::New()
 }
 
 static char const rcsid[] =
-"$Id: vtkHDFVolumeReader.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $";
+"$Id: vtkHDFVolumeReader.cxx,v 1.2 2004/01/15 11:00:55 cpbotha Exp $";
 
 const char *vtkHDFVolumeReader_rcsid(void)
 {

@@ -1,9 +1,9 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    $RCSfile: vtkdscasRenderingWin32Header.h,v $
+  Module:    $RCSfile: vtkdevideRenderingWin32Header.h,v $
   Language:  C++
-  Date:      $Date: 2003/01/08 14:07:29 $
+  Date:      $Date: 2004/01/15 11:00:55 $
   Version:   $Revision: 1.1 $
 
   Copyright (c) 1993-2002 Ken Martin, Will Schroeder, Bill Lorensen 
@@ -15,24 +15,24 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkdscasIOWin32Header - manage Windows system differences
+// .NAME vtkdevideIOWin32Header - manage Windows system differences
 // .SECTION Description
-// The vtkdscasIOWin32Header captures some system differences between Unix
+// The vtkdevideIOWin32Header captures some system differences between Unix
 // and Windows operating systems. 
 
-#ifndef __vtkdscasRenderingWin32Header_h
-#define __vtkdscasRenderingWin32Header_h
+#ifndef __vtkdevideRenderingWin32Header_h
+#define __vtkdevideRenderingWin32Header_h
 
-#include <vtkdscasConfigure.h>
+#include <vtkdevideConfigure.h>
 
-#if defined(WIN32) && !defined(VTK_DSCAS_STATIC)
-#if defined(vtkdscasRendering_EXPORTS)
-#define VTK_DSCAS_RENDERING_EXPORT __declspec( dllexport ) 
+#if defined(WIN32) && !defined(VTK_DEVIDE_STATIC)
+#if defined(vtkdevideRendering_EXPORTS)
+#define VTK_DEVIDE_RENDERING_EXPORT __declspec( dllexport ) 
 #else
-#define VTK_DSCAS_RENDERING_EXPORT __declspec( dllimport ) 
+#define VTK_DEVIDE_RENDERING_EXPORT __declspec( dllimport ) 
 #endif
 #else
-#define VTK_DSCAS_RENDERING_EXPORT
+#define VTK_DEVIDE_RENDERING_EXPORT
 #endif
 
 #endif

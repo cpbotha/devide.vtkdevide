@@ -1,8 +1,8 @@
-# $Id: shell_render_engine.py,v 1.6 2004/01/09 17:54:43 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.7 2004/01/15 11:00:53 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
-from vtkdscas import *
+from vtkdevide import *
 import time
 
 def bench(camera, rwi):
