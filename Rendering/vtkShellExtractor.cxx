@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.4 2003/09/03 11:13:13 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.5 2003/10/20 22:20:00 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -69,6 +69,7 @@ template <class T>
 static void ExtractShell(T* data_ptr,
                          vtkImageData* Input,
                          vtkImageData* GradientImageData,
+			 int GradientImageIsGradient,
                          vtkPiecewiseFunction* OpacityTF,
                          vtkColorTransferFunction* ColourTF,
                          float OmegaL, float OmegaH, float min_gradmag,
@@ -290,7 +291,7 @@ static void ExtractShell(T* data_ptr,
                             temp_sv.Normal[1] = ((float)nbrs[2] - (float)nbrs[3]) / dxm2;
                             temp_sv.Normal[2] = ((float)nbrs[4] - (float)nbrs[5]) / dxm2;
                         }
-                        else
+                        else if (!GradientImageIsGradient)
                         {
                             // make use of the GradientImageVolume for calculating gradients
                             if (x > 0)
@@ -327,6 +328,12 @@ static void ExtractShell(T* data_ptr,
                             temp_sv.Normal[1] = ((float)gnbrs[2] - (float)gnbrs[3]) / dxm2;
                             temp_sv.Normal[2] = ((float)gnbrs[4] - (float)gnbrs[5]) / dxm2;
                         }
+			else
+			{
+			  temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsFloat(x,y,z,0) / dxm2;
+			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsFloat(x,y,z,1) / dxm2;
+			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsFloat(x,y,z,2) / dxm2;
+			}
 
                         t_gradmag = sqrt(temp_sv.Normal[0] * temp_sv.Normal[0] +
                                          temp_sv.Normal[1] * temp_sv.Normal[1] +
@@ -416,6 +423,7 @@ vtkShellExtractor::vtkShellExtractor()
     this->OpacityTF = NULL;
     this->ColourTF = NULL;
     this->GradientImageData = NULL;
+    this->GradientImageIsGradient = 0;
     this->D = NULL;
     this->P = NULL;
 }
@@ -484,6 +492,13 @@ void vtkShellExtractor::Update(void)
             {
                 vtkWarningMacro("<< GradientImageData and Input have different dimensions.");
             }
+
+            if (this->GradientImageIsGradient && 
+                this->GradientImageData->GetNumberOfScalarComponents() < 3)
+            {
+                vtkWarningMacro("<< GradientImageIsData ON, but < 3 components in GradientImage.  Setting to OFF.");
+                this->GradientImageIsGradient = 0;
+            }
             
         }
 
@@ -521,6 +536,7 @@ void vtkShellExtractor::Update(void)
         {
             char* data_ptr = ((vtkCharArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -530,6 +546,7 @@ void vtkShellExtractor::Update(void)
         {
             unsigned char* data_ptr = ((vtkUnsignedCharArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -539,6 +556,7 @@ void vtkShellExtractor::Update(void)
         {
             short* data_ptr = ((vtkShortArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -548,6 +566,7 @@ void vtkShellExtractor::Update(void)
         {
             unsigned short* data_ptr = ((vtkUnsignedShortArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData, 
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -557,6 +576,7 @@ void vtkShellExtractor::Update(void)
         {
             int* data_ptr = ((vtkIntArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData, 
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -566,6 +586,7 @@ void vtkShellExtractor::Update(void)
         {
             unsigned int* data_ptr = ((vtkUnsignedIntArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData, 
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -575,6 +596,7 @@ void vtkShellExtractor::Update(void)
         {
             long* data_ptr = ((vtkLongArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -584,6 +606,7 @@ void vtkShellExtractor::Update(void)
         {
             unsigned long* data_ptr = ((vtkUnsignedLongArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -593,6 +616,7 @@ void vtkShellExtractor::Update(void)
         {
             float* data_ptr = ((vtkFloatArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -602,6 +626,7 @@ void vtkShellExtractor::Update(void)
         {
             double* data_ptr = ((vtkDoubleArray*)scalars)->GetPointer(0);
             ExtractShell(data_ptr, this->Input, TempGradientImageData,
+			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
                          &vectorD, this->P);
@@ -616,7 +641,7 @@ void vtkShellExtractor::Update(void)
             delete this->D;
 
         this->D = new ShellVoxel[vectorD.size()];
-        for (int i = 0; i < vectorD.size(); i++)
+        for (unsigned i = 0; i < vectorD.size(); i++)
             memcpy(this->D + i, &(vectorD[i]), sizeof(ShellVoxel));
 
         cout << vectorD.size() << " shell voxels found." << endl;

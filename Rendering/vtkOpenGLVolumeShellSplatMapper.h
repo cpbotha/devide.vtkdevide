@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.4 2003/09/03 11:13:13 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.5 2003/10/20 22:20:00 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -80,6 +80,12 @@ public vtkVolumeMapper
   double GetGaussianRadialExtent(void) {return this->gaussian_radial_extent;}
   void SetGaussianSigma(double);
   double GetGaussianSigma(void) {return this->gaussian_sigma;}
+
+  /**
+   * If you know what yer doing, you can use this instance of the ShellExtractor
+   * to do some fine tuning.
+   */
+  vtkGetObjectMacro(ShellExtractor, vtkShellExtractor);
 
   /**
    * If this is set, the gradient that's used for rendering will be calculated

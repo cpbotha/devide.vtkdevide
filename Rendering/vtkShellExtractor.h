@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.h,v 1.3 2003/09/03 11:13:13 cpbotha Exp $
+// $Id: vtkShellExtractor.h,v 1.4 2003/10/20 22:20:00 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -101,9 +101,23 @@ public:
    /**
     * Set optional imagedata member that will be used only for calculating
     * rendering gradient.  No checking is done on the validity of this data,
-    * so it's probably your responsibility.
+    * so it's probably your responsibility.  If GradientImageIsGradient,
+    * the shell extracter assumes that the 3 scalar components in
+    * GradientImageData represent the actual gradient, i.e. it doesn't try
+    * and calculate the gradient from the GradientImageData.
     */
    vtkSetObjectMacro(GradientImageData, vtkImageData);
+   /**
+    * If this is on, the ShellExtractor assumes that the GradientImage
+    * contains three scalar components which represent the gradient (in
+    * world coordinates).  If this is off and GradientImage is set, the
+    * ShellExtractor will CALCULATE the gradients using the
+    * GradientImage.  If GradientImage is not set, this variable has no
+    * effect.  Default: OFF.
+    */
+   vtkSetMacro(GradientImageIsGradient, int);
+   vtkGetMacro(GradientImageIsGradient, int);
+   vtkBooleanMacro(GradientImageIsGradient, int);
    /**
     * Set lower opacity bound for shell extraction.  This also calls
     * this->Modified() to indicate that the current output is invalidated.
@@ -145,6 +159,7 @@ protected:
    float OmegaL;
    float OmegaH;
    vtkImageData* GradientImageData;
+   int GradientImageIsGradient;
 
    /**
     * The time at which the last shell extraction was done.
