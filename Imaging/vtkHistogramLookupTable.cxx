@@ -1,13 +1,13 @@
-#include "vtkImageHistogram2D.h"
+#include "vtkHistogramLookupTable.h"
 
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.8 $");
-vtkStandardNewMacro(vtkImageHistogram2D);
+vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.1 $");
+vtkStandardNewMacro(vtkHistogramLookupTable);
 
 //----------------------------------------------------------------------------
-vtkImageHistogram2D::vtkImageHistogram2D()
+vtkHistogramLookupTable::vtkHistogramLookupTable()
 {
     this->SetInput1Bins(256);
     this->SetInput2Bins(256);
@@ -18,7 +18,7 @@ vtkImageHistogram2D::vtkImageHistogram2D()
 
 //----------------------------------------------------------------------------
 // Grow the output image 
-void vtkImageHistogram2D::ExecuteInformation(
+void vtkHistogramLookupTable::ExecuteInformation(
                     vtkImageData **inDatas, vtkImageData *outData)
 {
 
@@ -66,7 +66,7 @@ void vtkImageHistogram2D::ExecuteInformation(
 }
 
 //----------------------------------------------------------------------------
-void vtkImageHistogram2D::ComputeInputUpdateExtent(int inExt[6], 
+void vtkHistogramLookupTable::ComputeInputUpdateExtent(int inExt[6], 
                                                    int outExt[6],
                                                    int whichInput)
 {
@@ -79,7 +79,7 @@ void vtkImageHistogram2D::ComputeInputUpdateExtent(int inExt[6],
 // This templated function executes the filter for any type of data.
 // Handles the two input operations
 template <class T>
-void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
+void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
                                 vtkImageData *in1Data, T *in1Ptr,
                                 vtkImageData *in2Data, T *in2Ptr,
                                 vtkImageData *outData, double *outPtr)
@@ -146,7 +146,7 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
 }
 
 
-void vtkImageHistogram2D::ExecuteData(vtkDataObject *out)
+void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
 {
   // Make sure the Input has been set.
   if ( this->GetInput1() == NULL || this->GetInput2() == NULL)
@@ -211,7 +211,7 @@ void vtkImageHistogram2D::ExecuteData(vtkDataObject *out)
   switch (this->GetInput1()->GetScalarType())
   {
       vtkTemplateMacro(
-          vtkImageHistogram2DExecute(
+          vtkHistogramLookupTableExecute(
               this,
               this->GetInput1(), static_cast<VTK_TT*>(in1Ptr),
               this->GetInput2(), static_cast<VTK_TT*>(in2Ptr),
@@ -229,7 +229,7 @@ void vtkImageHistogram2D::ExecuteData(vtkDataObject *out)
 }
 
 
-void vtkImageHistogram2D::PrintSelf(ostream& os, vtkIndent indent)
+void vtkHistogramLookupTable::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 
