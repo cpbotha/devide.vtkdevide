@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.12 2003/12/30 13:20:11 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.13 2003/12/30 15:11:36 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1070,11 +1070,11 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
 
    // ------------------------------------------------------------------------
-   else // PERSPECTIVE rendering, iPBTF
+   else if (this->PerspectiveOrderingMode == 1) // PERSPECTIVE rendering, iPBTF
    {
        // variables used for traversal of P and D
-       int Pidx;
-       ShellVoxel *Dptr;
+       int Pidx, Pidx0, Pidx1; // octant-numbering scheme
+       ShellVoxel *Dptr, *Dptr0, *Dptr1;
 
        // materials caching
        GLfloat prev_colour[4];
@@ -1325,44 +1325,69 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             
             for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
             {
+                if (bigz == smallz)
+                {
+                    cerr << "AAAARRRGGGHHH THIS SHOULD NEVER HAPPEN!" << endl;
+                }
                 if (interleaving)
                 {
-
                     // double loop
                     for (int y = y0; y != y1; y += yinc)
                     {
-                        Pidx = (bigz * ydim + y) * 2;
-                        if (P[Pidx] != -1)
+                        Pidx0 = (bigz * ydim + y) * 2;
+                        Pidx1 = (smallz * ydim + y) * 2;
+                        
+                        int len0 = 0, len1 = 0;
+                        
+                        if (P[Pidx0] != -1)
                         {
-                            Dptr = D + P[Pidx];
+                            Dptr0 = D + P[Pidx0];
+                            len0 = P[Pidx0 + 1];
                             if (xinc == -1)
-                                Dptr += (P[Pidx + 1] - 1);
-
-                            for (int x = 0; x < P[Pidx + 1]; x++)
-                            {
-                                DrawVoxel(Dptr, bigOctantIdx, y, bigz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                Dptr += xinc;
-                            } // for (int x ...
-                        } // if (P[Pidx] != -1 ...
-
-                        // --------------------------------------------------
-                        // SMALL Z
-                        // --------------------------------------------------
-                        Pidx = (smallz * ydim + y) * 2;
-                        if (P[Pidx] != -1)
+                                Dptr0 += (len0 - 1);
+                        }
+                        if (P[Pidx1] != -1)
                         {
-                            Dptr = D + P[Pidx];
+                            Dptr1 = D + P[Pidx1];
+                            len1 = P[Pidx1 + 1];
                             if (xinc == -1)
-                                Dptr += (P[Pidx + 1] - 1);
+                                Dptr1 += (len1 - 1);
+                        }
 
-                            for (int x = 0; x < P[Pidx + 1]; x++)
+                        if (len0 && len0 >= len1)
+                        {
+                            for (int x = 0; x < len0; x++)
                             {
-                                DrawVoxel(Dptr, smallOctantIdx, y, smallz,
+                                DrawVoxel(Dptr0, bigOctantIdx, y, bigz,
                                           prev_colour, ambient, diffuse, u, v);
-                                Dptr += xinc;
-                            } // for (int x ...
-                        } // if (P[Pidx] != -1 ...
+                                Dptr0 += xinc;
+                                if (x < len1)
+                                {
+                                    DrawVoxel(Dptr1, smallOctantIdx, y, smallz,
+                                              prev_colour, ambient, diffuse,
+                                              u, v);
+                                    Dptr1 += xinc;
+                                }
+                            }
+                        }
+
+                        if (len1 && len1 > len0)
+                        {
+                            for (int x = 0; x < len1; x++)
+                            {
+                                DrawVoxel(Dptr1, smallOctantIdx, y, smallz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                Dptr1 += xinc;
+                                
+                                if (x < len0)
+                                {
+                                    DrawVoxel(Dptr0, bigOctantIdx, y, bigz,
+                                              prev_colour, ambient, diffuse,
+                                              u, v);
+                                    Dptr0 += xinc;
+                                }
+                            }
+                        }
                         
                     } // for (int y ...
 
@@ -1395,24 +1420,11 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                         if (bigz + bigzInc == bigzThresh)
                         {
                             interleaving = true;
-                            cout << "interleave " << bigz + bigzInc << endl;
                         }
                     } // for (int y ...
                 } // else interleaving ...
             } // for (int bigz ... 
 	    
-	    // first do the balance of the largest segment (ugh)
-	    int bigseglen = seg1len > seg2len ? seg1len : seg2len;
-	    
-	    // make 2 element arrays, always parameter of biggest seg
-	    // first... argh! this is difficult!
-
-	    // use DrawVoxels on balance part... it shouldn't make a diff
-	    //for (int zi = 0; zi < bigseg; zi++)
-
-	    // driving DrawVoxels: checks on limits the whole time and
-	    // draws the corresponding splats as well.
-
          }
          else if (yin)
          {
@@ -1462,6 +1474,239 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       } // CORNER-ON
 
    } // else PERSPECTIVE rendering with interleaved PBTF
+
+   // ------------------------------------------------------------------------
+   // ------------------------------------------------------------------------
+   else  // PERSPECTIVE rendering, extra-special BTF (mode 2)
+   {
+
+       // we need to project the centre of the volume onto the view plane and
+       // then check in which volume octant that point is
+
+       vtkMatrix4x4 *octantM = vtkMatrix4x4::New();
+       vtkMatrix4x4::Multiply4x4(this->PerspectiveMatrix,
+                                 this->VoxelsToViewMatrix,  octantM);
+       float voxel_volume_centre[4];
+       float projected_volume_centre[4];
+       float projected_voxel_volume_centre[4];
+       
+       voxel_volume_centre[0] = (float)xdim / 2.0;
+       voxel_volume_centre[1] = (float)ydim / 2.0;
+       voxel_volume_centre[2] = (float)zdim / 2.0;
+       voxel_volume_centre[3] = 1.0;
+
+       // project the volume centre onto the view plane
+       octantM->MultiplyPoint(voxel_volume_centre, projected_volume_centre);
+
+       // set its third dimension to zero (that should be IN the plane)
+       projected_volume_centre[2] = 0.0;
+
+       // we're going back to voxel space
+       octantM->Invert();
+       octantM->MultiplyPoint(projected_volume_centre,
+                              projected_voxel_volume_centre);
+
+       // now determine the octant
+       // and yes, it does make sense that we're checking with <: the projected
+       // point is not stuck on the view-plane, it's slipping and sliding as
+       // the view plane is moving.  Think on that and take it from there. :)
+       octantIdx = 0;
+       if (projected_voxel_volume_centre[0] < voxel_volume_centre[0])
+       {
+           octantIdx |= 0x1;
+       }
+       if (projected_voxel_volume_centre[1] < voxel_volume_centre[1])
+       {
+           octantIdx |= 0x2;
+       }
+       if (projected_voxel_volume_centre[2] < voxel_volume_centre[2])
+       {
+           octantIdx |= 0x4;
+       }
+
+      // take care of the matrix we made
+      octantM->Delete();
+
+#ifdef SSM_VERBOSE_OUTPUT
+      cout << "PVC " << projected_voxel_volume_centre[0] << " " << projected_voxel_volume_centre[1] << " " << projected_voxel_volume_centre[2] << " " << endl;
+#endif
+
+      // check whether it's volume-on, face-on, edge-on or corner-on
+      int xin = 0, yin = 0, zin = 0, xyztot = 0;
+      if (camVoxelPos[0] >= 0 && camVoxelPos[0] < inputDims[0])
+      {
+         xin = 1;
+         xyztot++;
+      }
+      if (camVoxelPos[1] >= 0 && camVoxelPos[1] < inputDims[1])
+      {
+         yin = 1;
+         xyztot++;
+      }
+      if (camVoxelPos[2] >= 0 && camVoxelPos[2] < inputDims[2])
+      {
+         zin = 1;
+         xyztot++;
+      }
+
+      int pq, pr, ps;
+
+      // **************************************************************************
+      // NB: convention: LDB is our origin, NOT LDF as in Swan's thesis!
+      // **************************************************************************
+
+      // volume-on: break up volume into 8 octants
+      if (xyztot == 3)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "VOLUME-ON" << endl;
+#endif         
+         pq = vtkMath::Round(camVoxelPos[0]);
+         pq = (pq >= xdim) ? xdim - 1 : pq;
+         pr = vtkMath::Round(camVoxelPos[1]);
+         pr = (pr >= ydim) ? ydim - 1 : pr;
+         ps = vtkMath::Round(camVoxelPos[2]);
+         ps = (ps >= zdim) ? zdim - 1 : ps;
+         // rendering octant LDF (code: 4)
+         this->DrawVoxels(0, pq + 1,      0, pr + 1,      ps + 1, zdim,   3, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RDF (code: 5)
+         this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      ps + 1, zdim,   2, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LUF (code: 6)      
+         this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   ps + 1, zdim,   1, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RUF (code: 7)
+         this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   ps + 1, zdim,   0, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LDB (code: 0)
+         this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, ps + 1,      7, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RDB (code: 1)
+         this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, ps + 1,      6, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LUB (code: 2)
+         this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, ps + 1,      5, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RUB (code: 3)
+         this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, ps + 1,      4, D, P, ydim, ambient, diffuse, u, v);
+      } // end VOLUME-ON
+
+      // face-on: break volume into 4 quadrants
+      else if (xyztot == 2)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "FACE-ON: ";
+#endif
+         // check in which octant pq,pr,ps falls
+         octantIdx = 0;
+
+         // this is face-on, only one dim can be outside
+         if (zin == 0)
+         {
+             // z is outside
+             if (camVoxelPos[2] >= zdim)
+             {
+                 octantIdx |= 0x4;
+             }
+             if (camVoxelPos[0] > xdim - camVoxelPos[0])
+                 octantIdx |= 0x1;
+             if (camVoxelPos[1] > ydim - camVoxelPos[1])
+                 octantIdx |= 0x2;
+         }
+         else if (yin == 0)
+         {
+             // y is outside
+             if (camVoxelPos[1] >= ydim)
+             {
+                 octantIdx |= 0x2;
+             }
+             if (camVoxelPos[0] > xdim - camVoxelPos[0])
+                 octantIdx |= 0x1;
+             if (camVoxelPos[2] > zdim - camVoxelPos[2])
+                 octantIdx |= 0x4;
+             
+         }
+         else if (xin == 0)
+         {
+             // x is outside
+             if (camVoxelPos[0] >= xdim)
+             {
+                 octantIdx |= 0x1;
+             }
+             if (camVoxelPos[1] > ydim - camVoxelPos[1])
+                 octantIdx |= 0x2;
+             if (camVoxelPos[2] > zdim - camVoxelPos[2])
+                 octantIdx |= 0x4;
+         }
+             
+         this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2],
+                          octantIdx, D, P, inputDims[1], ambient, diffuse,
+                          u, v);
+         
+      } // FACE-ON
+
+      // edge-on
+      else if (xyztot == 1)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "EDGE-ON" << endl;
+#endif         
+         int edge_idx = 0;
+         if (zin)
+         {
+            ps = vtkMath::Round(camVoxelPos[2]);
+            ps = (ps >= zdim) ? zdim - 1 : ps;
+            if (camVoxelPos[0] >= xdim)
+               edge_idx |= 0x1;
+            if (camVoxelPos[1] >= ydim)
+               edge_idx |= 0x2;
+            // this is sorted, really
+            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+         else if (yin)
+         {
+            pr = vtkMath::Round(camVoxelPos[1]);
+            pr = (pr >= ydim) ? ydim - 1 : pr;
+            if (camVoxelPos[0] >= xdim)
+               edge_idx |= 0x1;
+            if (camVoxelPos[2] >= zdim)
+               edge_idx |= 0x4;
+            this->DrawVoxels(0, xdim, 0, pr + 1, 0, zdim, edge_idx + 2, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(0, xdim, pr + 1, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+         else // xin
+         {
+            pq = vtkMath::Round(camVoxelPos[0]);
+            pq = (pq >= xdim) ? xdim - 1 : pq;
+            if (camVoxelPos[1] >= ydim)
+               edge_idx |= 0x2;
+            if (camVoxelPos[2] >= zdim)
+               edge_idx |= 0x4;
+            this->DrawVoxels(0, pq + 1,      0, ydim, 0, zdim, edge_idx + 1, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(pq + 1, xdim,   0, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+      } // EDGE-ON
+
+      // corner-on
+      else
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "CORNER-ON" << endl;
+#endif         
+         // being here means Vp is by definition outside the volume:
+         octantIdx = 0;
+         if (camVoxelPos[0] >= inputDims[0])
+         {
+            octantIdx |= 0x1;
+         }
+         if (camVoxelPos[1] >= inputDims[1])
+         {
+            octantIdx |= 0x2;
+         }
+         if (camVoxelPos[2] >= inputDims[2])
+         {
+            octantIdx |= 0x4;
+         }
+         this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2], octantIdx, D, P, inputDims[1], ambient, diffuse, u, v);
+      } // CORNER-ON
+
+   } // else PERSPECTIVE rendering, extra-special BTF
+   
 #ifdef SSM_VERBOSE_OUTPUT
    cout << "voxels_drawn == " << voxels_drawn << endl;
 #endif   
