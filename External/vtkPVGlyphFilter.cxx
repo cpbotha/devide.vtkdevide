@@ -18,7 +18,7 @@
 #include "vtkObjectFactory.h"
 #include "vtkPolyData.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 vtkPVGlyphFilter::vtkPVGlyphFilter()
@@ -53,6 +53,12 @@ int vtkPVGlyphFilter::GetRandomMode()
 
 void vtkPVGlyphFilter::Execute()
 {
+  if (this->MaskPoints->GetInput() == NULL)
+    {
+    vtkErrorMacro(<<"No input set.");
+    return;
+    }
+  
   if (this->UseMaskPoints)
     {
     this->Superclass::SetInput(this->MaskPoints->GetOutput());
