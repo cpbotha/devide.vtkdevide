@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.15 2004/07/01 13:12:07 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.16 2004/07/01 15:16:23 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -107,8 +107,8 @@ static void ExtractShell(T* data_ptr,
 
     // initialise P to all "no shell voxels in these rows (X)"
     memset(Px, -1, ylen * zlen * sizeof(int) * 2);
-    memset(Py, -1, ylen * zlen * sizeof(int) * 2);
-    memset(Pz, -1, ylen * zlen * sizeof(int) * 2);
+    memset(Py, -1, xlen * zlen * sizeof(int) * 2);
+    memset(Pz, -1, xlen * ylen * sizeof(int) * 2);
     
     int Pidx, prevPidx;
 
@@ -493,6 +493,68 @@ static void ExtractShell(T* data_ptr,
         } // for (int x = 0 ...
       } // for (int z = 0 ...
 
+    // ----------------------------------------------------------------------
+    
+
+    // P is Y * X
+    // initialize pWallZY by just copying Px
+    memcpy(pWallZY, Px, zlen * ylen * 2 * sizeof(int));
+
+    // then complete vectorDy and Py
+    for (int y = 0; y < ylen; y++)
+      {
+      for (int x = 0; x < xlen; x++)
+        {
+        for (int z = 0; z < ylen; z++)
+          {
+
+          PxIdx = (z * ylen + y) * 2;
+          if (pWallZY[PxIdx] >= 0)
+            {
+            // now check that the ->x of the ShellVoxel is the one we
+            // want
+            temp_sv = (*vectorDx)[pWallZY[PxIdx]];
+            if (temp_sv.x == x)
+              {
+              // replace the coordinate (we're going to space-leap in y)
+              temp_sv.x = z;
+            
+              // store the copy in our vectorDy
+              vectorDz->push_back(temp_sv);
+              // record in Py if necessary
+              PzIdx = (y * xlen + x) * 2;
+              if (Pz[PzIdx] == -1)
+                {
+                Pz[PzIdx] = vectorDz->size() - 1;
+                }
+
+              // then decrement the run-length
+              --pWallZY[PxIdx + 1];
+              if (pWallZY[PxIdx + 1] == 0)
+                {
+                // so we'll skip this next time (it's done!)
+                pWallZY[PxIdx] = -1;
+                }
+              else
+                {
+                // there are still voxels left, so we can increment this
+                ++pWallZY[PxIdx];
+                }
+              } // if (temp_sv.x == x)
+              
+            } // if (pWallZY[PxIdx] >= 0) ...
+          
+          } // for (int y = 0 ...
+
+        // this y-line is done, complete the P
+        PzIdx = (y * xlen + x) * 2;
+        if (Pz[PzIdx] != -1)
+          {
+          Pz[PzIdx + 1] = vectorDz->size() - Pz[PzIdx];
+          }
+        
+        } // for (int x = 0 ...
+      } // for (int z = 0 ...
 
     delete[] pWallZY;
 }
