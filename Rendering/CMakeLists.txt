@@ -4,10 +4,7 @@
 # Here is where you can add the name of your local Rendering classes.
 #
 
-SOURCE_FILES (Rendering_SRCS
-   vtkShellExtractor
-   vtkOpenGLVolumeShellSplatMapper
-)
+SET (Rendering_SRCS vtkShellExtractor vtkOpenGLVolumeShellSplatMapper)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
