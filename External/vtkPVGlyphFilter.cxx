@@ -20,7 +20,7 @@
 #include "vtkPolyData.h"
 #include "vtkPointData.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.7 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.8 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 //-----------------------------------------------------------------------------
@@ -66,6 +66,12 @@ void vtkPVGlyphFilter::Execute()
 {
   if (this->UseMaskPoints)
     {
+    if (!this->MaskPoints->GetInput())
+     {
+     vtkErrorMacro(<<"No input set.");
+     return;
+     }
+
     vtkPolyData* output = this->GetOutput();
     this->Superclass::SetInput(this->MaskPoints->GetOutput());
     vtkIdType maxNumPts = this->MaximumNumberOfPoints;
