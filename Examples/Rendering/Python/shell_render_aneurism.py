@@ -1,4 +1,4 @@
-# $Id: shell_render_aneurism.py,v 1.5 2004/01/28 15:51:27 cpbotha Exp $
+# $Id: shell_render_aneurism.py,v 1.6 2004/07/02 10:22:20 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -14,6 +14,26 @@ def bench(camera, rwi):
     end_time = time.clock()
 
     print "FPS == %f" % (36 / (end_time - initial_time))
+    
+def bench2(camera, rwi):
+    initial_time = time.clock()
+
+    numberOfRenders = 10 * (36 + 1)
+    
+    for i in range(10):
+        for j in range(36):
+            camera.Azimuth(10)
+            rwi.Render()
+        
+        camera.Elevation(36 * i)
+        rwi.Render()
+            
+            
+    
+    end_time = time.clock()
+
+    print "FPS == %f" % (numberOfRenders / (end_time - initial_time))
+
 
 def ce_cb(obj, evt_name):
     if obj.GetKeyCode() == 'm':
@@ -27,7 +47,7 @@ def ce_cb(obj, evt_name):
     if obj.GetKeyCode() == 'i':
         com = splatmapper.GetPerspectiveOrderingMode()
 	com = com + 1
-	if com > 2:
+	if com > 3:
 	    com = 0
         splatmapper.SetPerspectiveOrderingMode(com)
         print "ordering mode switched to %d" % (com)
@@ -60,7 +80,7 @@ def ce_cb(obj, evt_name):
         print "GaussianSigma == %s" % str(cur + 0.1)
         
     elif obj.GetKeyCode() == 'b':
-        bench(ren.GetActiveCamera(), rwi)
+        bench2(ren.GetActiveCamera(), rwi)
         
     rwi.Render()
         
@@ -98,6 +118,7 @@ splatmapper.SetOmegaL(0.1)
 splatmapper.SetOmegaH(0.2)
 splatmapper.SetInput(reader.GetOutput())
 splatmapper.SetRenderMode(0)
+splatmapper.SetPerspectiveOrderingMode(3)
 
 vprop = vtkVolumeProperty()
 vprop.SetScalarOpacity(otf)
@@ -127,6 +148,7 @@ cubeAxesActor2d.SetCamera(ren.GetActiveCamera())
 
 
 renwin = vtkRenderWindow()
+renwin.SetSize(512,512)
 renwin.AddRenderer(ren)
 
 rwi = vtkRenderWindowInteractor()

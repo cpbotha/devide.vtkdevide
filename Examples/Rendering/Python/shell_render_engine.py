@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.10 2004/06/22 14:26:48 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.11 2004/07/02 10:22:20 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -46,13 +46,16 @@ def ce_cb(obj, evt_name):
         splatmapper.SetRenderMode(crm)
         print "rendermode switched to %d" % (crm)
 
-    if obj.GetKeyCode() in ['0', '1', '2']:
+    if obj.GetKeyCode() in ['0', '1', '2', '4']:
 #         com = splatmapper.GetPerspectiveOrderingMode()
 # 	com = com + 1
 # 	if com > 2:
 # 	    com = 0
 
         com = int(obj.GetKeyCode())
+        if com == 4:
+            com = 3
+            
         splatmapper.SetPerspectiveOrderingMode(com)
         print "ordering mode switched to %d" % (com)
         
@@ -60,8 +63,10 @@ def ce_cb(obj, evt_name):
             textActor.SetInput("PBTF")
         elif com == 1:
             textActor.SetInput("IP-PBTF")
-        else:
+        elif com == 2:
             textActor.SetInput("Traditional BTF")
+        else:
+            textActor.SetInput("New-style IP-PBTF")
 
         #textActor.GetPosition2Coordinate().SetValue(1, 1)
         textActor.SetDisplayPosition(0, 140)
