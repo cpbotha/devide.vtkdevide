@@ -2,8 +2,9 @@
 #include <vtkSystemIncludes.h> // this should give us stl thingies
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
+#include <vtkstd/algorithm>
 
-vtkCxxRevisionMacro(vtkInteractorStyleTrackballActorConstrained, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkInteractorStyleTrackballActorConstrained, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkInteractorStyleTrackballActorConstrained);
 
 vtkInteractorStyleTrackballActorConstrained::vtkInteractorStyleTrackballActorConstrained() : vtkInteractorStyleTrackballActor()
@@ -18,6 +19,61 @@ vtkInteractorStyleTrackballActorConstrained::~vtkInteractorStyleTrackballActorCo
    this->ActiveProps.clear();
 }
 
+void vtkInteractorStyleTrackballActorConstrained::AddActiveProp(vtkProp3D *theProp)
+{
+   if (!theProp)
+   {
+      return;
+   }
+
+   vtkstd::vector<vtkProp3D *>::iterator ii;
+   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+
+   if (ii == this->ActiveProps.end())
+   {
+      // not found, so we can add it
+      this->ActiveProps.push_back(theProp);
+   }
+}
+
+void vtkInteractorStyleTrackballActorConstrained::RemoveActiveProp(vtkProp3D *theProp)
+{
+   if (!theProp)
+   {
+      return;
+   }
+
+   vtkstd::vector<vtkProp3D *>::iterator ii;
+   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+
+   if (ii != this->ActiveProps.end())
+   {
+      // found it, so we can nuke it
+      this->ActiveProps.erase(ii);
+   }
+}
+
+void vtkInteractorStyleTrackballActorConstrained::RemoveAllActiveProps(void)
+{
+   this->ActiveProps.clear();
+}
+
+void vtkInteractorStyleTrackballActorConstrained::SetActiveProp(vtkProp3D *theProp)
+{
+   // we have to do this either way...
+   this->RemoveAllActiveProps();
+   // AddActiveProp will check for NULL
+   this->AddActiveProp(theProp);
+}
+
+bool vtkInteractorStyleTrackballActorConstrained::IsPropActive(vtkProp3D *theProp)
+{
+   vtkstd::vector<vtkProp3D *>::iterator ii;
+   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+
+   return (ii != this->ActiveProps.end());
+}
+
 void vtkInteractorStyleTrackballActorConstrained::OnLeftButtonDown()
 {
    int x = this->Interactor->GetEventPosition()[0];
@@ -25,6 +81,12 @@ void vtkInteractorStyleTrackballActorConstrained::OnLeftButtonDown()
 
    this->FindPokedRenderer(x, y);
    this->FindPickedActor(x, y);
+
+   if (!this->IsPropActive(this->InteractionProp))
+   {
+      this->InteractionProp = NULL;
+   }
+
    if (this->CurrentRenderer == NULL || this->InteractionProp == NULL)
    {
       return;
@@ -51,6 +113,12 @@ void vtkInteractorStyleTrackballActorConstrained::OnMiddleButtonDown()
 
    this->FindPokedRenderer(x, y);
    this->FindPickedActor(x, y);
+
+   if (!this->IsPropActive(this->InteractionProp))
+   {
+      this->InteractionProp = NULL;
+   }
+
    if (this->CurrentRenderer == NULL || this->InteractionProp == NULL)
    {
       return;
@@ -73,6 +141,12 @@ void vtkInteractorStyleTrackballActorConstrained::OnRightButtonDown()
 
    this->FindPokedRenderer(x, y);
    this->FindPickedActor(x, y);
+
+   if (!this->IsPropActive(this->InteractionProp))
+   {
+      this->InteractionProp = NULL;
+   }
+
    if (this->CurrentRenderer == NULL || this->InteractionProp == NULL)
    {
       return;
