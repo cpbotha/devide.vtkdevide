@@ -28,7 +28,7 @@ public:
   // 0 - use BorderValue for Border
   // 1 - use input for Border
   // 2 - use min(input) for Border
-  // 3 - use min(input) for Border
+  // 3 - use max(input) for Border
   vtkSetMacro(BorderMode, int);
   vtkGetMacro(BorderMode, int);
 
@@ -39,14 +39,20 @@ public:
   vtkSetMacro(InteriorMode, int);
   vtkGetMacro(InteriorMode, int);
 
+  vtkSetVector3Macro(Borders, int);
+  vtkGetVector3Macro(Borders, int)
+
 protected:
   vtkImageBorderMask();
   ~vtkImageBorderMask() {};
 
   int BorderValue;
   int BorderMode;
+  int Borders[3];
+  
   int InteriorValue;
   int InteriorMode;
+  
 
   virtual void SimpleExecute(vtkImageData* input, vtkImageData* output);
   
