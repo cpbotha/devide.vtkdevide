@@ -1,8 +1,8 @@
-# $Id: shell_render_zuydweg.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+# $Id: shell_render_zuydweg.py,v 1.2 2003/01/15 18:52:05 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
-from vtkpython import *
-from vtkcpbothapython import *
+from vtk import *
+from vtkdscas import *
 import os
 import stat
 

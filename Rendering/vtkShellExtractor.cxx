@@ -1,5 +1,5 @@
 // vtkShellExtractor.h copyright (c) 2002 by Charl P. Botha http://cpbotha.net/
-// $Id: vtkShellExtractor.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.2 2003/01/15 18:52:38 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 #include <math.h>
@@ -16,6 +16,7 @@
 #include "vtkIntArray.h"
 #include "vtkUnsignedIntArray.h"
 #include "vtkLongArray.h"
+#include "vtkPointData.h"
 #include "vtkUnsignedLongArray.h"
 #include "vtkFloatArray.h"
 #include "vtkDoubleArray.h"
