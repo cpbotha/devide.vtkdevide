@@ -30,6 +30,8 @@ Your VTK build
   thingies required by cmake are in f:\tcl\include and lib.  TK_INTERNAL_PATH
   is of course in the VTK/Rendering/tkInternals/tk<version>.
 
+- Python 2.3.3 uses Tcl 8.4, so... (ActiveTcl8.4.6.1-win32-ix86-99631.exe)
+
 - VERY important: make sure that VTK_USE_ANSI_STDLIB is set to ON in your
   VTK cmake configuration!
 
