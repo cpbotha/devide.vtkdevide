@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.5 $");
+vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.6 $");
 vtkStandardNewMacro(vtkImageHistogram2D);
 
 //----------------------------------------------------------------------------
@@ -71,9 +71,12 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
 
     // clear output data
     memset(outPtr, 0, input1bins * input2bins * sizeof(double));
-        
-    double in1binWidth = (in1range[1] - in1range[0]) / input1bins;
-    double in2binWidth = (in2range[1] - in2range[0]) / input2bins;
+
+    // we add 1 to the range, because max - min gives the number of
+    // intervals, not the number of elements, and we are binning
+    // elements, not intervals
+    double in1binWidth = (in1range[1] - in1range[0] + 1) / input1bins;
+    double in2binWidth = (in2range[1] - in2range[0] + 1) / input2bins;
 
     // calculate number of elements
     unsigned long noe = in1Data->GetDimensions()[0] *
