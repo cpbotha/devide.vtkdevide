@@ -1,5 +1,5 @@
 // vtkInteractorStyleTrackballActorConstrained copyright (c) 2003 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.3 2003/06/29 18:26:36 cpbotha Exp $
+// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.4 2003/11/30 22:45:42 cpbotha Exp $
 // interactorstyle that can constrain object manipulation to planes, lines and objects
 
 #ifndef __vtkInteractorStyleTrackballActorConstrained_h
