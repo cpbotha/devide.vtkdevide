@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageBorderMask, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkImageBorderMask, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkImageBorderMask);
 
 
@@ -91,34 +91,39 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
     }
 
   int zOffset, yOffset, xOffset;
+  int topAndBottomY[2];
 
   for (int z = zintStart; z < zintEnd; z++)
     {
     zOffset = z * dims[1] * dims[0];
 
-    for (int y = 0; y < dims[1]; y++)
+	// do top and bottom y-rows
+	topAndBottomY[0] = 0;
+	topAndBottomY[1] = dims[1] - 1;
+	for (int i = 0; i < 2; i++)
+	  {
+	  yOffset = zOffset + topAndBottomY[i] * dims[0];
+
+	  for (int x = 0; x < dims[0]; x++)
+        {
+        xOffset = yOffset + x;
+        outPtr[xOffset] = vtkImageBorderMaskReplaceValue(
+              BorderMode, BorderValue,
+              inPtr[xOffset], inputMinimum, inputMaximum);
+          
+        } // for (int x = 0 ...
+      } // for (int i = 0 ...
+
+    // now the interior y-lines (plus border x left and right)
+    for (int y = 1; y < dims[1] - 1; y++)
       {
       yOffset = zOffset + y * dims[0];
-
-      // BOUNDARY - top and bottom lines
-      if (y == 0 || y == dims[1] - 1)
-        {
-        for (int x = 1; x < dims[0] - 1; x++)
-          {
-          xOffset = yOffset + x;
-
-          outPtr[xOffset] = vtkImageBorderMaskReplaceValue(
-            BorderMode, BorderValue,
-            inPtr[xOffset], inputMinimum, inputMaximum);
-          
-          } // for (int x = 1 ...
-        } // if (y == 0 ...
 
       // leftmost x BOUNDARY
       xOffset = yOffset + 0;
       outPtr[xOffset] = vtkImageBorderMaskReplaceValue(
-        BorderMode, BorderValue,
-        inPtr[xOffset], inputMinimum, inputMaximum);
+	    		BorderMode, BorderValue,
+		    	inPtr[xOffset], inputMinimum, inputMaximum);
       
       // INTERIOR
       for (int x = 1; x < dims[0] - 1; x++)
@@ -137,7 +142,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
         BorderMode, BorderValue,
         inPtr[xOffset], inputMinimum, inputMaximum);
       
-      }
+      } // for (int y = 1 ...
     } // for (int z = zintStart ...
 
   // then let's do the z==0 and z==dims[2] - 1 boundaries (if
@@ -157,7 +162,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
         yOffset = zOffset + y * dims[0];
         for (int x = 0; x < dims[0]; x++)
           {
-          zOffset = yOffset + x;
+          xOffset = yOffset + x;
           
           outPtr[xOffset] = vtkImageBorderMaskReplaceValue(
             BorderMode, BorderValue,
@@ -192,7 +197,7 @@ void vtkImageBorderMask::SimpleExecute(vtkImageData* input,
     // all data types vtk can handle.
     vtkTemplateMacro8(vtkImageBorderMaskExecute, input, output,
                       (VTK_TT *)(inPtr), (VTK_TT *)(outPtr),
-                      this->BorderMode, this->BorderMode,
+                      this->BorderMode, this->BorderValue,
                       this->InteriorMode, this->InteriorValue);
     default:
       vtkGenericWarningMacro("Execute: Unknown input ScalarType");
