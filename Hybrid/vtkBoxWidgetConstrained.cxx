@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained()
@@ -148,6 +148,12 @@ vtkBoxWidgetConstrained::vtkBoxWidgetConstrained()
   this->CurrentHandle = NULL;
 
   this->Transform = vtkTransform::New();
+
+
+  // BEGIN cpbotha	
+  this->ConstrainToPlaneOff();
+  this->SetConstrainPlaneNormal(0.0, 0.0, 0.0);
+  // END cpbotha
  
 }
 
@@ -949,6 +955,22 @@ void vtkBoxWidgetConstrained::Translate(double *p1, double *p2)
   v[0] = p2[0] - p1[0];
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
+
+  // BEGIN cpbotha
+
+  // if we're constrained, constrain man!
+  if (this->ConstrainToPlane)
+  {
+	double bdp = vtkMath::Dot(v, this->ConstrainPlaneNormal);
+	double badvector[3];
+	for (int i=0; i<3; i++)
+	{
+		badvector[i] = bdp * this->ConstrainPlaneNormal[i];
+		v[i] -= badvector[i];
+	}
+  }
+
+  // END cpbotha
   
   // Move the corners
   for (int i=0; i<8; i++)

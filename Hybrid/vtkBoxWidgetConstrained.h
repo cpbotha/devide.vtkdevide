@@ -121,6 +121,16 @@ public:
   vtkGetMacro(RotationEnabled,int);
   vtkBooleanMacro(RotationEnabled,int);
 
+  // BEGIN cpbotha
+  // are we constrained to a plane?
+  vtkSetMacro(ConstrainToPlane, int);
+  vtkGetMacro(ConstrainToPlane, int);
+  vtkBooleanMacro(ConstrainToPlane, int);
+
+  vtkSetVector3Macro(ConstrainPlaneNormal, double);
+  vtkGetVector3Macro(ConstrainPlaneNormal, double);
+  // END cpbotha
+
 protected:
   vtkBoxWidgetConstrained();
   ~vtkBoxWidgetConstrained();
@@ -225,6 +235,12 @@ protected:
   int TranslationEnabled;
   int ScalingEnabled;
   int RotationEnabled;
+
+  // BEGIN cpbotha
+  // Set this if you want motion to be constrained to the given plane
+  int ConstrainToPlane;
+  double ConstrainPlaneNormal[3];
+  // END cpbotha
 
 private:
   vtkBoxWidgetConstrained(const vtkBoxWidgetConstrained&);  //Not implemented
