@@ -38,6 +38,7 @@ IF (VTKDEVIDE_CAN_BUILD)
     Imaging
     IO
     Rendering
+    External
   )
 
   #
