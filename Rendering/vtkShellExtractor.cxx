@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.5 2003/10/20 22:20:00 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.6 2003/11/18 10:10:11 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -406,7 +406,8 @@ static void ExtractShell(T* data_ptr,
 
             } // for (int x = 0 ...
         } // for (int y = 0 ...
-        cout << "row " << z << " done." << endl;
+        // FIXME: add progress event here (or something)
+        //cout << "row " << z << " done." << endl;
     } // for (int z = 0 ...
 
     // we're done, yahooooo!

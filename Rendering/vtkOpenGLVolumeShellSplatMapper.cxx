@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.6 2003/09/03 11:13:13 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.7 2003/11/18 10:10:11 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -60,6 +60,7 @@
 
 // discrete Gaussian will be N x N
 #define OGLVSM_RF_N 64
+//#define SSM_VERBOSE_OUTPUT
 
 // stupid global variable we can use
 long voxels_drawn;
@@ -619,7 +620,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    // much our circular area (pi * r^2) differs from the "total" area (i.e. area of circle with radius == 4 * sigma, where 
    // the Gaussian is normally 0.0)
    double nfactor = (this->gaussian_radial_extent * this->gaussian_radial_extent) / (4.0 * this->gaussian_sigma * 4.0 * this->gaussian_sigma);
+#ifdef SSM_VERBOSE_OUTPUT
    cout << "nfactor == " << nfactor << endl;
+#endif
    for (int i = 0; i < OGLVSM_RF_N * OGLVSM_RF_N; i++)
    {
       // uncomment below to have both opacity and  colour modulated by the Gaussian
@@ -770,7 +773,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    // we have to find out WHERE the view point is (once)
    double camWorldPos[4];
    ren->GetActiveCamera()->GetPosition(camWorldPos);
+#ifdef SSM_VERBOSE_OUTPUT
    cout << "camWorldPos == " << camWorldPos[0] << "," << camWorldPos[1] << "," << camWorldPos[2] << endl;
+#endif
    camWorldPos[3] = 1.0;
    // and convert it to voxel space
    double camVoxelPos[4];
@@ -820,8 +825,10 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       {
          octantIdx |= 0x4;
       }
-
+      
+#ifdef SSM_VERBOSE_OUTPUT
       cout << "PVC " << projected_voxel_volume_centre[0] << " " << projected_voxel_volume_centre[1] << " " << projected_voxel_volume_centre[2] << " " << endl;
+#endif
 
       // take care of the matrix we made
       octantM->Delete();
@@ -857,7 +864,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       // volume-on: break up volume into 8 octants
       if (xyztot == 3)
       {
+#ifdef SSM_VERBOSE_OUTPUT          
          cout << "VOLUME-ON" << endl;
+#endif         
          pq = vtkMath::Round(camVoxelPos[0]);
          pq = (pq >= xdim) ? xdim - 1 : pq;
          pr = vtkMath::Round(camVoxelPos[1]);
@@ -885,7 +894,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       // face-on: break volume into 4 quadrants
       else if (xyztot == 2)
       {
+#ifdef SSM_VERBOSE_OUTPUT          
          cout << "FACE-ON: ";
+#endif         
          if (zin == 0)
          {
             pq = vtkMath::Round(camVoxelPos[0]);
@@ -894,7 +905,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             pr = (pr >= ydim) ? ydim - 1 : pr;
             if (camVoxelPos[2] >= zdim)
             {
+#ifdef SSM_VERBOSE_OUTPUT                
                cout << "z >= zdim" <<endl;
+#endif               
                // quadrant LU
                this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   5, D, P, inputDims[1], ambient, diffuse, u, v);
                // quadrant LD
@@ -906,7 +919,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             }
             else
             {
+#ifdef SSM_VERBOSE_OUTPUT                
                cout << "z < 0" <<endl;
+#endif               
                // MIRROR of clause above, only shell rendering octantIdx changes
                // quadrant LU
                this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
@@ -985,7 +1000,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       // edge-on
       else if (xyztot == 1)
       {
+#ifdef SSM_VERBOSE_OUTPUT          
          cout << "EDGE-ON" << endl;
+#endif         
          int edge_idx = 0;
          if (zin)
          {
@@ -1026,7 +1043,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       // corner-on
       else
       {
+#ifdef SSM_VERBOSE_OUTPUT          
          cout << "CORNER-ON" << endl;
+#endif         
          // being here means Vp is by definition outside the volume:
          octantIdx = 0;
          if (camVoxelPos[0] >= inputDims[0])
@@ -1045,8 +1064,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       } // CORNER-ON
 
    } // else PERSPECTIVE rendering
-
+#ifdef SSM_VERBOSE_OUTPUT
    cout << "voxels_drawn == " << voxels_drawn << endl;
+#endif   
 
    // end plotting frikking points
    glEnd();
@@ -1075,7 +1095,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    clock_t diff_clock = end_clock - start_clock;
    float secs = (float)diff_clock / (float)CLOCKS_PER_SEC;
 
+#ifdef SSM_VERBOSE_OUTPUT   
    cout << "Clock ticks == " << diff_clock << " Secs == " << secs << " FPS == " << 1.0 / secs << endl;
+#endif   
 
    // restore all gl attributes
    glPopAttrib();
@@ -1099,7 +1121,9 @@ void vtkOpenGLVolumeShellSplatMapper::DrawVoxels(int x0, int x1, int y0, int y1,
    ShellVoxel* Dptr;
    GLfloat prev_colour[4];
    prev_colour[0] = prev_colour[1] = prev_colour[2] = prev_colour[3] = -1;
+#ifdef SSM_VERBOSE_OUTPUT   
    cout << x0 << " --> " << x1 << ", " << y0 << " --> " << y1 << ", " << z0 << " --> " << z1 << endl;
+#endif   
    switch (octantIdx)
    {
       case 0:
@@ -1290,7 +1314,9 @@ void vtkOpenGLVolumeShellSplatMapper::DrawVoxels(int x0, int x1, int y0, int y1,
                } // for (z = inputDims[2] ...
             } // for (y = inputDims[1] ...
          }
+#ifdef SSM_VERBOSE_OUTPUT         
          cout << endl;
+#endif         
          break;
 
       case 7:
@@ -1318,7 +1344,9 @@ void vtkOpenGLVolumeShellSplatMapper::DrawVoxels(int x0, int x1, int y0, int y1,
                } // for (z = inputDims[2] ...
             } // for (y = inputDims[1] ...
          }
+#ifdef SSM_VERBOSE_OUTPUT         
          cout << endl;
+#endif         
          break;
    }
 
