@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.10 2003/12/15 12:11:15 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.11 2004/06/28 21:23:58 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -383,16 +383,16 @@ static void ExtractShell(T* data_ptr,
 
                             // we have to travel back to find the previous
                             // row with shell voxels in it
-                            prevPidx = Pidx - 2;
-                            while (prevPidx >= 0 && P[prevPidx] == -1)
-                                prevPidx-=2;
-                            // if we found a valid prevPidx, we can tally,
-                            // if not, Pidx is the FIRST row
-                            if (prevPidx >= 0)
-                            {
-                                P[prevPidx+1] = P[Pidx] - P[prevPidx];
-                            }
-                        }
+//                             prevPidx = Pidx - 2;
+//                             while (prevPidx >= 0 && P[prevPidx] == -1)
+//                                 prevPidx-=2;
+//                             // if we found a valid prevPidx, we can tally,
+//                             // if not, Pidx is the FIRST row
+//                             if (prevPidx >= 0)
+//                             {
+//                                 P[prevPidx+1] = P[Pidx] - P[prevPidx];
+//                             }
+                        } // if (P[Pidx] == -1) ...
                     } // if (nbrv_lt_oh) ...
                 } // if (temp_sv.Opacity > OmegaL ...
 
@@ -400,6 +400,16 @@ static void ExtractShell(T* data_ptr,
                 dptr++;
 
             } // for (int x = 0 ...
+
+            // now make sure that we COMPLETE the current row
+            Pidx = (z*ylen + y) * 2;
+            if (P[Pidx] != -1 && P[Pidx+1] == -1)
+              {
+              // this means that the beginning of the row is indicated
+              // but not the run length
+              P[Pidx + 1] = vectorD->size() - P[Pidx];
+              }
+            
         } // for (int y = 0 ...
         // FIXME: add progress event here (or something)
         //cout << "row " << z << " done." << endl;
