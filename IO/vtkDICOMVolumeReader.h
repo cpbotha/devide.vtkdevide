@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.6 2003/06/16 10:15:45 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.7 2003/06/19 10:12:10 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /* TODO
@@ -70,6 +70,7 @@ public:
    unsigned short Columns;
    unsigned short BitsAllocated;
    unsigned short PixelRepresentation;
+   unsigned short BitsStored;
    vector<dicom_file> dicom_files;
    series_instance_misc_metadata_t misc_metadata;
 };

@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.7 2003/06/16 10:15:45 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.8 2003/06/19 10:12:10 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #if !defined(WIN32)
@@ -261,6 +261,16 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             temp_PixelRepresentation = 1;
          }
 
+         DcmStack BitsStored_stack;
+         unsigned short temp_BitsStored;
+         DcmElement* BitsStored_obj = search_object(0x0028, 0x0101, *(temp_dicom_file.fileformat), BitsStored_stack);
+         if (!BitsStored_obj || BitsStored_obj->getUint16(temp_BitsStored) != EC_Normal)
+         {
+            vtkWarningMacro(<<"Could not read BitsStored from " << temp_dicom_file.filename.c_str() << ", assuming 12 (normal for CT).");
+            temp_BitsStored = 12;
+         }
+
+
          // then some arb shit...
          char *StudyDescription_cp;
          DcmStack StudyDescription_stack;
@@ -287,6 +297,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          temp_series_instance.Columns = temp_Columns;
          temp_series_instance.BitsAllocated = temp_BitsAllocated;
          temp_series_instance.PixelRepresentation = temp_PixelRepresentation;
+         temp_series_instance.BitsStored = temp_BitsStored;
 
          // make sure the dicom_files vector is empty
          temp_series_instance.dicom_files.clear();
@@ -357,14 +368,19 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    output->SetOrigin(DataOrigin[0], DataOrigin[1], DataOrigin[2]);
    // and setup the WholeExtent to be the same as the extent (Extent is what's in mem, WholeExtent is everything)
    output->SetWholeExtent(0, DataDimensions[0]-1, 0, DataDimensions[1]-1, 0, DataDimensions[2]-1);
-   // we always set short... if we get 8 bit data, that will get casted to short
-   if ((*si_iterator).PixelRepresentation)
+
+   if ((*si_iterator).PixelRepresentation == 0 && (*si_iterator).BitsStored == 16)
    {
-      output->SetScalarType(VTK_SHORT);
+      // this is a special case... by definition, it has to be the full 16 bits, so we
+      // have to use unsigneds.  You better hope that the rescaleIntercept is not
+      // negative, then this will break!
+      output->SetScalarType(VTK_UNSIGNED_SHORT);
    }
    else
    {
-      output->SetScalarType(VTK_UNSIGNED_SHORT);
+      // we try to have signed data wherever possible.  Even if the pixeldata is
+      // unsigned, the RescaleIntercept (or slope) could make us negative!
+      output->SetScalarType(VTK_SHORT);
    }
 
    //output->SetScalarType((*si_iterator).BitsAllocated == 8 ? VTK_UNSIGNED_CHAR : VTK_SHORT);
@@ -530,7 +546,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       }
       else // we have a dicom_pixeldata_pointer
       {
-         if (temp_PixelRepresentation == 0) // "normal"
+         if (temp_PixelRepresentation == 0) // "normal" unsigned pixeldata
          {
             if ((*si_iterator).BitsAllocated == 8)
             {
@@ -538,12 +554,14 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                {
                   // HU = slope * SV + intercept
                   // where: SV = actual unsigned int >> (highbit + 1 - bitsstored) && all valid stored bits on;
-                  *(uspixels + numpixels_perslice * i + pidx) =
-                     (unsigned short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_uc + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
+                  // our output will be SIGNED shorts in this case...
+                  *(spixels + numpixels_perslice * i + pidx) =
+                     (short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_uc + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
                }
             }
-            else // 16 BitsAllocated
+            else if (output->GetScalarType() == VTK_UNSIGNED_SHORT)// 16 BitsAllocated
             {
+               // this means BitsStored is 16, so we output into unsigned short
                int pidx;
                for (pidx = 0; pidx < numpixels_perslice; pidx++)
                {
@@ -552,7 +570,19 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                   *(uspixels + numpixels_perslice * i + pidx) =
                      (unsigned short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
                }
-
+            }
+            else
+            {
+               // this means BitsStored is LESS than 16, so even although the pixeldata is unsigned,
+               // we output into signed shorts, as the Rescale thingies can turn us into signed
+               int pidx;
+               for (pidx = 0; pidx < numpixels_perslice; pidx++)
+               {
+                  // HU = slope * SV + intercept
+                  // where: SV = actual unsigned int >> (highbit + 1 - bitsstored) && all valid stored bits on;
+                  *(spixels + numpixels_perslice * i + pidx) =
+                     (short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
+               }
             }
          }
          else // two's complement
@@ -710,7 +740,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.7 2003/06/16 10:15:45 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.8 2003/06/19 10:12:10 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
