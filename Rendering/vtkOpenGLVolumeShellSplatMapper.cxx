@@ -1,6 +1,6 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2002 by Charl P. Botha 
 // http://cpbotha.net/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.3 2003/04/29 19:29:35 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.4 2003/04/29 21:14:42 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 // TODO:
@@ -701,9 +701,15 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                     OGLVSM_RF_N, OGLVSM_RF_N, 0, GL_LUMINANCE_ALPHA, // format val0 -> r,g,b and val1 -> opacity
                     GL_FLOAT, (const GLvoid *) this->normalised_integrated_rfunc );
 
+#ifdef GL_VERSION_1_1
+      // do we really need this call, i.e. is the texture not already
+      // bound?
+      glBindTexture(GL_TEXTURE_2D, tex_idx);
+#else
       glEndList();
-
       glCallList ((GLuint) tex_idx);
+#endif
+
 
       glEnable(GL_TEXTURE_2D);
 
