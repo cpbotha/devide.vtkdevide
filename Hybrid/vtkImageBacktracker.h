@@ -11,7 +11,7 @@ class vtkImageConnectorSeed;
 
 //ETX
 
-class VTK_DEVIDE_IMAGING_EXPORT vtkImageBacktracker :
+class VTK_DEVIDE_HYBRID_EXPORT vtkImageBacktracker :
 public vtkImageToPolyDataFilter
 {
 public:
