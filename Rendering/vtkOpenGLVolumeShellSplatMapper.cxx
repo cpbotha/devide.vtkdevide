@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.17 2004/01/06 18:23:15 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.18 2004/01/07 22:35:04 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1618,31 +1618,229 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             pr = (pr >= ydim) ? ydim - 1 : pr;
             ps = vtkMath::Round(camVoxelPos[2]);
             ps = (ps >= zdim) ? zdim - 1 : ps;
+
+            cout << "HINK: face-on, xin == 0, pp == "
+                 << pr << " ps == " << ps << endl;
+
+
+            // y is th slowest changing dimension
+            int x0, x1, xinc;
+            unsigned char octantIdxBZBY, octantIdxBZSY;
+            unsigned char octantIdxSZBY, octantIdxSZSY;
+            
+            
             if (camVoxelPos[0] >= xdim)
             {
-               // We're viewing from the "RIGHT"
-               // quadrant LU
-               this->DrawVoxels(0, xdim,   pr + 1, ydim,   ps + 1, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant LD
-               this->DrawVoxels(0, xdim,   0, pr + 1,      ps + 1, zdim,   3, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RU
-               this->DrawVoxels(0, xdim,   pr + 1, ydim,   0, ps + 1,      5, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RD
-               this->DrawVoxels(0, xdim,   0, pr + 1,      0, ps + 1,      7, D, P, inputDims[1], ambient, diffuse, u, v);
+	      // FIXME: continue here...
+	      x0 = 0;
+	      x1 = xdim;
+	      xinc = 1;
+	      // zyx == 001b == 0x1
+	      octantIdxBZBY = 
+		octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0x1;
             }
             else
             {
-               // MIRROR
-               // quadrant LU
-               this->DrawVoxels(0, xdim,   pr + 1, ydim,   ps + 1, zdim,   0, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant LD
-               this->DrawVoxels(0, xdim,   0, pr + 1,      ps + 1, zdim,   2, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RU
-               this->DrawVoxels(0, xdim,   pr + 1, ydim,   0, ps + 1,      4, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RD
-               this->DrawVoxels(0, xdim,   0, pr + 1,      0, ps + 1,      6, D, P, inputDims[1], ambient, diffuse, u, v);
+	      x0 = xdim - 1;
+	      x1 = -1; // we're going to use != x1 as end cond
+	      xinc = -1;
+	      octantIdxBZBY =
+		  octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0;
             }
-         }
+
+	    // FIXME: continue here...
+
+            // setup split-loop for z
+            int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz, initsmallz;
+            if (ps >= (zdim - ps))
+            {
+                bigzStart = 0;
+                bigzEnd = ps;
+                bigzInc = 1;
+                bigzThresh = ps - (zdim - ps); // biglen - small_len
+                initsmallz = zdim - 1;
+                octantIdxBZBX |= 0x04; octantIdxBZSX = octantIdxBZBX;
+            }
+            else
+            {
+                bigzStart = zdim - 1;
+                bigzEnd = ps - 1; // loop uses != bigzEnd
+                bigzInc = -1;
+                bigzThresh = ps * 2 - 1;
+                initsmallz = 0;
+                octantIdxSZBX |= 0x4; octantIdxSZSX = octantIdxSZBX;
+            }
+            
+
+            // setup split-loop for x
+            int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
+            if (pq >= (xdim - pq))
+            {
+                bigxStart = 0;
+                bigxEnd = pq;
+                bigxInc = 1;
+                bigxThresh = pq - (xdim - pq); // biglen - small_len
+                initsmallx = xdim - 1;
+                octantIdxBZBX |= 0x1; octantIdxSZBX = octantIdxBZBX;
+            }
+            else
+            {
+                bigxStart = xdim - 1;
+                bigxEnd = pq - 1; // loop uses != bigxEnd
+                bigxInc = -1;
+                bigxThresh = pq * 2 - 1;
+                initsmallx = 0;
+                octantIdxBZSX |= 0x1; octantIdxSZSX = octantIdxBZSX;
+            }
+
+            bool zInterleaved;
+            bool xInterleaved;
+
+            ShellVoxel *DptrBZ, *DptrBZBX, *DptrBZSX;
+            DptrBZ = DptrBZBX = DptrBZSX = (ShellVoxel*)NULL;
+            
+            ShellVoxel *DptrSZ, *DptrSZBX, *DptrSZSX;
+            DptrSZ = DptrSZBX = DptrSZSX = (ShellVoxel*)NULL;
+            
+            int PidxBZ, PidxSZ;
+
+            for (int y = y0; y != y1; y += yinc)
+            {
+                if (bigzStart == bigzThresh)
+                    zInterleaved = true;
+                else
+                    zInterleaved = false;
+
+                smallz = initsmallz;
+
+                for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
+                {
+                    if (bigxStart == bigxThresh)
+                        xInterleaved = true;
+                    else
+                        xInterleaved = false;
+
+                    smallx = initsmallx;
+
+                    PidxBZ = (bigz * ydim + y) * 2;
+                    if (P[PidxBZ] != -1)
+                    {
+                        // ?? if !zInterleaved, we don't get here either!
+                        DptrBZ = D + P[PidxBZ];
+                        if (bigxInc == 1)
+                        {
+                            // bigx is increasing, this means that the Dptr
+                            // for bigx is at the start of the sparse X
+                            // structure
+                            DptrBZBX = DptrBZ;
+                            DptrBZSX = DptrBZ + P[PidxBZ + 1] - 1;
+                        }
+                        else
+                        {
+                            DptrBZBX = DptrBZ + P[PidxBZ + 1] - 1;
+                            DptrBZSX = DptrBZ;
+                        }
+                    }
+                    else
+                    {
+                        DptrBZ = (ShellVoxel*)NULL;
+                    }
+
+                    if (zInterleaved)
+                    {
+                        PidxSZ = (smallz * ydim + y) * 2;
+                        if (P[PidxSZ] != -1)
+                        {
+                            DptrSZ = D + P[PidxSZ];
+                            if (bigxInc == 1)
+                            {
+                                DptrSZBX = DptrSZ;
+                                DptrSZSX = DptrSZ + P[PidxSZ + 1] - 1;
+                            }
+                            else
+                            {
+                                DptrSZBX = DptrSZ + P[PidxSZ + 1] - 1;
+                                DptrSZSX = DptrSZ;
+                            }
+                        }
+                        else
+                        {
+                            DptrSZ = (ShellVoxel*)NULL;
+                        }
+                    }
+                    else
+                    {
+                        // zInterleaved == false, so we set this for safety
+                        DptrSZ = (ShellVoxel*)NULL;
+                    }
+
+                    for (int bigx = bigxStart; bigx != bigxEnd;
+                         bigx += bigxInc)
+                    {
+
+                        if (DptrBZ)
+                        {
+                            // ?? if !zInterleaved, we never get here!!
+                            if (DptrBZBX->x == bigx)
+                            {
+                                DrawVoxel(DptrBZBX, octantIdxBZBX, y, bigz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrBZBX += bigxInc;
+                            }
+
+                            if (xInterleaved && DptrBZSX->x == smallx)
+                            {
+                                DrawVoxel(DptrBZSX, octantIdxBZSX, y, bigz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrBZSX -= bigxInc;
+                            }
+                        } // if (DptrBZ) ...
+
+                        if (zInterleaved && DptrSZ)
+                        {
+                            if (DptrSZBX->x == bigx)
+                            {
+                                DrawVoxel(DptrSZBX, octantIdxSZBX, y, smallz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrSZBX += bigxInc;
+                            }
+
+                            if (xInterleaved && DptrSZSX->x == smallx)
+                            {
+                                DrawVoxel(DptrSZSX, octantIdxSZSX, y, smallz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrSZSX -= bigxInc;
+                            }
+                        } // if (zInterleaved && DptrSZ) ...
+
+
+                        if (xInterleaved)
+                        {
+                            smallx -= bigxInc;
+                        }
+                        else
+                        {
+                            if (bigx + bigxInc == bigxThresh)
+                                xInterleaved = true;
+                        }
+                        
+                        
+                    } // for (int bigx == bigxStart ...
+
+                    if (zInterleaved)
+                    {
+                        smallz -= bigzInc;
+                    }
+                    else
+                    {
+                        if (bigz + bigzInc == bigzThresh)
+                            zInterleaved = true;
+                    }
+                    
+                } // for (int bigz == bigzStart ...
+                
+            } // for (int x = x0 ...
+         } // else (xin == 0 face-on case)
       } // FACE-ON
 
       // edge-on
