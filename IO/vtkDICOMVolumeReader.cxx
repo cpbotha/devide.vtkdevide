@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.5 2003/03/07 01:54:14 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.6 2003/04/08 15:55:22 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #if !defined(WIN32)
@@ -209,6 +209,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          double temp_PixelSpacingx, temp_PixelSpacingy;
          unsigned short temp_Rows, temp_Columns;
          unsigned short temp_BitsAllocated;
+         unsigned short temp_PixelRepresentation;
 
          DcmStack SliceThickness_stack;
          DcmElement* SliceThickness_obj = search_object(0x0018, 0x0050, *(temp_dicom_file.fileformat), SliceThickness_stack); // SliceThickness
@@ -251,6 +252,15 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             temp_BitsAllocated = 16;
          }
 
+         // we need this so we know if our output has to be short or unsigned short
+         DcmStack PixelRepresentation_stack;
+         DcmElement* PixelRepresentation_obj = search_object(0x0028, 0x0103, *(temp_dicom_file.fileformat), PixelRepresentation_stack); // PixelRepresentation
+         if (!PixelRepresentation_obj || PixelRepresentation_obj->getUint16(temp_PixelRepresentation) != EC_Normal)
+         {
+            vtkWarningMacro(<<"Could not read PixelRepresentation from " << temp_dicom_file.filename.c_str() << ", assuming 1 (signed).");
+            temp_PixelRepresentation = 1;
+         }
+
          // then some arb shit...
          char *StudyDescription_cp;
          DcmStack StudyDescription_stack;
@@ -276,6 +286,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          temp_series_instance.Rows = temp_Rows;
          temp_series_instance.Columns = temp_Columns;
          temp_series_instance.BitsAllocated = temp_BitsAllocated;
+         temp_series_instance.PixelRepresentation = temp_PixelRepresentation;
 
          // make sure the dicom_files vector is empty
          temp_series_instance.dicom_files.clear();
@@ -347,7 +358,15 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    // and setup the WholeExtent to be the same as the extent (Extent is what's in mem, WholeExtent is everything)
    output->SetWholeExtent(0, DataDimensions[0]-1, 0, DataDimensions[1]-1, 0, DataDimensions[2]-1);
    // we always set short... if we get 8 bit data, that will get casted to short
-   output->SetScalarType(VTK_SHORT);
+   if ((*si_iterator).PixelRepresentation)
+   {
+      output->SetScalarType(VTK_SHORT);
+   }
+   else
+   {
+      output->SetScalarType(VTK_UNSIGNED_SHORT);
+   }
+
    //output->SetScalarType((*si_iterator).BitsAllocated == 8 ? VTK_UNSIGNED_CHAR : VTK_SHORT);
    // and we will have only one scalar component
    output->SetNumberOfScalarComponents(1);
@@ -392,7 +411,8 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
 
 
    // find a pointer that we can use
-   short* pixels = (short*)output->GetScalarPointer();
+   short* spixels = (short*)output->GetScalarPointer();
+   unsigned short *uspixels = (unsigned short*)output->GetScalarPointer();
    
    int numpixels = DataDimensions[0] * DataDimensions[1] * DataDimensions[2];
    int numpixels_perslice = DataDimensions[0] * DataDimensions[1];
@@ -408,7 +428,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
    int last_progress_i = -1;
    for (unsigned i = 0; i < dicom_files_p->size(); i++)
    {
-      cout << "starting slice " << i << " of " << dicom_files_p->size() - 1 << endl;
+      //cout << "starting slice " << i << " of " << dicom_files_p->size() - 1 << endl;
 
       double progress = (double)i / (double)dicom_files_p->size();
       // stupid way of only updating every 10 percent
@@ -518,8 +538,8 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                {
                   // HU = slope * SV + intercept
                   // where: SV = actual unsigned int >> (highbit + 1 - bitsstored) && all valid stored bits on;
-                  *(pixels + numpixels_perslice * i + pidx) =
-                     (short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_uc + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
+                  *(uspixels + numpixels_perslice * i + pidx) =
+                     (unsigned short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_uc + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
                }
             }
             else // 16 BitsAllocated
@@ -529,8 +549,8 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                {
                   // HU = slope * SV + intercept
                   // where: SV = actual unsigned int >> (highbit + 1 - bitsstored) && all valid stored bits on;
-                  *(pixels + numpixels_perslice * i + pidx) =
-                     (short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
+                  *(uspixels + numpixels_perslice * i + pidx) =
+                     (unsigned short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
                }
 
             }
@@ -546,7 +566,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                   temp_bits = (*(dicom_pixeldata_pointer_uc + pidx) >> rshift_factor) & validbits_mask;
                   temp_bits_ptr = (char*)(&temp_bits); // here we get two's complement for free
                   // and now we can get the HU again
-                  *(pixels + numpixels_perslice * i + pidx) = 
+                  *(spixels + numpixels_perslice * i + pidx) = 
                      (short)INTROUND(temp_RescaleSlope * (double)(*temp_bits_ptr) + temp_RescaleIntercept);
                }
             }
@@ -561,7 +581,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                   temp_bits = (*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask;
                   temp_bits_ptr = (short*)(&temp_bits); // here we get two's complement for free
                   // and now we can get the HU again
-                  *(pixels + numpixels_perslice * i + pidx) = 
+                  *(spixels + numpixels_perslice * i + pidx) = 
                      (short)INTROUND(temp_RescaleSlope * (double)(*temp_bits_ptr) + temp_RescaleIntercept);
                } // for (int pidx = 0; ...
                cout << "LAST pixel: " << numpixels_perslice * i + pidx - 1 << endl;
@@ -684,7 +704,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.5 2003/03/07 01:54:14 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.6 2003/04/08 15:55:22 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
