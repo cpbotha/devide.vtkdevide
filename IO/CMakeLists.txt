@@ -4,10 +4,13 @@
 # Here is where you can add the name of your local IO classes.
 #
 
-SOURCE_FILES (IO_SRCS
-  vtkHDFVolumeReader
-  vtkDICOMVolumeReader
-)
+IF (HAS_HDF)
+   SET (IO_SRCS vtkHDFVolumeReader)
+ENDIF (HAS_HDF)
+
+IF (HAS_DCMTK)
+   SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader)
+ENDIF (HAS_DCMTK)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
@@ -17,6 +20,7 @@ SOURCE_FILES (IO_SRCS
 #
 
 ADD_LIBRARY (vtkdscasIO IO_SRCS)
+
 
 #
 # Create the vtkdscasIO Tcl library
@@ -78,15 +82,20 @@ ENDIF (VTK_WRAP_JAVA AND VTKDSCAS_WRAP_JAVA)
 # Link to VTK and local
 #
 
-INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH} ${HDF_INCLUDE_PATH})
-INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/ofstd)
-LINK_DIRECTORIES(${DCMTK_LIB_PATH} ${HDF_LIB_PATH})
-
 LINK_LIBRARIES (
   vtkdscasIO
   vtkIO
-  mfhdf
-  df
-  dcmdata
-  ofstd
 )
+
+IF (HAS_HDF)
+   INCLUDE_DIRECTORIES(${HDF_INCLUDE_PATH})
+   LINK_DIRECTORIES(${HDF_LIB_PATH})
+   LINK_LIBRARIES (mfhdf df)
+ENDIF (HAS_HDF)
+
+IF (HAS_DCMTK)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH})
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/ofstd)
+   LINK_DIRECTORIES(${DCMTK_LIB_PATH})
+   LINK_LIBRARIES(dcmdata ofstd)
+ENDIF (HAS_DCMTK)

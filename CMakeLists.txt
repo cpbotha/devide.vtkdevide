@@ -2,7 +2,7 @@
 # Set the project name.
 #
 
-PROJECT (VTKCPBOTHA)
+PROJECT (VTKDSCAS)
 
 #
 # Assume everything is set up correctly for build.
@@ -11,19 +11,19 @@ PROJECT (VTKCPBOTHA)
 # In that case, the build won't be done.
 #
 
-SET (VTKCPBOTHA_CAN_BUILD 1)
+SET (VTKDSCAS_CAN_BUILD 1)
 
 #
 # Load CMake commands that you probably should not modify.
 #
 
-INCLUDE (${VTKCPBOTHA_SOURCE_DIR}/CMakeOptions.cmake)
+INCLUDE (${VTKDSCAS_SOURCE_DIR}/CMakeOptions.cmake)
 
 #
 # If everything is OK, then go into the sub directories and build.
 #
 
-IF (VTKCPBOTHA_CAN_BUILD)
+IF (VTKDSCAS_CAN_BUILD)
 
   #
   # Here is where you can list the sub-directories holding your local 
@@ -35,15 +35,14 @@ IF (VTKCPBOTHA_CAN_BUILD)
   SUBDIRS (
     IO
     Rendering
-#    Testing
   )
 
   #
   # You can put your include path(s) here
   #
 
-  INCLUDE_DIRECTORIES(${VTKCPBOTHA_SOURCE_DIR}/IO)
-  INCLUDE_DIRECTORIES(${VTKCPBOTHA_SOURCE_DIR}/Testing)  
+  INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/IO)
+  INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/Testing)  
   
   #
   # are we going to build the examples?
@@ -62,10 +61,10 @@ IF (VTKCPBOTHA_CAN_BUILD)
   #
 
   CONFIGURE_FILE(
-    ${VTKCPBOTHA_SOURCE_DIR}/vtkcpbothaConfigure.h.in
-    ${VTKCPBOTHA_BINARY_DIR}/vtkcpbothaConfigure.h
+    ${VTKDSCAS_SOURCE_DIR}/vtkdscasConfigure.h.in
+    ${VTKDSCAS_BINARY_DIR}/vtkdscasConfigure.h
   )
 
-  INCLUDE_DIRECTORIES(${VTKCPBOTHA_BINARY_DIR})
+  INCLUDE_DIRECTORIES(${VTKDSCAS_BINARY_DIR})
 
-ENDIF (VTKCPBOTHA_CAN_BUILD)
+ENDIF (VTKDSCAS_CAN_BUILD)
