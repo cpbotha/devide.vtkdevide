@@ -5,6 +5,7 @@
 #
 
 SET (Imaging_SRCS
+     vtkImageGreyscaleReconstruct3D.cxx
      vtkImageHistogram2D.cxx)
 
 # --------------------------------------------------------------------------
