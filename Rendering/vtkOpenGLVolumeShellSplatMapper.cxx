@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.43 2004/07/02 10:22:30 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.44 2004/07/05 10:07:05 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -85,8 +85,8 @@ void DrawVoxelSplat(ShellVoxel* Dptr,
 
    if (vtkShellExtractor::shell_noc_visibility_lut[octantIdx][Dptr->nbrOCode])
    {
-      if (Dptr->Red != prev_colour[0] || Dptr->Green != prev_colour[1] ||
-          Dptr->Blue != prev_colour[2] || Dptr->Opacity != prev_colour[3])
+   if (Dptr->Red != prev_colour[0] || Dptr->Green != prev_colour[1] ||
+       Dptr->Blue != prev_colour[2] || Dptr->Opacity != prev_colour[3])
       {
          prev_colour[0] = Dptr->Red;
          prev_colour[1] = Dptr->Green;
