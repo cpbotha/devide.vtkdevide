@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.10 2004/06/30 10:02:13 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.11 2004/07/01 13:12:07 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -116,6 +116,12 @@ public vtkVolumeMapper
     double *camVoxelPos, int xdim, int ydim, int zdim,
     const float& ambient, const float& diffuse,
     float* u, float* v);
+  
+  void ippbtfFaceOnX(
+    double *camVoxelPos, int xdim, int ydim, int zdim,
+    const float& ambient, const float& diffuse,
+    float* u, float* v);
+  
 
   /**
    * Internal method used by Render() to render sub-volumes.

@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.14 2004/06/30 10:02:13 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.15 2004/07/01 13:12:07 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -464,12 +464,18 @@ static void ExtractShell(T* data_ptr,
                 {
                 Py[PyIdx] = vectorDy->size() - 1;
                 }
+
               // then decrement the run-length
               --pWallZY[PxIdx + 1];
               if (pWallZY[PxIdx + 1] == 0)
                 {
                 // so we'll skip this next time (it's done!)
                 pWallZY[PxIdx] = -1;
+                }
+              else
+                {
+                // there are still voxels left, so we can increment this
+                ++pWallZY[PxIdx];
                 }
               } // if (temp_sv.x == x)
               
@@ -783,7 +789,9 @@ void vtkShellExtractor::Update(void)
         for (unsigned i = 0; i < vectorDz.size(); i++)
             memcpy(this->Dz + i, &(vectorDz[i]), sizeof(ShellVoxel));
         
-        cout << vectorDx.size() << " shell voxels found." << endl;
+        cout << vectorDx.size() << " x shell voxels found." << endl;
+        cout << vectorDy.size() << " y shell voxels found." << endl;
+        cout << vectorDz.size() << " z shell voxels found." << endl;        
 
         // stop doing stuff
         this->ExtractTime.Modified();
