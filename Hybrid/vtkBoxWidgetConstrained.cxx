@@ -20,13 +20,15 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.5 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.6 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
 {
-  this->ConstrainToPlaneOff();
-  this->SetConstrainPlaneNormal(0.0, 0.0, 0.0);
+  // default: don't constrain
+  this->SetConstraintType(0);
+  // vector is set to some default value
+  this->SetConstraintVector(0.0, 0.0, 0.0);
 }
 
 // Loop through all points and translate them
@@ -39,22 +41,34 @@ void vtkBoxWidgetConstrained::Translate(double *p1, double *p2)
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
-  // BEGIN cpbotha
+  // constrained to line  
+  if (this->GetConstraintType() == 1)
+    {
+    // calculate the component of the motion vector that is collinear
+    // with the constraintvector
+    double goodMagnitude = vtkMath::Dot(v, this->ConstraintVector);
+    for (int i; i < 3; i++)
+      {
+      // that will be the new motion vector!
+      v[i] = goodMagnitude * this->ConstraintVector[i];
+      }
 
-  // if we're constrained, constrain man!
-  if (this->ConstrainToPlane)
-  {
-	double bdp = vtkMath::Dot(v, this->ConstrainPlaneNormal);
-	double badvector[3];
-	for (int i=0; i<3; i++)
-	{
-		badvector[i] = bdp * this->ConstrainPlaneNormal[i];
-		v[i] -= badvector[i];
-	}
-  }
+    }
+  if (this->GetConstraintType() == 2)
+    {
+    // calculate the component of the motion vector that is collinear
+    // with the constraintvector
+    double bdp = vtkMath::Dot(v, this->ConstraintVector);
+    double badvector[3];
+    for (int i=0; i<3; i++)
+      {
+      badvector[i] = bdp * this->ConstraintVector[i];
+      // this has to be substracted from the motion vector, as we
+      // only tolerate motion parallel to the constraintplane
+      v[i] -= badvector[i];
+      }
+    }
 
-  // END cpbotha
-  
   // Move the corners
   for (int i=0; i<8; i++)
     {
@@ -78,49 +92,42 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
-  // BEGIN cpbotha
-
   // if we're constrained, constrain man!
-  if (this->ConstrainToPlane)
-  {
-	double blaat[3];
-	vtkMath::Cross(vpn, v, blaat);
+  if (this->ConstraintType)
+    {
+    double blaat[3];
+    vtkMath::Cross(vpn, v, blaat);
 
-	double bdp = vtkMath::Dot(v, this->ConstrainPlaneNormal);
-	double badvector[3];
-	for (int i=0; i<3; i++)
-	{
-		badvector[i] = bdp * this->ConstrainPlaneNormal[i];
-		v[i] -= badvector[i];
-		axis[i] = this->ConstrainPlaneNormal[i];
-	}
+    double bdp = vtkMath::Dot(v, this->ConstraintVector);
+    double badvector[3];
+    for (int i=0; i<3; i++)
+      {
+      badvector[i] = bdp * this->ConstraintVector[i];
+      v[i] -= badvector[i];
+      axis[i] = this->ConstraintVector[i];
+      }
 
 	
-	if (vtkMath::Dot(axis, blaat) < 0)
-	{
-		for (int i=0; i<3; i++)
-		{
-			axis[i] *= -1;
-		}
-	}
+    if (vtkMath::Dot(axis, blaat) < 0)
+      {
+      for (int i=0; i<3; i++)
+        {
+        axis[i] *= -1;
+        }
+      }
 
-  }
-  else
-  {
-
-  // END cpbotha
-
-
-  // Create axis of rotation and angle of rotation
-  vtkMath::Cross(vpn,v,axis);
-  if ( vtkMath::Normalize(axis) == 0.0 )
-    {
-    return;
     }
+  else
+    {
 
-  // BEGIN cpbotha
-  }
-  // END cpbotha
+    // Create axis of rotation and angle of rotation
+    vtkMath::Cross(vpn,v,axis);
+    if ( vtkMath::Normalize(axis) == 0.0 )
+      {
+      return;
+      }
+
+    }
 
   int *size = this->CurrentRenderer->GetSize();
   double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);

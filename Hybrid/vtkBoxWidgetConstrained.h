@@ -23,15 +23,11 @@ public:
   static vtkBoxWidgetConstrained *New();
   vtkTypeRevisionMacro(vtkBoxWidgetConstrained,vtkBoxWidget);
 
-  // BEGIN cpbotha
-  // are we constrained to a plane?
-  vtkSetMacro(ConstrainToPlane, int);
-  vtkGetMacro(ConstrainToPlane, int);
-  vtkBooleanMacro(ConstrainToPlane, int);
+  vtkSetMacro(ConstraintType, int);
+  vtkGetMacro(ConstraintType, int);
 
-  vtkSetVector3Macro(ConstrainPlaneNormal, double);
-  vtkGetVector3Macro(ConstrainPlaneNormal, double);
-  // END cpbotha
+  vtkSetVector3Macro(ConstraintVector, double);
+  vtkGetVector3Macro(ConstraintVector, double);
 
 protected:
   vtkBoxWidgetConstrained();
@@ -39,11 +35,16 @@ protected:
   // Methods to manipulate the hexahedron.
   virtual void Translate(double *p1, double *p2);
   virtual void Rotate(int X, int Y, double *p1, double *p2, double *vpn);
-  // BEGIN cpbotha
-  // Set this if you want motion to be constrained to the given plane
-  int ConstrainToPlane;
-  double ConstrainPlaneNormal[3];
-  // END cpbotha
+
+  /// ConstraintType determines how exactly the box motion will be constrained.
+  /// 0 - no constraint
+  /// 1 - constrain to line
+  /// 2 - constrain to plane
+  int ConstraintType;
+  /// ConstraintVector defines the constraint geometry
+  /// ConstraintType == 1: ConstraintVector is a line
+  /// ConstraintType == 2: ConstraintVector is a plane normal
+  double ConstraintVector[3];
 
 private:
   vtkBoxWidgetConstrained(const vtkBoxWidgetConstrained&);  //Not implemented
