@@ -1,6 +1,6 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2002 by Charl P. Botha 
 // http://cpbotha.net/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.2 2003/04/29 19:59:00 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 #ifndef __vtkOpenGLVolumeShellSplatMapper_h
@@ -21,8 +21,8 @@ class VTK_DSCAS_RENDERING_EXPORT vtkOpenGLVolumeShellSplatMapper :
 public vtkVolumeMapper
 {
 public:
+   static vtkOpenGLVolumeShellSplatMapper* New();   
    vtkTypeMacro(vtkOpenGLVolumeShellSplatMapper, vtkVolumeMapper);
-   static vtkOpenGLVolumeShellSplatMapper* New();
    /**
     * Set lower opacity bound for shell extraction.  This also calls
     * this->Modified() to indicate that the current output is invalidated.
