@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.27 2004/01/09 22:46:22 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.28 2004/01/14 18:51:47 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -2663,41 +2663,54 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 #ifdef SSM_VERBOSE_OUTPUT          
          cout << "EDGE-ON" << endl;
 #endif         
-         int edge_idx = 0;
+         octantIdx = 0;
+
          if (zin)
          {
             ps = vtkMath::Round(camVoxelPos[2]);
             ps = (ps >= zdim) ? zdim - 1 : ps;
+
+            // check on which side of the middel ps is
+            if (ps > zdim - ps)
+                octantIdx |= 0x4;
+            
             if (camVoxelPos[0] >= xdim)
-               edge_idx |= 0x1;
+               octantIdx |= 0x1;
             if (camVoxelPos[1] >= ydim)
-               edge_idx |= 0x2;
-            // this is sorted, really
-            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
-            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+               octantIdx |= 0x2;
          }
          else if (yin)
          {
             pr = vtkMath::Round(camVoxelPos[1]);
             pr = (pr >= ydim) ? ydim - 1 : pr;
+
+            if (pr > ydim - pr)
+                octantIdx |= 0x2;
+            
             if (camVoxelPos[0] >= xdim)
-               edge_idx |= 0x1;
+               octantIdx |= 0x1;
             if (camVoxelPos[2] >= zdim)
-               edge_idx |= 0x4;
-            this->DrawVoxels(0, xdim, 0, pr + 1, 0, zdim, edge_idx + 2, D, P, inputDims[1], ambient, diffuse, u, v);
-            this->DrawVoxels(0, xdim, pr + 1, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+               octantIdx |= 0x4;
          }
          else // xin
          {
             pq = vtkMath::Round(camVoxelPos[0]);
             pq = (pq >= xdim) ? xdim - 1 : pq;
+
+            if (pq > xdim - pq)
+                octantIdx |= 0x1;
+            
             if (camVoxelPos[1] >= ydim)
-               edge_idx |= 0x2;
+               octantIdx |= 0x2;
             if (camVoxelPos[2] >= zdim)
-               edge_idx |= 0x4;
-            this->DrawVoxels(0, pq + 1,      0, ydim, 0, zdim, edge_idx + 1, D, P, inputDims[1], ambient, diffuse, u, v);
-            this->DrawVoxels(pq + 1, xdim,   0, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+               octantIdx |= 0x4;
          }
+
+         this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2],
+                          octantIdx, D, P, inputDims[1], ambient, diffuse,
+                          u, v);
+
+         
       } // EDGE-ON
 
       // corner-on
