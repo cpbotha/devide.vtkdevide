@@ -16,11 +16,11 @@
 
 #include "vtkGarbageCollector.h"
 #include "vtkMaskPoints.h"
-#include "vtkMultiProcessController.h"
+//#include "vtkMultiProcessController.h"
 #include "vtkObjectFactory.h"
 #include "vtkPolyData.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.3 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.4 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 //-----------------------------------------------------------------------------
@@ -30,8 +30,8 @@ vtkPVGlyphFilter::vtkPVGlyphFilter()
   this->SetScaleModeToScaleByVector();
   this->MaskPoints = vtkMaskPoints::New();
   this->MaximumNumberOfPoints = 5000;
-  this->NumberOfProcesses = vtkMultiProcessController::GetGlobalController() ?
-    vtkMultiProcessController::GetGlobalController()->GetNumberOfProcesses() : 1;
+  //this->NumberOfProcesses = vtkMultiProcessController::GetGlobalController() ?
+  //  vtkMultiProcessController::GetGlobalController()->GetNumberOfProcesses() : 1;
   this->UseMaskPoints = 1;
 }
 
@@ -75,6 +75,8 @@ void vtkPVGlyphFilter::Execute()
     // Although this is not perfectly process invariant, it is better
     // than we had before (divide by number of processes).
     vtkIdType totalNumPts = numPts;
+    
+#if 0
     vtkMultiProcessController *controller;
     controller = vtkMultiProcessController::GetGlobalController();
     if (controller)
@@ -105,6 +107,7 @@ void vtkPVGlyphFilter::Execute()
       maxNumPts = (vtkIdType)(
         (double)(maxNumPts)*(double)(numPts)/(double)(totalNumPts));
       }
+#endif
 
     maxNumPts = (maxNumPts < 1) ? 1 : maxNumPts;
     this->MaskPoints->SetMaximumNumberOfPoints(maxNumPts);
@@ -164,5 +167,5 @@ void vtkPVGlyphFilter::PrintSelf(ostream& os, vtkIndent indent)
 
   os << indent << "UseMaskPoints: " << (this->UseMaskPoints?"on":"off") << endl;
 
-  os << indent << "NumberOfProcesses: " << this->NumberOfProcesses << endl;
+  //os << indent << "NumberOfProcesses: " << this->NumberOfProcesses << endl;
 }

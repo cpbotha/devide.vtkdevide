@@ -44,7 +44,7 @@ public:
   
   // Description:
   // Get the number of processes used to run this filter.
-  vtkGetMacro(NumberOfProcesses, int);
+  //vtkGetMacro(NumberOfProcesses, int);
   
   // Description:
   // Set/get whether to mask points
@@ -64,7 +64,7 @@ protected:
   
   vtkMaskPoints *MaskPoints;
   int MaximumNumberOfPoints;
-  int NumberOfProcesses;
+  //int NumberOfProcesses;
   int UseMaskPoints;
   
   virtual void ReportReferences(vtkGarbageCollector*);
