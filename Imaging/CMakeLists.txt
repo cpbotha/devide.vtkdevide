@@ -6,7 +6,8 @@
 
 SET (Imaging_SRCS
      vtkImageGreyscaleReconstruct3D.cxx
-     vtkImageHistogram2D.cxx)
+     vtkImageHistogram2D.cxx
+     vtkImageBacktracker.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
