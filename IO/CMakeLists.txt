@@ -12,6 +12,8 @@ IF (HAS_DCMTK)
    SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
 ENDIF (HAS_DCMTK)
 
+SET (IO_SRCS ${IO_SRCS} vtkIVCONDriver.cxx)
+
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
 
