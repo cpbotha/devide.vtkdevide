@@ -3,7 +3,7 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 
-vtkCxxRevisionMacro(vtkInteractorStyleTrackballActorConstrained, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkInteractorStyleTrackballActorConstrained, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkInteractorStyleTrackballActorConstrained);
 
 vtkInteractorStyleTrackballActorConstrained::vtkInteractorStyleTrackballActorConstrained() : vtkInteractorStyleTrackballActor()
@@ -18,7 +18,7 @@ vtkInteractorStyleTrackballActorConstrained::~vtkInteractorStyleTrackballActorCo
    this->ActiveProps.clear();
 }
 
-void vtkInteractorStyleTrackballActor::OnLeftButtonDown()
+void vtkInteractorStyleTrackballActorConstrained::OnLeftButtonDown()
 {
    int x = this->Interactor->GetEventPosition()[0];
    int y = this->Interactor->GetEventPosition()[1];
@@ -44,7 +44,7 @@ void vtkInteractorStyleTrackballActor::OnLeftButtonDown()
    }
 }
 
-void vtkInteractorStyleTrackballActor::OnMiddleButtonDown()
+void vtkInteractorStyleTrackballActorConstrained::OnMiddleButtonDown()
 {
    int x = this->Interactor->GetEventPosition()[0];
    int y = this->Interactor->GetEventPosition()[1];
@@ -66,7 +66,7 @@ void vtkInteractorStyleTrackballActor::OnMiddleButtonDown()
    }
 }
 
-void vtkInteractorStyleTrackballActor::OnRightButtonDown()
+void vtkInteractorStyleTrackballActorConstrained::OnRightButtonDown()
 {
    int x = this->Interactor->GetEventPosition()[0];
    int y = this->Interactor->GetEventPosition()[1];

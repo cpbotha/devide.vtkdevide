@@ -27,6 +27,8 @@ The vtkdscas config
 
 - Add wsock32.lib and netapi32.lib to the standard libraries
   (CMAKE_STANDARD_LIBRARIES).  Both HDF and DCMTK require this.
+  NOTE: this is not necessary anymore; I've changed the cmake config so it's
+  clever enough to do this by itself.
 
 - Use the dlllib subdirectory of the HDF installation: VTK and also vtkdscas
   are compiled with /MD (multi-threaded and DLL support)
