@@ -1,4 +1,4 @@
-# $Id: shell_render_aneurism.py,v 1.2 2003/03/08 00:19:56 cpbotha Exp $
+# $Id: shell_render_aneurism.py,v 1.3 2004/01/09 17:54:43 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -23,6 +23,14 @@ def ce_cb(obj, evt_name):
 	    crm = 0
         splatmapper.SetRenderMode(crm)
         print "rendermode switched to %d" % (crm)
+
+    if obj.GetKeyCode() == 'i':
+        com = splatmapper.GetPerspectiveOrderingMode()
+	com = com + 1
+	if com > 2:
+	    com = 0
+        splatmapper.SetPerspectiveOrderingMode(com)
+        print "ordering mode switched to %d" % (com)
 
     elif obj.GetKeyCode() == '\'':
         cur = splatmapper.GetEllipsoidDiameter()
@@ -108,6 +116,15 @@ ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
 #ren.GetActiveCamera().ParallelProjectionOn()
+
+cubeAxesActor2d = vtk.vtkCubeAxesActor2D()
+cubeAxesActor2d.SetFlyModeToOuterEdges()
+ren.AddActor(cubeAxesActor2d)
+cubeAxesActor2d.VisibilityOn()
+reader.Update()
+cubeAxesActor2d.SetBounds(reader.GetOutput().GetBounds())
+cubeAxesActor2d.SetCamera(ren.GetActiveCamera())
+
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)

@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.5 2003/12/30 15:11:36 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.6 2004/01/09 17:54:43 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -123,6 +123,13 @@ ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
 #ren.GetActiveCamera().ParallelProjectionOn()
+
+cubeAxesActor2d = vtk.vtkCubeAxesActor2D()
+cubeAxesActor2d.SetFlyModeToOuterEdges()
+ren.AddActor(cubeAxesActor2d)
+cubeAxesActor2d.VisibilityOn()
+cubeAxesActor2d.SetBounds(reader.GetOutput().GetBounds())
+cubeAxesActor2d.SetCamera(ren.GetActiveCamera())
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)
