@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.31 2004/06/22 12:09:23 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.32 2004/06/22 14:27:01 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1235,7 +1235,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                     else
                         xInterleaved = false;
 
-                    smallx = initsmallx;                    
+                    smallx = initsmallx;
                     
                     PidxBY = (z * ydim + bigy) * 2;
                     if (P[PidxBY] != -1)
