@@ -5,6 +5,7 @@
 #
 
 SET (Imaging_SRCS
+     vtkHistogramLookupTable.cxx
      vtkImageBorderMask.cxx
      vtkImageGreyscaleReconstruct3D.cxx
      vtkImageHistogram2D.cxx

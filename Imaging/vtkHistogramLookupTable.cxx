@@ -4,8 +4,10 @@
 #include "vtkImageProgressIterator.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.4 $");
+vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.5 $");
 vtkStandardNewMacro(vtkHistogramLookupTable);
+
+#define OUTPUT_TYPE signed short
 
 //----------------------------------------------------------------------------
 vtkHistogramLookupTable::vtkHistogramLookupTable()
@@ -37,15 +39,15 @@ void vtkHistogramLookupTable::ExecuteInformation(
     return;
     }
   
-  // the output has type VTK_SIGNED_SHORT and has only one component,
+  // the output has type VTK_SHORT and has only one component,
   // but otherwise looks the same as the input
   outData->SetNumberOfScalarComponents(1);
-  outData->SetScalarType(VTK_SIGNED_SHORT);
+  outData->SetScalarType(VTK_SHORT);
   
-  outData->SetOrigin(inDatas[0]->GetOrigit());
+  outData->SetOrigin(inDatas[0]->GetOrigin());
   outData->SetSpacing(inDatas[0]->GetSpacing());
     
-  //outData->SetExtent(inDatas[0]->GetExtent());
+  outData->SetExtent(outData->GetUpdateExtent());
   outData->SetWholeExtent(inDatas[0]->GetWholeExtent());
 
 }
@@ -59,7 +61,7 @@ void vtkHistogramLookupTable::ComputeInputUpdateExtent(int inExt[6],
     {
     // for every output voxel we need the corresponding input voxel
     // neat huh?
-    memcpy(inExt,outExt,size(int)*6);
+    memcpy(inExt,outExt,sizeof(int)*6);
     }
   else
     {
@@ -80,76 +82,60 @@ void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
                                     I1T *, I2T *)
 
 {
+  in1Data->Update();
+  in2Data->Update();
   
   vtkImageIterator<I1T> in1It(in1Data, outExt);
-  vtkImageIterator<I2T> in2It(in2Data, outExt);
 
   // we're single-threaded, so we can pass thread-id 0
-  vtkImageProgressIterator<unsigned short> outIt(outData, outExt, self, 0);
+  vtkImageProgressIterator<OUTPUT_TYPE> outIt(outData, outExt, self, 0);
+  I1T tempVal1, tempVal2;
 
+  int histogramExtent[6];
+  in2Data->GetWholeExtent(histogramExtent);
+  double histogramSpacing[3];
+  in2Data->GetSpacing(histogramSpacing);
+  double histogramOrigin[3];
+  in2Data->GetOrigin(histogramOrigin);
+  
+  int bins1 = histogramExtent[1] - histogramExtent[0] + 1;
+  int bins2 = histogramExtent[3] - histogramExtent[2] + 1;
+  double binWidth1 = histogramSpacing[0];
+  double binWidth2 = histogramSpacing[1];
+  double range1min = histogramOrigin[0];
+  double range2min = histogramOrigin[1];
+
+  unsigned int bin1, bin2;
+  I2T *in2Ptr = (I2T *)(in2Data->GetScalarPointer());
+  
   while (!outIt.IsAtEnd())
     {
-    
-    } // while (!outIt.IsAtEnd()) ...
+    I1T *inSI = in1It.BeginSpan();
+    OUTPUT_TYPE *outSI = outIt.BeginSpan();
+    OUTPUT_TYPE *outSIEnd = outIt.EndSpan();
+    while (outSI < outSIEnd)
+      {
+      tempVal1 = *inSI;
+      ++inSI; // go to next scalar component
+      tempVal2 = *inSI;
+      ++inSI; // go to next pair
 
-  
-    // store these ranges in our own ivars as well!
-    double in1range[2], in2range[2];
-    in1Data->GetScalarRange(in1range);
-    in2Data->GetScalarRange(in2range);
-
-    int input1bins = self->GetInput1Bins();
-    int input2bins = self->GetInput2Bins();
-
-    // clear output data
-    memset(outPtr, 0, input1bins * input2bins * sizeof(double));
-
-    // we add 1 to the range, because max - min gives the number of
-    // intervals, not the number of elements, and we are binning
-    // elements, not intervals
-    double in1binWidth = (in1range[1] - in1range[0] + 1) / input1bins;
-    double in2binWidth = (in2range[1] - in2range[0] + 1) / input2bins;
-
-    // calculate number of elements
-    unsigned long noe = in1Data->GetDimensions()[0] *
-        in1Data->GetDimensions()[1] * in1Data->GetDimensions()[2];
-
-    double progress = 0.0;
-    double numProgressSteps = 20;
-    double progressStep = 1.0 / numProgressSteps;
-    int noeProgressStep = (int)(noe / numProgressSteps);
-
-    T in1val, in2val;
-    unsigned bin1, bin2;
-    long MaxSamplesPerBin = self->GetMaxSamplesPerBin();
-    int ClipSamples = self->GetClipSamples();
-    for (unsigned long i = 0; i < noe; i++)
-    {
-        if (i % noeProgressStep == 0)
+      // now check where in the histogram tempVal1 and tempVal2 are
+      bin1 = (unsigned)((tempVal1 - range1min) / binWidth1);
+      bin2 = (unsigned)((tempVal2 - range2min) / binWidth2);
+      if (*(in2Ptr + bin2 * bins1 + bin1) > 0)
         {
-            self->UpdateProgress(progress);
-            progress += progressStep;
-            // progress will end up one step higher than 1.0, but that's
-            // okay, because we won't be using it then.
+        *outSI = 1;
         }
-        
-        in1val = *in1Ptr;
-        in2val = *in2Ptr;
-        
-        bin1 = (unsigned)((in1val - in1range[0]) / in1binWidth);
-        bin2 = (unsigned)((in2val - in2range[0]) / in2binWidth);
-
-        // increment the correct bin
-        if (!ClipSamples ||
-            *(outPtr + bin2 * input1bins + bin1) < MaxSamplesPerBin)
-          {
-            *(outPtr + bin2 * input1bins + bin1) += 1;
-          }
-
-        in1Ptr++;
-        in2Ptr++;
-
-    }
+      else
+        {
+        *outSI = 0;
+        }
+      ++outSI;
+      } // while (outSI < outSIEnd)
+    in1It.NextSpan();
+    outIt.NextSpan();
+    } // while (!outIt.IsAtEnd()) ...
 
     self->UpdateProgress(1.0);
 }
@@ -162,13 +148,13 @@ void vtkHistogramLookupTableExecute1(vtkHistogramLookupTable *self,
                                      T *)
 {
   // second stage of type specialization
-  switch (input1->GetScalarType())
+  switch (input2->GetScalarType())
     {
     vtkTemplateMacro7(vtkHistogramLookupTableExecute, self,
                       input1, input2, output, outExt,
                       static_cast<T *>(0), static_cast<VTK_TT *>(0));
     default:
-      vtkErrorMacro(<< "Execute: Unknown ScalarType for second input.");
+      vtkGenericWarningMacro(<< "Execute: Unknown ScalarType for second input.");
       return;
     }
 }
@@ -194,7 +180,7 @@ void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
     {
     vtkErrorMacro(<< "ExecuteData: The first input has to have at least "
                   << "two components.");
-    return
+    return;
     }
 
   // get metadata across
