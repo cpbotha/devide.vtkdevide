@@ -4,7 +4,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.6 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.7 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
 
 struct coordAndOffset
@@ -28,9 +28,19 @@ vtkImageGreyscaleReconstruct3D::vtkImageGreyscaleReconstruct3D()
 void vtkImageGreyscaleReconstruct3D::ExecuteInformation(
                     vtkImageData **inDatas, vtkImageData *outData)
 {
+  // first check that we can actually use inDatas
+  // We can't check inDatas directly; the array is only valid up to
+  // NumberOfInputs.  Checking this->GetInput(idx) is the correct way.
+  if (this->GetInput(1))
+    {
     inDatas[1]->UpdateInformation();
     // copy all metadata (I hope) from the J marker image
     outData->CopyStructure(inDatas[1]);
+    }
+  else
+    {
+    vtkErrorMacro(<< "Marker input not set.");
+    }
 }
 
 //----------------------------------------------------------------------------
