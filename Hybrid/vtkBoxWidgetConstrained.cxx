@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.9 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.10 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
@@ -103,47 +103,67 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   double axis[3]; //axis of rotation
   double theta; //rotation angle
   int i;
+  double pa1[3], pa2[3];
 
   v[0] = p2[0] - p1[0];
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
-  // constrained to plane
-  if (this->ConstraintType == 2)
+  // constrained to plane OR line
+  if (this->ConstraintType)
     {
-    // FIXME: continue here
-    // center becomes origin on plane (and axis origin is at center)
-    // p1,p2 (relative to center) are projected on to plane
-
     // by definition, the axis is the ConstraintVector
     // we also flatten v to be in the plane
+    // in the case of the line constraint, the line is the axis of rotation
+    // in the case of the plane constraint, the plane normal is rot. axis
+    // i.e. in both cases the ConstraintVector
     double bdp = vtkMath::Dot(v, this->ConstraintVector);
     for (int i=0; i<3; i++)
       {
-      v[i] -= this-ConstraintVector[i] * bdp;
+      v[i] -= this->ConstraintVector[i] * bdp;
       axis[i] = this->ConstraintVector[i];
       }
 
-    // NOTE:
-    // maybe center translated to on-screen, use same trick
-    // as trackballinteractor spinning - okay?
+    // now calculate cross-product of our axis and v
+    double avc[3];
+    vtkMath::Cross(axis, v, avc);
+    vtkMath::Normalize(avc);
+    // this cross-product (along with center) defines two hemispheres
+    // the hemisphere determines the correct rotation direction
+    // so let's determine the hemisphere of p2
+    double p2v[3];
+    for (int i = 0; i < 3; i++)
+      {
+      p2v[i] = p2[i] - center[i];
+      }
+    // if it's incorrect, flip the rotation axis and all is well!
+    // this is simple code, but it did take some thinking :)
+    double hdp = vtkMath::Dot(p2v, avc);
+    if (hdp >= 0)
+      {
+      for (int i = 0; i < 3; i++)
+        {
+        axis[i] *= -1;
+        }
+      }
     }
   else
     {
 
-  // Create axis of rotation and angle of rotation
-  vtkMath::Cross(vpn,v,axis);
-  if ( vtkMath::Normalize(axis) == 0.0 )
-    {
-    return;
+    // Create axis of rotation and angle of rotation
+    vtkMath::Cross(vpn,v,axis);
+    if ( vtkMath::Normalize(axis) == 0.0 )
+      {
+      return;
+      }
+
     }
 
   int *size = this->CurrentRenderer->GetSize();
   double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + 
-              (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
+    (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
   theta = 360.0 * sqrt(l2/((double)size[0]*size[0]+size[1]*size[1]));
 
-    }
 
   //Manipulate the transform to reflect the rotation
   this->Transform->Identity();
