@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.24 2004/01/08 19:27:01 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.25 2004/01/09 17:26:25 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1724,8 +1724,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             } // for (int z = 0...
 
             int curBZBYidx, curBZSYidx, curSZBYidx, curSZSYidx;
-            ShellVoxel **curDpp;
-            int *curxPtr;
+            ShellVoxel **curDppBZBY, **curDppBZSY, **curDppSZBY, **curDppSZSY;
+            int *curxPtrBZBY, *curxPtrBZSY, *curxPtrSZBY, *curxPtrSZSY;
+
 
             for (int x = x0; x != x1; x += xinc)
             {
@@ -1747,87 +1748,112 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
                     // we can start setting this up here (saves time in the
                     // inner loop)
-                    //curBZBYidx = curBZSYidx = bigz * ydim;
-                    //curSZBYidx = curSZSYidx = smallz * ydim;
+                    // BZBY
+                    curBZBYidx = bigz * ydim + bigyStart;
+                    curDppBZBY = DptrMatrix + curBZBYidx;
+                    curxPtrBZBY = xMatrix + curBZBYidx;
+
+                    // BZSY
+                    curBZSYidx = bigz * ydim + initsmally;
+                    curDppBZSY = DptrMatrix + curBZSYidx;
+                    curxPtrBZSY = xMatrix + curBZSYidx;
+
+                    // SZBY
+                    curSZBYidx = smallz * ydim + bigyStart;
+                    curDppSZBY = DptrMatrix + curSZBYidx;
+                    curxPtrSZBY = xMatrix + curSZBYidx;
+
+                    // SZSY
+                    curSZSYidx = smallz * ydim + initsmally;
+                    curDppSZSY = DptrMatrix + curSZSYidx;
+                    curxPtrSZSY = xMatrix + curSZSYidx;
                     
                     for (int bigy = bigyStart; bigy != bigyEnd;
                          bigy += bigyInc)
                     {
-
-                        // FIXME: curBZBYidx, curDpp and curxPtr can WALK!!!
-                        
-                        curBZBYidx = bigz * ydim + bigy;
-                        curDpp = DptrMatrix + curBZBYidx;
-                        curxPtr = xMatrix + curBZBYidx;
-
                         // we want to avoid fetching (**curDpp) EVERY time,
                         // i.e. *curDpp)->x == x would be DEADLY (fetch whole
                         // ShellVoxel struct for EVERY ITERATION
                         // *curxPtr will be -1 if (*curDpp) == NULL, so that's
                         // one check less
-                        if (*curxPtr == x)
+                        if (*curxPtrBZBY == x)
                         {
-                            DrawVoxel(*curDpp, octantIdxBZBY, bigy, bigz,
+                            DrawVoxel(*curDppBZBY, octantIdxBZBY, bigy, bigz,
                                       prev_colour, ambient, diffuse, u, v);
                             // advance to next ShellVoxel*
-                            *curDpp += xinc;
+                            *curDppBZBY += xinc;
                             // also perform caching of x (this will cause
                             // another lookup, but seeing that we've just
                             // done this anyway, the prefetch might have
                             // gotten it
-                            *curxPtr = (*curDpp)->x;
+                            *curxPtrBZBY = (*curDppBZBY)->x;
                             //DptrMatrix[curBZBYidx] += xinc;
                             //DptrMatrix[curBZBYidx] = curDptr + xinc;
                         }
 
+
                         if (zInterleaved)
                         {
-                            curSZBYidx = smallz * ydim + bigy;
-                            curDpp = DptrMatrix + curSZBYidx;
-                            curxPtr = xMatrix + curSZBYidx;
+                            //curSZBYidx = smallz * ydim + bigy;
+                            //curDpp = DptrMatrix + curSZBYidx;
+                            //curxPtr = xMatrix + curSZBYidx;
 
-                            if (*curxPtr == x)
+                            if (*curxPtrSZBY == x)
                             {
-                                DrawVoxel(*curDpp, octantIdxSZBY, bigy, smallz,
+                                DrawVoxel(*curDppSZBY, octantIdxSZBY,
+                                          bigy, smallz,
                                           prev_colour, ambient, diffuse, u, v);
-                                *curDpp += xinc;
-                                *curxPtr = (*curDpp)->x;
+                                *curDppSZBY += xinc;
+                                *curxPtrSZBY = (*curDppSZBY)->x;
                             }
 
                             
                             if (yInterleaved)
                             {
-                                curSZSYidx = smallz * ydim + smally;
-                                curDpp = DptrMatrix + curSZSYidx;
-                                curxPtr = xMatrix + curSZSYidx;
+                                //curSZSYidx = smallz * ydim + smally;
+                                //curDpp = DptrMatrix + curSZSYidx;
+                                //curxPtr = xMatrix + curSZSYidx;
 
-                                if (*curxPtr == x)
+                                if (*curxPtrSZSY == x)
                                 {
-                                    DrawVoxel(*curDpp, octantIdxSZSY,
+                                    DrawVoxel(*curDppSZSY, octantIdxSZSY,
                                               smally, smallz, prev_colour,
                                               ambient, diffuse, u, v);
-                                    *curDpp += xinc;
-                                    *curxPtr = (*curDpp)->x;
+                                    *curDppSZSY += xinc;
+                                    *curxPtrSZSY = (*curDppSZSY)->x;
                                 }
+
+                                // used in this clause, incremented in this
+                                // clause
+                                curDppSZSY -= bigyInc;
+                                curxPtrSZSY -= bigyInc;
                             }
 
+                            // incremented here at the end
+                            // (they are used at the start of this clause)
+                            curDppSZBY += bigyInc;
+                            curxPtrSZBY += bigyInc;
                         } // if (zInterleaved)...
                         
                         if (yInterleaved)
                         {
-                            curBZSYidx = bigz * ydim + smally;
-                            curDpp = DptrMatrix + curBZSYidx;
-                            curxPtr = xMatrix + curBZSYidx;
+                            //curBZSYidx = bigz * ydim + smally;
+                            //curDpp = DptrMatrix + curBZSYidx;
+                            //curxPtr = xMatrix + curBZSYidx;
 
-                            if (*curxPtr == x)
+                            if (*curxPtrBZSY == x)
                             {
-                                DrawVoxel(*curDpp, octantIdxBZSY, smally, bigz,
+                                DrawVoxel(*curDppBZSY, octantIdxBZSY,
+                                          smally, bigz,
                                           prev_colour, ambient, diffuse, u, v);
-                                *curDpp += xinc;
-                                *curxPtr = (*curDpp)->x;
+                                *curDppBZSY += xinc;
+                                *curxPtrBZSY = (*curDppBZSY)->x;
                             }
 
                             smally -= bigyInc;
+
+                            curDppBZSY -= bigyInc;
+                            curxPtrBZSY -= bigyInc;
                         }
                         else
                         {
@@ -1835,6 +1861,10 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                             if (bigy + bigyInc == bigyThresh)
                                 yInterleaved = true;
                         }
+
+                        // BZBY
+                        curDppBZBY += bigyInc;
+                        curxPtrBZBY += bigyInc;
 
                         
                     } // for (int bigy == bigyStart ... INNER LOOP
