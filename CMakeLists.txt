@@ -33,6 +33,7 @@ IF (VTKDSCAS_CAN_BUILD)
   #
 
   SUBDIRS (
+    Common
     Hybrid
     IO
     Rendering
