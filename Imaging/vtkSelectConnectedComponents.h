@@ -68,6 +68,7 @@ protected:
   
   void ComputeInputUpdateExtents(vtkDataObject *out);
 
+  void ExecuteInformation(vtkImageData *inData, vtkImageData *outData);
   void ExecuteData(vtkDataObject *out); 
 private:
   vtkSelectConnectedComponents(const vtkSelectConnectedComponents&);  // Not implemented.

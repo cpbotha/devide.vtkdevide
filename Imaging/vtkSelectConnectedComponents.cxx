@@ -4,7 +4,7 @@
 #include "vtkObjectFactory.h"
 #include "vtkImageData.h"
 
-vtkCxxRevisionMacro(vtkSelectConnectedComponents, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkSelectConnectedComponents, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkSelectConnectedComponents);
 
 //----------------------------------------------------------------------------
@@ -91,6 +91,13 @@ void vtkSelectConnectedComponents::ComputeInputUpdateExtents(vtkDataObject *out)
     input->SetUpdateExtent(input->GetWholeExtent());
     }
 }
+//----------------------------------------------------------------------------
+void vtkSelectConnectedComponents::ExecuteInformation(
+  vtkImageData *inData, vtkImageData *outData)
+{
+  // the default ExecuteInformation sets the same type on the output!
+  outData->SetScalarType(VTK_UNSIGNED_CHAR);
+}
 
 //----------------------------------------------------------------------------
 void vtkSelectConnectedComponents::ExecuteData(vtkDataObject *)
@@ -111,9 +118,10 @@ void vtkSelectConnectedComponents::ExecuteData(vtkDataObject *)
   outData->AllocateScalars();
   
   if (inData->GetScalarType() != VTK_UNSIGNED_LONG ||
-      outData->GetScalarType() != VTK_UNSIGNED_LONG)
+      outData->GetScalarType() != VTK_UNSIGNED_CHAR)
     {
-    vtkErrorMacro("Execute: Both input and output must have scalar type Unsigned Long");
+    vtkErrorMacro("Execute: Input has to be unsigned long, output has to be "
+                  "unsigned char.");
     return;
     }
 
@@ -163,7 +171,10 @@ void vtkSelectConnectedComponents::ExecuteData(vtkDataObject *)
 
     // get scalar value at that point
     inputConnectedValues[seedIdx] = 
-      *((unsigned long *)(inData->GetScalarPointer(seed->Index)));
+      *((unsigned long *)(inData->GetScalarPointer(tempSeed->Index)));
+
+    // and go to the next seed for the next iteration
+    tempSeed = tempSeed->Next;
     }
 
   // now we've built up a list with scalar values at the seed positions
