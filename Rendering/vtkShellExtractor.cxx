@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.7 2003/11/18 16:13:17 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.8 2003/11/18 17:22:47 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -111,16 +111,8 @@ static void ExtractShell(T* data_ptr,
     float dxm2 = 2.0 * x_spacing;
     float dym2 = 2.0 * y_spacing;
     float dzm2 = 2.0 * z_spacing;
-
-    vtkTransform *voxelsToVolumeTransform = vtkTransform::New();
-    voxelsToVolumeTransform->Identity();
-    voxelsToVolumeTransform->Translate(Input->GetOrigin());
-    voxelsToVolumeTransform->Scale(Input->GetSpacing());
-    vtkMatrix4x4 *voxelsToVolumeMatrix = vtkMatrix4x4::New();
-    voxelsToVolumeMatrix->DeepCopy(voxelsToVolumeTransform->GetMatrix());
-    voxelsToVolumeTransform->Delete();
-
-    float tempValue;
+ 
+   float tempValue;
 
     for (int z = 0; z < zlen; z++)
     {
@@ -414,8 +406,6 @@ static void ExtractShell(T* data_ptr,
     } // for (int z = 0 ...
 
     // we're done, yahooooo!
-    // do some cleanup
-    voxelsToVolumeMatrix->Delete();
 }
 
 
