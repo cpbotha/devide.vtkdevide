@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.18 2004/07/02 08:51:51 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.19 2004/11/28 00:50:45 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -77,327 +77,330 @@ static void ExtractShell(T* data_ptr,
                          vector<ShellVoxel>* vectorDy, int Py[],
                          vector<ShellVoxel>* vectorDz, int Pz[])
 {
-    T* dptr = data_ptr;
-    T nbrs[6]; // the six neighbours
-    float gnbrs[6]; // the six neighbours in the gradient volume
-    float nbr_os[6]; // opacities of the six neighbours
-    float t_gradmag; // temp gradient magnitude
+  T* dptr = data_ptr;
+  T nbrs[6]; // the six neighbours
+  float gnbrs[6]; // the six neighbours in the gradient volume
+  float nbr_os[6]; // opacities of the six neighbours
+  float t_gradmag; // temp gradient magnitude
 
-    int nbrv_lt_oh; // flag variable: neighbourhood voxel < OmegaH ?
-    double temp_rgb[3];
+  int nbrv_lt_oh; // flag variable: neighbourhood voxel < OmegaH ?
+  double temp_rgb[3];
 
-    // important variables
-    int xlen = Input->GetDimensions()[0];
-    int ylen = Input->GetDimensions()[1];
-    int zlen = Input->GetDimensions()[2];
-    double x_spacing = Input->GetSpacing()[0];
-    double y_spacing = Input->GetSpacing()[1];
-    double z_spacing = Input->GetSpacing()[2];
-    double x_orig = Input->GetOrigin()[0];
-    double y_orig = Input->GetOrigin()[1];
-    double z_orig = Input->GetOrigin()[2];   
+  // important variables
+  int xlen = Input->GetDimensions()[0];
+  int ylen = Input->GetDimensions()[1];
+  int zlen = Input->GetDimensions()[2];
+  double x_spacing = Input->GetSpacing()[0];
+  double y_spacing = Input->GetSpacing()[1];
+  double z_spacing = Input->GetSpacing()[2];
+  double x_orig = Input->GetOrigin()[0];
+  double y_orig = Input->GetOrigin()[1];
+  double z_orig = Input->GetOrigin()[2];   
 
-    //vector<ShellVoxel> vectorD;
-    // initialise the D vector
-    vectorDx->clear();
-    vectorDy->clear();
-    vectorDz->clear();
+  //vector<ShellVoxel> vectorD;
+  // initialise the D vector
+  vectorDx->clear();
+  vectorDy->clear();
+  vectorDz->clear();
       
-    ShellVoxel temp_sv;
+  ShellVoxel temp_sv;
 
-    // initialise P to all "no shell voxels in these rows (X)"
-    //memset(Px, -1, ylen * zlen * sizeof(int) * 2);
-    //memset(Py, -1, xlen * zlen * sizeof(int) * 2);
-    //memset(Pz, -1, xlen * ylen * sizeof(int) * 2);
+  // initialise P to all "no shell voxels in these rows (X)"
+  //memset(Px, -1, ylen * zlen * sizeof(int) * 2);
+  //memset(Py, -1, xlen * zlen * sizeof(int) * 2);
+  //memset(Pz, -1, xlen * ylen * sizeof(int) * 2);
     
-    int Pidx, prevPidx;
+  int Pidx; 
+  //int prevPidx; // newly commented, check
 
-    int xstep = 1;
-    int ystep = xlen;
-    int zstep = xlen * ylen;
+  int xstep = 1;
+  int ystep = xlen;
+  int zstep = xlen * ylen;
 
-    double dxm2 = 2.0 * x_spacing;
-    double dym2 = 2.0 * y_spacing;
-    double dzm2 = 2.0 * z_spacing;
+  double dxm2 = 2.0 * x_spacing;
+  double dym2 = 2.0 * y_spacing;
+  double dzm2 = 2.0 * z_spacing;
  
-   double tempValue;
+  double tempValue;
 
-    for (int z = 0; z < zlen; z++)
+  cout << "Building x shell." << endl;
+  for (int z = 0; z < zlen; z++)
+    {
+    for (int y = 0; y < ylen; y++)
       {
-      for (int y = 0; y < ylen; y++)
-        {
 
-        // start with new z,y: initialise all P to "no shell voxels in
-        // these rows"
-        Pidx = (z*ylen + y) * 2;
-        Px[Pidx] = -1;
-        Px[Pidx + 1] = -1;
+      // start with new z,y: initialise all P to "no shell voxels in
+      // these rows"
+      Pidx = (z*ylen + y) * 2;
+      Px[Pidx] = -1;
+      Px[Pidx + 1] = -1;
         
-        for (int x = 0; x < xlen; x++)
+      for (int x = 0; x < xlen; x++)
+        {
+        //temp_sv.Value = (float)(*dptr);
+        tempValue = (double)(*dptr);
+        // look the suxor up
+        temp_sv.Opacity = OpacityTF->GetValue(tempValue);
+        // first check if it's opaque enough
+        if (temp_sv.Opacity > OmegaL)
           {
-                //temp_sv.Value = (float)(*dptr);
-                tempValue = (double)(*dptr);
-                // look the suxor up
-                temp_sv.Opacity = OpacityTF->GetValue(tempValue);
-                // first check if it's opaque enough
-                if (temp_sv.Opacity > OmegaL)
-                {
-                    // initially, we assume none of the neighbouring voxels
-                    // is < OmegaH
-                    nbrv_lt_oh = 0;
-                    // and zero the neighbour code
-                    temp_sv.nbrOCode = 0;
+          // initially, we assume none of the neighbouring voxels
+          // is < OmegaH
+          nbrv_lt_oh = 0;
+          // and zero the neighbour code
+          temp_sv.nbrOCode = 0;
 
-                    // cache the six neighbour values since we'll probably
-                    // be needing them again; the cpu cache doesn't like the
-                    // read we're doing here... :(
-                    // note that we're zero-padding for both the normal
-                    // calculation and neighbourhood thingies
-
-                    // X ************************************************
-                    if (x > 0)
-                    {
-                        nbrs[0] = *(dptr - xstep);
-                        nbr_os[0] = OpacityTF->GetValue((double)(nbrs[0]));
-                        if (nbr_os[0] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x1; // activate bit 0
-                        if (nbr_os[0] <= OmegaH)
-                            nbrv_lt_oh = 1;
-                    }
-                    else
-                    {
-                        nbrs[0] = 0;
-                        nbr_os[0] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
-
-                    if (x < xlen - 1)
-                    {
-                        nbrs[1] = *(dptr + xstep);
-                        nbr_os[1] = OpacityTF->GetValue((double)(nbrs[1]));
-                        if (nbr_os[1] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x2; // activate bit 1
-                        if (nbr_os[1] <= OmegaH)
-                            nbrv_lt_oh = 1;
-                    }
-                    else
-                    {
-                        nbrs[1] = 0;
-                        nbr_os[1] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
+          // cache the six neighbour values since we'll probably
+          // be needing them again; the cpu cache doesn't like the
+          // read we're doing here... :(
+          // note that we're zero-padding for both the normal
+          // calculation and neighbourhood thingies
+          
+          // X ************************************************
+          if (x > 0)
+            {
+            nbrs[0] = *(dptr - xstep);
+            nbr_os[0] = OpacityTF->GetValue((double)(nbrs[0]));
+            if (nbr_os[0] >= OmegaH)
+              temp_sv.nbrOCode |= 0x1; // activate bit 0
+            if (nbr_os[0] <= OmegaH)
+              nbrv_lt_oh = 1;
+            }
+          else
+            {
+            nbrs[0] = 0;
+            nbr_os[0] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
+          
+          if (x < xlen - 1)
+            {
+            nbrs[1] = *(dptr + xstep);
+            nbr_os[1] = OpacityTF->GetValue((double)(nbrs[1]));
+            if (nbr_os[1] >= OmegaH)
+              temp_sv.nbrOCode |= 0x2; // activate bit 1
+            if (nbr_os[1] <= OmegaH)
+              nbrv_lt_oh = 1;
+            }
+          else
+            {
+            nbrs[1] = 0;
+            nbr_os[1] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
 
 
 
-                    // Y ************************************************
-                    if (y > 0)
-                    {
-                        nbrs[2] = *(dptr - ystep);
-                        nbr_os[2] = OpacityTF->GetValue((double)(nbrs[2]));
-                        if (nbr_os[2] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x4; // activate bit 2
-                        if (nbr_os[2] <= OmegaH)
-                            nbrv_lt_oh = 1;
-                    }
-                    else
-                    {
-                        nbrs[2] = 0;
-                        nbr_os[2] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
+          // Y ************************************************
+          if (y > 0)
+            {
+            nbrs[2] = *(dptr - ystep);
+            nbr_os[2] = OpacityTF->GetValue((double)(nbrs[2]));
+            if (nbr_os[2] >= OmegaH)
+              temp_sv.nbrOCode |= 0x4; // activate bit 2
+            if (nbr_os[2] <= OmegaH)
+              nbrv_lt_oh = 1;
+            }
+          else
+            {
+            nbrs[2] = 0;
+            nbr_os[2] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
 
 
-                    if (y < ylen - 1)
-                    {
-                        nbrs[3] = *(dptr + ystep);
-                        nbr_os[3] = OpacityTF->GetValue((double)(nbrs[3]));
-                        if (nbr_os[3] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x8; // activate bit 3
-                        if (nbr_os[3] <= OmegaH)
-                            nbrv_lt_oh = 1;
-                    }
-                    else
-                    {
-                        nbrs[3] = 0;
-                        nbr_os[3] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
+          if (y < ylen - 1)
+            {
+            nbrs[3] = *(dptr + ystep);
+            nbr_os[3] = OpacityTF->GetValue((double)(nbrs[3]));
+            if (nbr_os[3] >= OmegaH)
+              temp_sv.nbrOCode |= 0x8; // activate bit 3
+            if (nbr_os[3] <= OmegaH)
+              nbrv_lt_oh = 1;
+            }
+          else
+            {
+            nbrs[3] = 0;
+            nbr_os[3] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
 
 
-                    // Z ************************************************		   
-                    if (z > 0)
-                    {
-                        nbrs[4] = *(dptr - zstep);
-                        nbr_os[4] = OpacityTF->GetValue((double)(nbrs[4]));
-                        if (nbr_os[4] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x10; // activate bit 4
-                        if (nbr_os[4] <= OmegaH)
-                            nbrv_lt_oh = 1;
+          // Z ************************************************		   
+          if (z > 0)
+            {
+            nbrs[4] = *(dptr - zstep);
+            nbr_os[4] = OpacityTF->GetValue((double)(nbrs[4]));
+            if (nbr_os[4] >= OmegaH)
+              temp_sv.nbrOCode |= 0x10; // activate bit 4
+            if (nbr_os[4] <= OmegaH)
+              nbrv_lt_oh = 1;
 
-                    }
-                    else
-                    {
-                        nbrs[4] = 0;
-                        nbr_os[4] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
-
-
-                    if (z < zlen - 1)
-                    {
-                        nbrs[5] = *(dptr + zstep);
-                        nbr_os[5] = OpacityTF->GetValue((double)(nbrs[5]));
-                        if (nbr_os[5] >= OmegaH)
-                            temp_sv.nbrOCode |= 0x20; // activate bit 5
-                        if (nbr_os[5] <= OmegaH)
-                            nbrv_lt_oh = 1;
-                    }
-                    else
-                    {
-                        nbrs[5] = 0;
-                        nbr_os[5] = 0.0;
-                        // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
-                        // neighbour with opacity <= OmegaH
-                        nbrv_lt_oh = 1;
-                        // we don't have to adapt the neighbour opacity code,
-                        // since it's zeroed by default
-                    }
+            }
+          else
+            {
+            nbrs[4] = 0;
+            nbr_os[4] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
 
 
-                    // DONE with neighbour caching, lookups and neighbour code
+          if (z < zlen - 1)
+            {
+            nbrs[5] = *(dptr + zstep);
+            nbr_os[5] = OpacityTF->GetValue((double)(nbrs[5]));
+            if (nbr_os[5] >= OmegaH)
+              temp_sv.nbrOCode |= 0x20; // activate bit 5
+            if (nbr_os[5] <= OmegaH)
+              nbrv_lt_oh = 1;
+            }
+          else
+            {
+            nbrs[5] = 0;
+            nbr_os[5] = 0.0;
+            // also, since 0.0 < OmegaL <= OmegaH < 1.0, we have a
+            // neighbour with opacity <= OmegaH
+            nbrv_lt_oh = 1;
+            // we don't have to adapt the neighbour opacity code,
+            // since it's zeroed by default
+            }
+          
+          
+          // DONE with neighbour caching, lookups and neighbour code
+          
+          // only if one of the neighbouring voxels was <= OmegaH
+          // is this a valid shell voxel
+          if (nbrv_lt_oh)
+            {
+            if (!GradientImageData)
+              {
+              // calculate normal
+              // NOTE: we are dividing by 2.0 * spacing as opengl wants
+              // these things to be NORMALISED in world space (although
+              // we'll be rendering in voxel space)
+              temp_sv.Normal[0] = ((double)nbrs[0] - (double)nbrs[1]) / dxm2;
+              temp_sv.Normal[1] = ((double)nbrs[2] - (double)nbrs[3]) / dym2;
+              temp_sv.Normal[2] = ((double)nbrs[4] - (double)nbrs[5]) / dzm2;
+              } // if (!GradientImageData) ...
+            
+            else if (!GradientImageIsGradient)
+              {
+              // make use of the GradientImageVolume for calculating gradients
+              if (x > 0)
+                gnbrs[0] = GradientImageData->GetScalarComponentAsDouble(x - 1, y, z, 0);
+              else
+                gnbrs[0] = 0.0;
+              
+              if (x < xlen - 1)
+                gnbrs[1] = GradientImageData->GetScalarComponentAsDouble(x + 1, y, z, 0);
+              else
+                gnbrs[1] = 0.0;
+              
+              if (y > 0)
+                gnbrs[2] = GradientImageData->GetScalarComponentAsDouble(x, y - 1, z, 0);
+              else
+                gnbrs[2] = 0.0;
+              
+              if (y < ylen - 1)
+                gnbrs[3] = GradientImageData->GetScalarComponentAsDouble(x, y + 1, z, 0);
+              else
+                gnbrs[3] = 0.0;
+              
+              if (z > 0)
+                gnbrs[4] = GradientImageData->GetScalarComponentAsDouble(x, y, z - 1, 0);
+              else
+                gnbrs[4] = 0.0;
+              
+              if (z < zlen - 1)
+                gnbrs[5] = GradientImageData->GetScalarComponentAsDouble(x, y, z + 1, 0);
+              else
+                gnbrs[5] = 0.0;
+              
+              temp_sv.Normal[0] = ((double)gnbrs[0] - (double)gnbrs[1]) / dxm2;
+              temp_sv.Normal[1] = ((double)gnbrs[2] - (double)gnbrs[3]) / dym2;
+              temp_sv.Normal[2] = ((double)gnbrs[4] - (double)gnbrs[5]) / dzm2;
+              } // else if (!GradientImageIsGradient) ...
+            
+            else
+              {
+              temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsDouble(x,y,z,0) / dxm2;
+              temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsDouble(x,y,z,1) / dym2;
+              temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsDouble(x,y,z,2) / dzm2;
+              } // else (i.e. GradientImageIsGradient)
 
-                    // only if one of the neighbouring voxels was <= OmegaH
-                    // is this a valid shell voxel
-                    if (nbrv_lt_oh)
-                        //if (1)
-                    {
-                        if (!GradientImageData)
-                        {
-                            // calculate normal
-                            // NOTE: we are dividing by 2.0 * spacing as opengl wants
-                            // these things to be NORMALISED in world space (although
-                            // we'll be rendering in voxel space)
-                            temp_sv.Normal[0] = ((double)nbrs[0] - (double)nbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((double)nbrs[2] - (double)nbrs[3]) / dym2;
-                            temp_sv.Normal[2] = ((double)nbrs[4] - (double)nbrs[5]) / dzm2;
-                        }
-                        else if (!GradientImageIsGradient)
-                        {
-                            // make use of the GradientImageVolume for calculating gradients
-                            if (x > 0)
-                                gnbrs[0] = GradientImageData->GetScalarComponentAsDouble(x - 1, y, z, 0);
-                            else
-                                gnbrs[0] = 0.0;
-                            
-                            if (x < xlen - 1)
-                                gnbrs[1] = GradientImageData->GetScalarComponentAsDouble(x + 1, y, z, 0);
-                            else
-                                gnbrs[1] = 0.0;
+            t_gradmag = sqrt(temp_sv.Normal[0] * temp_sv.Normal[0] +
+                             temp_sv.Normal[1] * temp_sv.Normal[1] +
+                             temp_sv.Normal[2] * temp_sv.Normal[2]);
 
-                            if (y > 0)
-                                gnbrs[2] = GradientImageData->GetScalarComponentAsDouble(x, y - 1, z, 0);
-                            else
-                                gnbrs[2] = 0.0;
-                            
-                            if (y < ylen - 1)
-                                gnbrs[3] = GradientImageData->GetScalarComponentAsDouble(x, y + 1, z, 0);
-                            else
-                                gnbrs[3] = 0.0;
+            if (t_gradmag > min_gradmag)
+              {
+              temp_sv.Normal[0] /= t_gradmag;
+              temp_sv.Normal[1] /= t_gradmag;
+              temp_sv.Normal[2] /= t_gradmag;
+              }
+            else
+              {
+              // the normal is too small, shouldn't count
+              temp_sv.Normal[0] = temp_sv.Normal[1] = temp_sv.Normal[2] = 0.0;
+              }
 
-                            if (z > 0)
-                                gnbrs[4] = GradientImageData->GetScalarComponentAsDouble(x, y, z - 1, 0);
-                            else
-                                gnbrs[4] = 0.0;
+            
+            // now we can fill up that structure
+            // Value is done
+            // Opacity is done
+            // Normal is done
+            // nbrOCode is done
+            temp_sv.x = x; // set integer x
+            // and update the voxel coords in voxel space
+            //temp_sv.volCoords[0] = x_orig + (float)x * x_spacing;
+            //temp_sv.volCoords[1] = y_orig + (float)y * y_spacing;
+            //temp_sv.volCoords[2] = z_orig + (float)z * z_spacing;                       
 
-                            if (z < zlen - 1)
-                                gnbrs[5] = GradientImageData->GetScalarComponentAsDouble(x, y, z + 1, 0);
-                            else
-                                gnbrs[5] = 0.0;
+            if (!ColourTF)
+              temp_sv.Red = temp_sv.Green = temp_sv.Blue = 1.0;
+            else
+              {
+              ColourTF->GetColor(tempValue, temp_rgb);
+              temp_sv.Red = temp_rgb[0];
+              temp_sv.Green = temp_rgb[1];
+              temp_sv.Blue = temp_rgb[2];
+              }
 
-                            temp_sv.Normal[0] = ((double)gnbrs[0] - (double)gnbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((double)gnbrs[2] - (double)gnbrs[3]) / dym2;
-                            temp_sv.Normal[2] = ((double)gnbrs[4] - (double)gnbrs[5]) / dzm2;
-                        }
-			else
-			{
-			  temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsDouble(x,y,z,0) / dxm2;
-			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsDouble(x,y,z,1) / dym2;
-			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsDouble(x,y,z,2) / dzm2;
-			}
+            vectorDx->push_back(temp_sv);
+            Pidx = (z*ylen + y) * 2;
+            if (Px[Pidx] == -1)
+              {
+              // this is the first voxel in this x-row, set its
+              // index in the P structure
+              Px[Pidx] = vectorDx->size() - 1;
+              // this means (by definition) that the previous row
+              // is done (or had no shell voxels at all, in which
+              // case it has no length, and in which case we
+              // have to search farther back for a row to tally
+              // up)
 
-                        t_gradmag = sqrt(temp_sv.Normal[0] * temp_sv.Normal[0] +
-                                         temp_sv.Normal[1] * temp_sv.Normal[1] +
-                                         temp_sv.Normal[2] * temp_sv.Normal[2]);
-
-                        if (t_gradmag > min_gradmag)
-                        {
-                            temp_sv.Normal[0] /= t_gradmag;
-                            temp_sv.Normal[1] /= t_gradmag;
-                            temp_sv.Normal[2] /= t_gradmag;
-                        }
-                        else
-                        {
-                            // the normal is too small, shouldn't count
-                            temp_sv.Normal[0] = temp_sv.Normal[1] = temp_sv.Normal[2] = 0.0;
-                        }
-
-
-                        // now we can fill up that structure
-                        // Value is done
-                        // Opacity is done
-                        // Normal is done
-                        // nbrOCode is done
-                        temp_sv.x = x; // set integer x
-                        // and update the voxel coords in voxel space
-                        //temp_sv.volCoords[0] = x_orig + (float)x * x_spacing;
-                        //temp_sv.volCoords[1] = y_orig + (float)y * y_spacing;
-                        //temp_sv.volCoords[2] = z_orig + (float)z * z_spacing;                       
-
-                        if (!ColourTF)
-                            temp_sv.Red = temp_sv.Green = temp_sv.Blue = 1.0;
-                        else
-                        {
-                            ColourTF->GetColor(tempValue, temp_rgb);
-                            temp_sv.Red = temp_rgb[0];
-                            temp_sv.Green = temp_rgb[1];
-                            temp_sv.Blue = temp_rgb[2];
-                        }
-
-                        vectorDx->push_back(temp_sv);
-                        Pidx = (z*ylen + y) * 2;
-                        if (Px[Pidx] == -1)
-                        {
-                            // this is the first voxel in this x-row, set its
-                            // index in the P structure
-                            Px[Pidx] = vectorDx->size() - 1;
-                            // this means (by definition) that the previous row
-                            // is done (or had no shell voxels at all, in which
-                            // case it has no length, and in which case we
-                            // have to search farther back for a row to tally
-                            // up)
-
-                            // we have to travel back to find the previous
-                            // row with shell voxels in it
+              // we have to travel back to find the previous
+              // row with shell voxels in it
 //                             prevPidx = Pidx - 2;
 //                             while (prevPidx >= 0 && P[prevPidx] == -1)
 //                                 prevPidx-=2;
@@ -407,27 +410,28 @@ static void ExtractShell(T* data_ptr,
 //                             {
 //                                 P[prevPidx+1] = P[Pidx] - P[prevPidx];
 //                             }
-                        } // if (P[Pidx] == -1) ...
-                    } // if (nbrv_lt_oh) ...
-                } // if (temp_sv.Opacity > OmegaL ...
+              } // if (P[Pidx] == -1) ...
+            } // if (nbrv_lt_oh) ...
+          } // if (temp_sv.Opacity > OmegaL ...
 
-                // make sure to increment dptr!!!
-                dptr++;
+        // make sure to increment dptr!!!
+        dptr++;
+        
+        } // for (int x = 0 ...
 
-            } // for (int x = 0 ...
-
-            // now make sure that we COMPLETE the current row
-            Pidx = (z*ylen + y) * 2;
-            if (Px[Pidx] != -1 && Px[Pidx+1] == -1)
-              {
-              // this means that the beginning of the row is indicated
-              // but not the run length
-              Px[Pidx + 1] = vectorDx->size() - Px[Pidx];
-              }
+      // now make sure that we COMPLETE the current row
+      Pidx = (z*ylen + y) * 2;
+      if (Px[Pidx] != -1 && Px[Pidx+1] == -1)
+        {
+        // this means that the beginning of the row is indicated
+        // but not the run length
+        Px[Pidx + 1] = vectorDx->size() - Px[Pidx];
+        }
             
-        } // for (int y = 0 ...
-        // FIXME: add progress event here (or something)
-        //cout << "row " << z << " done." << endl;
+      } // for (int y = 0 ...
+
+    // FIXME: add progress event or something...
+    cout << "row " << z << " done." << endl;
     } // for (int z = 0 ...
 
     // we're done, yahooooo!
@@ -437,13 +441,14 @@ static void ExtractShell(T* data_ptr,
     // we need a temporary pointer matrix so we can charge through Px
     // and Dx to generate the others...
     int *pWallZY = new int[zlen * ylen * 2];
-    int tempDoffset;
+    //int tempDoffset; // newly commented, check.
     int PxIdx, PyIdx, PzIdx;
     
     // P is Z * X
     // initialize pWallZY by just copying Px
     memcpy(pWallZY, Px, zlen * ylen * 2 * sizeof(int));
 
+    cout << "Building y shell." << endl;
     // then complete vectorDy and Py
     for (int z = 0; z < zlen; z++)
       {
@@ -512,6 +517,7 @@ static void ExtractShell(T* data_ptr,
     // initialize pWallZY by just copying Px
     memcpy(pWallZY, Px, zlen * ylen * 2 * sizeof(int));
 
+    cout << "Building z shell." << endl;
     // then complete vectorDy and Py
     for (int y = 0; y < ylen; y++)
       {
