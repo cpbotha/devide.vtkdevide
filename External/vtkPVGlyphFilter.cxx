@@ -18,8 +18,9 @@
 #include "vtkMaskPoints.h"
 #include "vtkObjectFactory.h"
 #include "vtkPolyData.h"
+#include "vtkPointData.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.6 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.7 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 //-----------------------------------------------------------------------------
@@ -88,7 +89,32 @@ void vtkPVGlyphFilter::Execute()
     {
     this->Superclass::SetInput(this->MaskPoints->GetInput());
     }
-  
+
+  // added by cpbotha:
+  // if the vector selection is at the default of NULL and there are no 
+  // vectors in the input dataset, see if there are any scalars.  If
+  // so, select these as the input vectors (they could have enough
+  // elements to be handled as vectors)
+  vtkDataSet *input = this->GetInput();
+  if (input)
+    {
+    vtkPointData *pd = input->GetPointData();
+    if (!pd->GetVectors(this->InputVectorsSelection) && 
+        !this->InputVectorsSelection)
+      {
+      // NO vectors, so let's try selecting the scalars (if there
+      // are any!)
+      vtkDataArray *inScalars = pd->GetScalars(
+        this->InputScalarsSelection);
+      
+      if (inScalars)
+        {
+        this->SelectInputVectors(inScalars->GetName());
+        }
+      }
+    }
+  // end addition by cpbotha
+   
   this->Superclass::Execute();
 }
 
