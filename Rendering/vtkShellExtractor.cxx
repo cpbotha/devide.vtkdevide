@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.13 2004/06/29 22:12:51 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.14 2004/06/30 10:02:13 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -424,30 +424,20 @@ static void ExtractShell(T* data_ptr,
     } // for (int z = 0 ...
 
     // we're done, yahooooo!
+    // ---------------------------------------------------------------------
     // well not quite... let's build up the y and z Ps and Ds.
 
     // we need a temporary pointer matrix so we can charge through Px
     // and Dx to generate the others...
-    ShellVoxel **pointerWallZY = new ShellVoxel*[zdim * ydim];
-    ShellVoxel* tempDptr;
+    int *pWallZY = new int[zlen * ylen * 2];
     int tempDoffset;
+    int PxIdx, PyIdx, PzIdx;
     
     // P is Z * X
-    // 1. initialize pointerWallZY for the x -> y run
-    memset(pointerWallZY, 0, zdim * ydim * sizeof(ShellVoxel *));
-    for (int z = 0; z < zlen; z++)
-      {
-      for (int y = 0; y < ylen; y++)
-        {
-        // for each position in P we have an offset and a length!
-        tempDoffset = Px[(z*ydim + y) * 2];
-        if (tempDoffset >= 0)
-          {
-          pointerWall[z*ydim + y] = vectorDx(tempDoffset);
-          }
-        }
-      }
-    
+    // initialize pWallZY by just copying Px
+    memcpy(pWallZY, Px, zlen * ylen * 2 * sizeof(int));
+
+    // then complete vectorDy and Py
     for (int z = 0; z < zlen; z++)
       {
       for (int x = 0; x < xlen; x++)
@@ -455,23 +445,50 @@ static void ExtractShell(T* data_ptr,
         for (int y = 0; y < ylen; y++)
           {
 
-          // find the Dptr for this x,y,z if it exists
-          // arghhh... need maybe P-wall with also run-lengths so that
-          // we know when to stop for a particular z,y combo
-          // hmmmm, copy of P. at each successful Dptr access, we
-          // decrement the run-length.  When the run-length reaches
-          // zero, we're done.  The offset is obviously increased
-          // every time
-          Pidx = (z * ydim + y) * 2;
-          if (pWallZY[Pidx] >= 0)
+          PxIdx = (z * ylen + y) * 2;
+          if (pWallZY[PxIdx] >= 0)
             {
-            // find and access, then decrement run-length
-            }
-          
+            // now check that the ->x of the ShellVoxel is the one we
+            // want
+            temp_sv = (*vectorDx)[pWallZY[PxIdx]];
+            if (temp_sv.x == x)
+              {
+              // replace the coordinate (we're going to space-leap in y)
+              temp_sv.x = y;
+            
+              // store the copy in our vectorDy
+              vectorDy->push_back(temp_sv);
+              // record in Py if necessary
+              PyIdx = (z * xlen + x) * 2;
+              if (Py[PyIdx] == -1)
+                {
+                Py[PyIdx] = vectorDy->size() - 1;
+                }
+              // then decrement the run-length
+              --pWallZY[PxIdx + 1];
+              if (pWallZY[PxIdx + 1] == 0)
+                {
+                // so we'll skip this next time (it's done!)
+                pWallZY[PxIdx] = -1;
+                }
+              } // if (temp_sv.x == x)
+              
+            } // if (pWallZY[PxIdx] >= 0) ...
           
           } // for (int y = 0 ...
+
+        // this y-line is done, complete the P
+        PyIdx = (z * xlen + x) * 2;
+        if (Py[PyIdx] != -1)
+          {
+          Py[PyIdx + 1] = vectorDy->size() - Py[PyIdx];
+          }
+        
         } // for (int x = 0 ...
       } // for (int z = 0 ...
+
+
+    delete[] pWallZY;
 }
 
 

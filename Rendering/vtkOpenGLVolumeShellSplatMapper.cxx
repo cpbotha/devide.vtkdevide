@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.36 2004/06/28 21:27:39 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.37 2004/06/30 10:02:13 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -352,6 +352,465 @@ void vtkOpenGLVolumeShellSplatMapper::SetRenderMode(int newRenderMode)
                       this->gaussian_radial_extent, this->gaussian_sigma);
 
 }
+
+// -----------------------------------------------------------------------
+// -----------------------------------------------------------------------
+void vtkOpenGLVolumeShellSplatMapper::
+ippbtfFaceOnZ(
+  double *camVoxelPos, int xdim, int ydim, int zdim,
+  const GLfloat& ambient, const GLfloat& diffuse,
+  GLfloat* u, GLfloat* v)  
+{
+  int pq, pr, ps;
+  
+  pq = vtkMath::Round(camVoxelPos[0]);
+  pq = (pq >= xdim) ? xdim - 1 : pq;
+  pr = vtkMath::Round(camVoxelPos[1]);
+  pr = (pr >= ydim) ? ydim - 1 : pr;
+
+  cout << "HINK: face-on, zin == 0, pq == "
+       << pq << " pr == " << pr << endl;
+
+  int *P = this->ShellExtractor->GetPx();
+  ShellVoxel *D = this->ShellExtractor->GetDx();
+            
+  // z is the slowest changing dimension
+  int z0, z1, zinc;
+  unsigned char octantIdxBYBX, octantIdxBYSX;
+  unsigned char octantIdxSYBX, octantIdxSYSX;
+            
+  if (camVoxelPos[2] >= zdim)
+    {
+    z0 = 0;
+    z1 = zdim;
+    zinc = 1;
+    // z is > zdim, so we can set this so long
+    octantIdxBYBX =
+      octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0x4;
+    }
+  else
+    {
+    z0 = zdim - 1;
+    z1 = -1; // we're going to use != z1 as end cond
+    zinc = -1;
+    octantIdxBYBX =
+      octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0;
+    }
+
+  // now partition y and x
+  int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
+
+  if (pr >= (ydim - pr))
+    {
+    bigyStart = 0;
+    bigyEnd = pr;
+    bigyInc = 1;
+    bigyThresh = pr - (ydim - pr); // biglen - small_len
+    initsmally = ydim - 1;
+    octantIdxBYBX |= 0x2; octantIdxBYSX = octantIdxBYBX;
+    }
+  else
+    {
+    bigyStart = ydim - 1;
+    bigyEnd = pr - 1; // loop uses != bigyEnd
+    bigyInc = -1;
+    bigyThresh = pr * 2 - 1;
+    initsmally = 0;
+    octantIdxSYBX |= 0x2; octantIdxSYSX = octantIdxSYBX;
+    }
+
+  int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
+
+  if (pq >= (xdim - pq))
+    {
+    bigxStart = 0;
+    bigxEnd = pq;
+    bigxInc = 1;
+    bigxThresh = pq - (xdim - pq); // biglen - small_len
+    initsmallx = xdim - 1;
+    octantIdxBYBX |= 0x1; octantIdxSYBX = octantIdxBYBX;
+    }
+  else
+    {
+    bigxStart = xdim - 1;
+    bigxEnd = pq - 1; // loop uses != bigxEnd
+    bigxInc = -1;
+    bigxThresh = pq * 2 - 1;
+    initsmallx = 0;
+    octantIdxBYSX |= 0x1; octantIdxSYSX = octantIdxBYSX;
+    }
+
+            
+  bool yInterleaved;
+  //bool xInterleaved;
+
+  ShellVoxel *DptrBY, *DptrBYBX, *DptrBYSX;
+  ShellVoxel *DptrBYBX1, *DptrBYSX1;
+  DptrBY = DptrBYBX = DptrBYSX = (ShellVoxel*)NULL;
+            
+  ShellVoxel *DptrSY, *DptrSYBX, *DptrSYSX;
+  ShellVoxel *DptrSYBX1, *DptrSYSX1;
+  DptrSY = DptrSYBX = DptrSYSX = (ShellVoxel*)NULL;
+            
+  int PidxBY, PidxSY;
+
+  // materials caching
+  GLfloat prev_colour[4];
+  prev_colour[0] = prev_colour[1] = prev_colour[2] = prev_colour[3] = -1;
+            
+  for (int z = z0; z != z1; z += zinc)
+    {
+    if (bigyStart == bigyThresh)
+      yInterleaved = true;
+    else
+      yInterleaved = false;
+
+    smally = initsmally;
+    for (int bigy = bigyStart; bigy != bigyEnd; bigy += bigyInc)
+      {
+//                     if (bigxStart == bigxThresh)
+//                         xInterleaved = true;
+//                     else
+//                         xInterleaved = false;
+
+      smallx = initsmallx;
+                    
+      PidxBY = (z * ydim + bigy) * 2;
+      if (P[PidxBY] != -1)
+        {
+        DptrBY = D + P[PidxBY];
+        if (bigxInc == 1)
+          {
+          DptrBYBX = DptrBY;
+          DptrBYSX = DptrBY + P[PidxBY + 1] - 1;
+
+          // this is just to stop it from going into
+          // the next line... because of the ->x == x
+          // check, it can never render the wrong pixels
+          // if it stays within its line (these X limits
+          // should always be past the end) - without these
+          // checks though, it can easily wander over into
+          // the next y-z line and strike a correct ->x == x
+          DptrBYBX1 = DptrBYSX + 1;
+          DptrBYSX1 = DptrBYBX - 1;
+          }
+        else
+          {
+          DptrBYBX = DptrBY + P[PidxBY + 1] - 1;
+          DptrBYSX = DptrBY;
+
+          DptrBYBX1 = DptrBYSX - 1;
+          DptrBYSX1 = DptrBYBX + 1;
+
+          }
+        }
+      else
+        {
+        DptrBY = (ShellVoxel*)NULL;
+        }
+
+      if (yInterleaved)
+        {
+        PidxSY = (z * ydim + smally) * 2;
+        if (P[PidxSY] != -1)
+          {
+          DptrSY = D + P[PidxSY];
+          if (bigxInc == 1)
+            {
+            DptrSYBX = DptrSY;
+            DptrSYSX = DptrSY + P[PidxSY + 1] - 1;
+                            
+            DptrSYBX1 = DptrSYSX + 1;
+            DptrSYSX1 = DptrSYBX - 1;
+            }
+          else
+            {
+            DptrSYBX = DptrSY + P[PidxSY + 1] - 1;
+            DptrSYSX = DptrSY;
+                          
+            DptrSYBX1 = DptrSYSX - 1;
+            DptrSYSX1 = DptrSYBX + 1;
+            }
+                        
+          }
+        else
+          {
+          DptrSY = (ShellVoxel*)NULL;
+          }
+        }
+      else
+        {
+        DptrSY = (ShellVoxel*)NULL;
+        }
+
+
+      // let's find the starting x (the Dptr furthest
+      // away from the X volume sub-division)
+      int maxDistance = -1;
+      int tempDistance = -1;
+      int tempX = -1;
+
+      bool renderBYBX, renderBYSX, renderSYBX, renderSYSX;
+      bool killBYBX, killBYSX, killSYBX, killSYSX;
+      killBYBX = killBYSX = killSYBX = killSYSX = false;
+
+      // this is just to get into our while loop.
+      renderBYBX = true;
+
+      while (renderBYBX || renderBYSX ||
+             renderSYBX || renderSYSX)
+        {
+        renderBYBX = renderBYSX = renderSYBX = renderSYSX =
+          false;
+                      
+        maxDistance = -1;
+                      
+        if (DptrBY)
+          {
+          if (DptrBYBX)
+            {
+            tempX = DptrBYBX->x;
+
+            tempDistance = pq - tempX;
+
+            // compensate for pq bias
+            // left interval excludes pq [0,pq)
+            // right interval includes pq [xdim-1, pq]
+            if (bigxInc > 0)
+              tempDistance -= 1;
+
+            // bigxInc is either 1 or -1 depending on
+            // direction; we make use of this to see
+            // when the next ->x is going to go over the
+            // volume division
+            if (bigxInc * tempDistance < 0)
+              {
+              // we've jumped over, terminate NOW
+              DptrBYBX = (ShellVoxel*)NULL;
+              //renderBYBX = false;
+              }
+            else
+              {
+              maxDistance = abs(tempDistance);
+                            
+              if (maxDistance == 0)
+                {
+                // this will be our last voxel
+                killBYBX = true;
+                }
+
+              renderBYBX = true;
+              }
+            } // if (DptrBYBX)... 
+
+          if (DptrBYSX)
+            {
+            tempX = DptrBYSX->x;
+            tempDistance = tempX - pq;
+
+            // this means smallX is on the left interval
+            // we add 1 because tempX - pq 
+            if (bigxInc < 0)
+              tempDistance += 1;
+                          
+            if (bigxInc * tempDistance < 0)
+              {
+              // we've already jumped over, TERMINATE
+              // renderBYSX is false by default
+              DptrBYSX = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              tempDistance = abs(tempDistance);
+                            
+              if (tempDistance == 0)
+                {
+                // this will be our last voxel, schedule
+                // termination
+                killBYSX = true;
+                }
+                            
+              if (tempDistance > maxDistance)
+                {
+                maxDistance = tempDistance;
+                // we won't need to render BYBX
+                renderBYBX = false;
+                renderBYSX = true;
+                }
+              else if (tempDistance == maxDistance)
+                {
+                // equal distance, so we can render this
+                // as well
+                renderBYSX = true;
+                }
+              }
+            } // if (DptrBYSX) ...
+          } // if (DptrBY) ...
+
+        if (yInterleaved && DptrSY)
+          {
+          if (DptrSYBX)
+            {
+            tempX = DptrSYBX->x;
+            tempDistance = pq - tempX;
+
+            if (bigxInc > 0)
+              tempDistance -= 1;
+
+            if (bigxInc * tempDistance < 0)
+              {
+              DptrSYBX = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              tempDistance = abs(tempDistance);
+
+              if (tempDistance == 0)
+                {
+                killSYBX = true;
+                }
+
+              if (tempDistance > maxDistance)
+                {
+                maxDistance = tempDistance;
+                // this one is further, so the previous
+                // ones don't get rendered right now
+                renderBYBX = renderBYSX = false;
+                renderSYBX = true;
+                }
+              else if (tempDistance == maxDistance)
+                {
+                renderSYBX = true;
+                }
+              }
+            }
+          if (DptrSYSX)
+            {
+            tempX = DptrSYSX->x;
+            tempDistance = tempX - pq;
+
+            // this means smallX is on the left interval
+            if (bigxInc < 0)
+              tempDistance += 1;
+                          
+            if (bigxInc * tempDistance < 0)
+              {
+              DptrSYSX = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              tempDistance = abs(tempDistance);
+
+              if (tempDistance == 0)
+                {
+                killSYSX = true;
+                }
+                          
+              if (tempDistance > maxDistance)
+                {
+                maxDistance = tempDistance;
+                renderBYBX = renderBYSX = renderSYBX = false;
+                renderSYSX = true;
+                }
+              else if (tempDistance == maxDistance)
+                {
+                renderSYSX = true;
+                }
+              }
+            }
+          }
+
+        if (renderBYBX)
+          {
+          DrawVoxel(DptrBYBX, octantIdxBYBX, bigy, z,
+                    prev_colour, ambient, diffuse, u, v);
+                        
+          if (killBYBX)
+            {
+            DptrBYBX = (ShellVoxel*)NULL;
+            }
+          else
+            {
+            DptrBYBX += bigxInc;
+
+            // okay, this means there was one good voxel
+            // BEFORE the division, and the next one is
+            // on the next line, so we have to kill!
+            if (DptrBYBX == DptrBYBX1)
+              DptrBYBX = (ShellVoxel*)NULL;
+            }
+          }
+
+        if (renderBYSX)
+          {
+          DrawVoxel(DptrBYSX, octantIdxBYSX, bigy, z,
+                    prev_colour, ambient, diffuse, u, v);
+                        
+          if (killBYSX)
+            {
+            DptrBYSX = (ShellVoxel*)NULL;
+            }
+          else
+            {
+            DptrBYSX -= bigxInc;
+
+            if (DptrBYSX == DptrBYSX1)
+              DptrBYSX = (ShellVoxel*)NULL;
+            }
+          }
+                      
+        if (renderSYBX)
+          {
+          DrawVoxel(DptrSYBX, octantIdxSYBX, smally, z,
+                    prev_colour, ambient, diffuse, u, v);
+          if (killSYBX)
+            {
+            DptrSYBX = (ShellVoxel*)NULL;
+            }
+          else
+            {
+            DptrSYBX += bigxInc;
+
+            if (DptrSYBX == DptrSYBX1)
+              DptrSYBX = (ShellVoxel*)NULL;
+            }
+          }
+
+        if (renderSYSX)
+          {
+          DrawVoxel(DptrSYSX, octantIdxSYSX, smally, z,
+                    prev_colour, ambient, diffuse, u, v);
+          if (killSYSX)
+            {
+            DptrSYSX = (ShellVoxel*)NULL;
+            }
+          else
+            {
+            DptrSYSX -= bigxInc;
+
+            if (DptrSYSX == DptrSYSX1)
+              DptrSYSX = (ShellVoxel*)NULL;
+            }
+          }
+                      
+        } // while (renderBYBX || renderBYSX || ...
+
+      if (yInterleaved)
+        {
+        smally -= bigyInc;
+        }
+      else
+        {
+        if (bigy + bigyInc == bigyThresh)
+          yInterleaved = true;
+        }
+                    
+      } // for (int bigy ...
+    } // for (int z ...
+  cout << "END: smally == " << smally << endl;            
+  
+  
+} // ipptfFaceOnZ()
 
 void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 {
@@ -2582,460 +3041,10 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
          cout << "FACE-ON: ";
 #endif         
          if (zin == 0)
-         {
-            pq = vtkMath::Round(camVoxelPos[0]);
-            pq = (pq >= xdim) ? xdim - 1 : pq;
-            pr = vtkMath::Round(camVoxelPos[1]);
-            pr = (pr >= ydim) ? ydim - 1 : pr;
-
-            cout << "HINK: face-on, zin == 0, pq == "
-                 << pq << " pr == " << pr << endl;
-
-            
-            // z is the slowest changing dimension
-            int z0, z1, zinc;
-            unsigned char octantIdxBYBX, octantIdxBYSX;
-            unsigned char octantIdxSYBX, octantIdxSYSX;
-            
-            if (camVoxelPos[2] >= zdim)
-            {
-                z0 = 0;
-                z1 = zdim;
-                zinc = 1;
-                // z is > zdim, so we can set this so long
-                octantIdxBYBX =
-                    octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0x4;
-            }
-            else
-            {
-                z0 = zdim - 1;
-                z1 = -1; // we're going to use != z1 as end cond
-                zinc = -1;
-                octantIdxBYBX =
-                    octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0;
-            }
-
-            // now partition y and x
-            int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
-
-            if (pr >= (ydim - pr))
-            {
-                bigyStart = 0;
-                bigyEnd = pr;
-                bigyInc = 1;
-                bigyThresh = pr - (ydim - pr); // biglen - small_len
-                initsmally = ydim - 1;
-                octantIdxBYBX |= 0x2; octantIdxBYSX = octantIdxBYBX;
-            }
-            else
-            {
-                bigyStart = ydim - 1;
-                bigyEnd = pr - 1; // loop uses != bigyEnd
-                bigyInc = -1;
-                bigyThresh = pr * 2 - 1;
-                initsmally = 0;
-                octantIdxSYBX |= 0x2; octantIdxSYSX = octantIdxSYBX;
-            }
-
-            int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
-
-            if (pq >= (xdim - pq))
-            {
-                bigxStart = 0;
-                bigxEnd = pq;
-                bigxInc = 1;
-                bigxThresh = pq - (xdim - pq); // biglen - small_len
-                initsmallx = xdim - 1;
-                octantIdxBYBX |= 0x1; octantIdxSYBX = octantIdxBYBX;
-            }
-            else
-            {
-                bigxStart = xdim - 1;
-                bigxEnd = pq - 1; // loop uses != bigxEnd
-                bigxInc = -1;
-                bigxThresh = pq * 2 - 1;
-                initsmallx = 0;
-                octantIdxBYSX |= 0x1; octantIdxSYSX = octantIdxBYSX;
-            }
-
-            
-            bool yInterleaved;
-            //bool xInterleaved;
-
-            ShellVoxel *DptrBY, *DptrBYBX, *DptrBYSX;
-            ShellVoxel *DptrBYBX1, *DptrBYSX1;
-            DptrBY = DptrBYBX = DptrBYSX = (ShellVoxel*)NULL;
-            
-            ShellVoxel *DptrSY, *DptrSYBX, *DptrSYSX;
-            ShellVoxel *DptrSYBX1, *DptrSYSX1;
-            DptrSY = DptrSYBX = DptrSYSX = (ShellVoxel*)NULL;
-            
-            int PidxBY, PidxSY;
-            
-            for (int z = z0; z != z1; z += zinc)
-            {
-                if (bigyStart == bigyThresh)
-                    yInterleaved = true;
-                else
-                    yInterleaved = false;
-
-                smally = initsmally;
-                for (int bigy = bigyStart; bigy != bigyEnd; bigy += bigyInc)
-                {
-//                     if (bigxStart == bigxThresh)
-//                         xInterleaved = true;
-//                     else
-//                         xInterleaved = false;
-
-                    smallx = initsmallx;
-                    
-                    PidxBY = (z * ydim + bigy) * 2;
-                    if (P[PidxBY] != -1)
-                    {
-                        DptrBY = D + P[PidxBY];
-                        if (bigxInc == 1)
-                        {
-                            DptrBYBX = DptrBY;
-                            DptrBYSX = DptrBY + P[PidxBY + 1] - 1;
-
-                            // this is just to stop it from going into
-                            // the next line... because of the ->x == x
-                            // check, it can never render the wrong pixels
-                            // if it stays within its line (these X limits
-                            // should always be past the end) - without these
-                            // checks though, it can easily wander over into
-                            // the next y-z line and strike a correct ->x == x
-                            DptrBYBX1 = DptrBYSX + 1;
-                            DptrBYSX1 = DptrBYBX - 1;
-                        }
-                        else
-                        {
-                            DptrBYBX = DptrBY + P[PidxBY + 1] - 1;
-                            DptrBYSX = DptrBY;
-
-                            DptrBYBX1 = DptrBYSX - 1;
-                            DptrBYSX1 = DptrBYBX + 1;
-
-                            if (bigy == 139 && z == 239)
-                              {
-                              cout << hex << DptrBY <<
-                                ":" << hex << DptrBYBX <<
-                                ":" << hex << DptrBYBX1 <<
-                                ":" << dec << P[PidxBY + 1] - 1 <<
-                                ":" << P[PidxBY] << ":"
-                                   << ydim << "," << bigy << "," << z << endl;
-                              }
-                        }
-                    }
-                    else
-                    {
-                        DptrBY = (ShellVoxel*)NULL;
-                    }
-
-                    if (yInterleaved)
-                      {
-                      PidxSY = (z * ydim + smally) * 2;
-                      if (P[PidxSY] != -1)
-                        {
-                        DptrSY = D + P[PidxSY];
-                        if (bigxInc == 1)
-                          {
-                          DptrSYBX = DptrSY;
-                          DptrSYSX = DptrSY + P[PidxSY + 1] - 1;
-                            
-                          DptrSYBX1 = DptrSYSX + 1;
-                          DptrSYSX1 = DptrSYBX - 1;
-                          }
-                        else
-                          {
-                          DptrSYBX = DptrSY + P[PidxSY + 1] - 1;
-                          DptrSYSX = DptrSY;
-                          
-                          DptrSYBX1 = DptrSYSX - 1;
-                          DptrSYSX1 = DptrSYBX + 1;
-                          }
-                        
-                        }
-                      else
-                        {
-                        DptrSY = (ShellVoxel*)NULL;
-                        }
-                      }
-                    else
-                      {
-                      DptrSY = (ShellVoxel*)NULL;
-                      }
-
-
-                    // let's find the starting x (the Dptr furthest
-                    // away from the X volume sub-division)
-                    int maxDistance = -1;
-                    int tempDistance = -1;
-                    int tempX = -1;
-
-                    bool renderBYBX, renderBYSX, renderSYBX, renderSYSX;
-                    bool killBYBX, killBYSX, killSYBX, killSYSX;
-                    killBYBX = killBYSX = killSYBX = killSYSX = false;
-
-                    // this is just to get into our while loop.
-                    renderBYBX = true;
-
-                    while (renderBYBX || renderBYSX ||
-                           renderSYBX || renderSYSX)
-                      {
-                      renderBYBX = renderBYSX = renderSYBX = renderSYSX =
-                        false;
-                      
-                      maxDistance = -1;
-                      
-                      if (DptrBY)
-                        {
-                        if (DptrBYBX)
-                          {
-                          tempX = DptrBYBX->x;
-
-                          tempDistance = pq - tempX;
-
-                          // compensate for pq bias
-                          // left interval excludes pq [0,pq)
-                          // right interval includes pq [xdim-1, pq]
-                          if (bigxInc > 0)
-                            tempDistance -= 1;
-
-                          // bigxInc is either 1 or -1 depending on
-                          // direction; we make use of this to see
-                          // when the next ->x is going to go over the
-                          // volume division
-                          if (bigxInc * tempDistance < 0)
-                            {
-                            // we've jumped over, terminate NOW
-                            DptrBYBX = (ShellVoxel*)NULL;
-                            //renderBYBX = false;
-                            }
-                          else
-                            {
-                            maxDistance = abs(tempDistance);
-                            
-                            if (maxDistance == 0)
-                              {
-                              // this will be our last voxel
-                              killBYBX = true;
-                              }
-
-                            renderBYBX = true;
-                            }
-                          } // if (DptrBYBX)... 
-
-                        if (DptrBYSX)
-                          {
-                          tempX = DptrBYSX->x;
-                          tempDistance = tempX - pq;
-
-                          // this means smallX is on the left interval
-                          // we add 1 because tempX - pq 
-                          if (bigxInc < 0)
-                            tempDistance += 1;
-                          
-                          if (bigxInc * tempDistance < 0)
-                            {
-                            // we've already jumped over, TERMINATE
-                            // renderBYSX is false by default
-                            DptrBYSX = (ShellVoxel*)NULL;
-                            }
-                          else
-                            {
-                            tempDistance = abs(tempDistance);
-                            
-                            if (tempDistance == 0)
-                              {
-                              // this will be our last voxel, schedule
-                              // termination
-                              killBYSX = true;
-                              }
-                            
-                            if (tempDistance > maxDistance)
-                              {
-                              maxDistance = tempDistance;
-                              // we won't need to render BYBX
-                              renderBYBX = false;
-                              renderBYSX = true;
-                              }
-                            else if (tempDistance == maxDistance)
-                              {
-                              // equal distance, so we can render this
-                              // as well
-                              renderBYSX = true;
-                              }
-                            }
-                          } // if (DptrBYSX) ...
-                        } // if (DptrBY) ...
-
-                      if (yInterleaved && DptrSY)
-                        {
-                        if (DptrSYBX)
-                          {
-                          tempX = DptrSYBX->x;
-                          tempDistance = pq - tempX;
-
-                          if (bigxInc > 0)
-                            tempDistance -= 1;
-
-                          if (bigxInc * tempDistance < 0)
-                            {
-                            DptrSYBX = (ShellVoxel*)NULL;
-                            }
-                          else
-                            {
-                            tempDistance = abs(tempDistance);
-
-                            if (tempDistance == 0)
-                              {
-                              killSYBX = true;
-                              }
-
-                            if (tempDistance > maxDistance)
-                              {
-                              maxDistance = tempDistance;
-                              // this one is further, so the previous
-                              // ones don't get rendered right now
-                              renderBYBX = renderBYSX = false;
-                              renderSYBX = true;
-                              }
-                            else if (tempDistance == maxDistance)
-                              {
-                              renderSYBX = true;
-                              }
-                            }
-                          }
-                        if (DptrSYSX)
-                          {
-                          tempX = DptrSYSX->x;
-                          tempDistance = tempX - pq;
-
-                          // this means smallX is on the left interval
-                          if (bigxInc < 0)
-                            tempDistance += 1;
-                          
-                          if (bigxInc * tempDistance < 0)
-                            {
-                            DptrSYSX = (ShellVoxel*)NULL;
-                            }
-                          else
-                            {
-                            tempDistance = abs(tempDistance);
-
-                            if (tempDistance == 0)
-                              {
-                              killSYSX = true;
-                              }
-                          
-                            if (tempDistance > maxDistance)
-                              {
-                              maxDistance = tempDistance;
-                              renderBYBX = renderBYSX = renderSYBX = false;
-                              renderSYSX = true;
-                              }
-                            else if (tempDistance == maxDistance)
-                              {
-                              renderSYSX = true;
-                              }
-                            }
-                          }
-                        }
-
-                      if (renderBYBX)
-                        {
-                        DrawVoxel(DptrBYBX, octantIdxBYBX, bigy, z,
-                                  prev_colour, ambient, diffuse, u, v);
-                        
-                        if (killBYBX)
-                          {
-                          DptrBYBX = (ShellVoxel*)NULL;
-                          }
-                        else
-                          {
-                          DptrBYBX += bigxInc;
-
-                          // okay, this means there was one good voxel
-                          // BEFORE the division, and the next one is
-                          // on the next line, so we have to kill!
-                          if (DptrBYBX == DptrBYBX1)
-                            DptrBYBX = (ShellVoxel*)NULL;
-                          }
-                        }
-
-                      if (renderBYSX)
-                        {
-                        DrawVoxel(DptrBYSX, octantIdxBYSX, bigy, z,
-                                  prev_colour, ambient, diffuse, u, v);
-                        
-                        if (killBYSX)
-                          {
-                          DptrBYSX = (ShellVoxel*)NULL;
-                          }
-                        else
-                          {
-                          DptrBYSX -= bigxInc;
-
-                          if (DptrBYSX == DptrBYSX1)
-                            DptrBYSX = (ShellVoxel*)NULL;
-                          }
-                        }
-                      
-                      if (renderSYBX)
-                        {
-                        DrawVoxel(DptrSYBX, octantIdxSYBX, smally, z,
-                                  prev_colour, ambient, diffuse, u, v);
-                        if (killSYBX)
-                          {
-                          DptrSYBX = (ShellVoxel*)NULL;
-                          }
-                        else
-                          {
-                          DptrSYBX += bigxInc;
-
-                          if (DptrSYBX == DptrSYBX1)
-                            DptrSYBX = (ShellVoxel*)NULL;
-                          }
-                        }
-
-                      if (renderSYSX)
-                        {
-                        DrawVoxel(DptrSYSX, octantIdxSYSX, smally, z,
-                                  prev_colour, ambient, diffuse, u, v);
-                        if (killSYSX)
-                          {
-                          DptrSYSX = (ShellVoxel*)NULL;
-                          }
-                        else
-                          {
-                          DptrSYSX -= bigxInc;
-
-                          if (DptrSYSX == DptrSYSX1)
-                            DptrSYSX = (ShellVoxel*)NULL;
-                          }
-                        }
-                      
-                      } // while (renderBYBX || renderBYSX || ...
-
-                    if (yInterleaved)
-                    {
-                        smally -= bigyInc;
-                    }
-                    else
-                    {
-                        if (bigy + bigyInc == bigyThresh)
-                            yInterleaved = true;
-                    }
-                    
-                } // for (int bigy ...
-            } // for (int z ...
-            cout << "END: smally == " << smally << endl;            
-            
-
-         } // if (zin == 0) ...
-
-
+           {
+           this->ippbtfFaceOnZ(
+             camVoxelPos, xdim, ydim, zdim, ambient, diffuse, u, v);
+           } // if (zin == 0) ...
          
          else if (yin == 0)
          {
