@@ -2,7 +2,7 @@
 Code greatly simplified (more manual) so that McMillan installer has an
 easier time finding the imports.
 
-$Id: vtkdscaspython.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+$Id: vtkdscas.py,v 1.1 2003/01/08 16:14:50 cpbotha Exp $
 """
 
 import os
