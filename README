@@ -10,8 +10,12 @@ http://www.itk.org/pipermail/insight-users/2003-December/005716.html
 Temporary fix: comment out DICOM thingies in RegisterBuiltInFactories() in
 Code/IO/itkImageIOFactory.cxx
 
-Getting this to build in Visual C++ 6.0
----------------------------------------
+Getting this to build in Visual C++ 6.0 (and VS.NET2003)
+--------------------------------------------------------
+
+* Important note: with the VS.NET2003 config, it seems that you have to add
+  RelWithDebInfo to the cmake config (via the GUI) with every new config,
+  else attempting to build with this target obviously fails.
 
 General
 -------
@@ -36,17 +40,28 @@ Your VTK build
   VTK cmake configuration!
 
 
-The vtkdscas config
--------------------
+The vtkdevide config
+--------------------
 
 - Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
-  have to build ofstd and dcmdata
+  have to build ofstd and dcmdata (when you import the DCMTK 3.5.3 workspace
+  into MSVS.NET2003, this is already done)
 
 - Since VTK has started mangling zlib names in their zlib library (better this
   way), you must build dcmdata with the VTK zlib library: modify the "project|
   settings| c/c++" in VC and add VTKSourceDir/Utilities/vtkzlib and
-  VTKBuildDir/Utilities to the includes.  Make sure there's no other zlib
-  include/library directories lying around on the same level as the dcmtk
-  root.  This way, DCMTK will make use of
+  VTKBuildDir/Utilities to the includes, only for dcmdata.  Make sure
+  there's no other zlib include/library directories lying around on
+  the same level as the dcmtk root.  This way, DCMTK will make use of
   vtk's zlib version.
 
+- In MSVS.NET2003, select dcmdata in the solution explorer, then
+  select properties, c/c++, general, additional includes.
+
+- Now we have to make a pseudo install: 
+  * create a new directory, e.g. dcmtkInstall with subdirs lib and include.
+  * copy dcmtk.lib and ofstd.lib into lib
+  * copy the dcmtk and the ofstd includes into respectively include/dcmtk
+    and include/ofstd
+  * then copy all .h files from dcmtksource/config/include to 
+    dcmtkInstall/include
