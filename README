@@ -3,7 +3,7 @@ Getting this to build in Visual C++ 6.0
 - VERY important: make sure that VTK_USE_ANSI_STDLIB is set to ON in your
   VTK cmake configuration!
 
-- Add ws2_32.lib and netapi32.lib to the standard libraries
+- Add wsock32.lib and netapi32.lib to the standard libraries
   (CMAKE_STANDARD_LIBRARIES).  Both HDF and DCMTK require this.
 
 - Use the dlllib subdirectory of the HDF installation: VTK and also vtkdscas
