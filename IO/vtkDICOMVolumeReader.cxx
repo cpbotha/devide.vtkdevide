@@ -1,6 +1,12 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.4 2003/02/10 12:17:58 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.5 2003/03/07 01:54:14 cpbotha Exp $
 // class for reading off-line DICOM datasets
+
+#if !defined(WIN32)
+#define HAVE_CONFIG_H
+#endif
+#include <osconfig.h>
+#include <dcmdata/dctk.h>
 
 #include <algorithm>
 #include <math.h>
@@ -8,12 +14,6 @@
 #include <vtkPointData.h>
 #include <vtkShortArray.h>
 #include <vtkStructuredPoints.h>
-
-#if !defined(WIN32)
-#define HAVE_CONFIG_H
-#endif
-#include <osconfig.h>
-#include <dcmdata/dctk.h>
 
 #include "vtkDICOMVolumeReader.h"
 
@@ -684,7 +684,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.4 2003/02/10 12:17:58 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.5 2003/03/07 01:54:14 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
