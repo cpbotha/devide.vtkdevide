@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.26 2004/01/09 22:39:34 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.27 2004/01/09 22:46:22 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -78,21 +78,20 @@ void DrawVoxelSplat(ShellVoxel* Dptr,
                     GLfloat* u, GLfloat* v)
 {
    static GLfloat temp_mat[4];
-//   static GLfloat vt_array[12];
    static GLfloat ambiento;
    static GLfloat diffuseo;
+
    if (vtkShellExtractor::shell_noc_visibility_lut[octantIdx][Dptr->nbrOCode])
-       //if (1)
    {
       if (Dptr->Red != prev_colour[0] || Dptr->Green != prev_colour[1] ||
           Dptr->Blue != prev_colour[2] || Dptr->Opacity != prev_colour[3])
-      //if (0)
       {
          prev_colour[0] = Dptr->Red;
          prev_colour[1] = Dptr->Green;
          prev_colour[2] = Dptr->Blue;
          prev_colour[3] = Dptr->Opacity;
-         // we premultiply colour with opacity, because that's what Porter and Duff say
+         // we premultiply colour with opacity, because that's what 
+         // Porter and Duff say
          ambiento = ambient * Dptr->Opacity;
          temp_mat[0] = prev_colour[0] * ambiento;
          temp_mat[1] = prev_colour[1] * ambiento;
@@ -109,33 +108,6 @@ void DrawVoxelSplat(ShellVoxel* Dptr,
       }
 
       glNormal3fv(Dptr->Normal);
-
-
-      // change to:
-      // glInterleavedArrays(GL_T2F_V3F, stride=0, pointer), i.e.
-      // 2 float texture coords followed by 3 float vertices and
-      // glDrawArrays(GL_QUADS, 0, 4)
-
-      /*
-       vt_array[0] = Dptr->x - u[0] - v[0];
-       vt_array[1] = y - u[1] - v[1];
-       vt_array[2] = z - u[2] - v[2];
-       * 
-       vt_array[3] = Dptr->x + u[0] - v[0]; 
-       vt_array[4] = y + u[1] - v[1]; 
-       vt_array[5] = z + u[2] - v[2];
-       * 
-       vt_array[6] = Dptr->x + u[0] + v[0]; 
-       vt_array[7] = y + u[1] + v[1]; 
-       vt_array[8] = z + u[2] + v[2];
-       * 
-       vt_array[9] = Dptr->x - u[0] + v[0]; 
-       vt_array[10] = y - u[1] + v[1]; 
-       vt_array[11] = z - u[2] + v[2];
-       * 
-       glInterleavedArrays(GL_V3F, 0, vt_array);
-       glDrawArrays(GL_QUADS, 0, 4);
-       */
 
       glTexCoord2f(0.0, 0.0);
       glVertex3f(Dptr->x - u[0] - v[0], y - u[1] - v[1], z - u[2] - v[2]);
@@ -244,13 +216,14 @@ vtkOpenGLVolumeShellSplatMapper::vtkOpenGLVolumeShellSplatMapper()
    this->PerspectiveMatrix = vtkMatrix4x4::New();
 
    this->integrated_rfunc = new double[OGLVSM_RF_N * OGLVSM_RF_N];
-   // for each and every view, integrated_rfunc will be normalised into this - and we will add
-   // alpha values to make this a luminance-alpha buffer
-   this->normalised_integrated_rfunc = new float[OGLVSM_RF_N * OGLVSM_RF_N * 2];
+   // for each and every view, integrated_rfunc will be normalised into this -
+   // and we will add alpha values to make this a luminance-alpha buffer
+   this->normalised_integrated_rfunc = 
+     new float[OGLVSM_RF_N * OGLVSM_RF_N * 2];
 
    this->GradientImageData = NULL;
 
-   // this will set the Gaussian parameters and initialise the textures themselves
+   // this will set the Gaussian parameters and initialise the textures 
    this->SetRenderMode(0);
 
    // this will setup the initial rendering mode (to normal PBTF)
