@@ -5,7 +5,8 @@
 #
 
 SET (Hybrid_SRCS 
-     vtkBoxWidgetConstrained.cxx)
+     vtkBoxWidgetConstrained.cxx
+     vtkImageBacktracker.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line

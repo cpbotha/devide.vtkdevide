@@ -3,7 +3,7 @@
 #define __vtkImageBacktracker_h
 
 #include "vtkImageToPolyDataFilter.h"
-#include "vtkdevideImagingWin32Header.h"
+#include "vtkdevideHybridWin32Header.h"
 
 class vtkImageConnectorSeed;
 
