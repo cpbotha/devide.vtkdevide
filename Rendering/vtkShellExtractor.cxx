@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.16 2004/07/01 15:16:23 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.17 2004/07/02 08:00:20 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -106,9 +106,9 @@ static void ExtractShell(T* data_ptr,
     ShellVoxel temp_sv;
 
     // initialise P to all "no shell voxels in these rows (X)"
-    memset(Px, -1, ylen * zlen * sizeof(int) * 2);
-    memset(Py, -1, xlen * zlen * sizeof(int) * 2);
-    memset(Pz, -1, xlen * ylen * sizeof(int) * 2);
+    //memset(Px, -1, ylen * zlen * sizeof(int) * 2);
+    //memset(Py, -1, xlen * zlen * sizeof(int) * 2);
+    //memset(Pz, -1, xlen * ylen * sizeof(int) * 2);
     
     int Pidx, prevPidx;
 
@@ -123,11 +123,18 @@ static void ExtractShell(T* data_ptr,
    double tempValue;
 
     for (int z = 0; z < zlen; z++)
-    {
-        for (int y = 0; y < ylen; y++)
+      {
+      for (int y = 0; y < ylen; y++)
         {
-            for (int x = 0; x < xlen; x++)
-            {
+
+        // start with new z,y: initialise all P to "no shell voxels in
+        // these rows"
+        Pidx = (z*ylen + y) * 2;
+        Px[Pidx] = -1;
+        Px[Pidx + 1] = -1;
+        
+        for (int x = 0; x < xlen; x++)
+          {
                 //temp_sv.Value = (float)(*dptr);
                 tempValue = (double)(*dptr);
                 // look the suxor up
@@ -442,6 +449,11 @@ static void ExtractShell(T* data_ptr,
       {
       for (int x = 0; x < xlen; x++)
         {
+
+        PyIdx = (z * xlen + x) * 2;
+        Py[PyIdx] = -1;
+        Py[PyIdx + 1] = -1;
+        
         for (int y = 0; y < ylen; y++)
           {
 
@@ -505,9 +517,13 @@ static void ExtractShell(T* data_ptr,
       {
       for (int x = 0; x < xlen; x++)
         {
+
+        PzIdx = (y * xlen + x) * 2;
+        Pz[PzIdx] = -1;
+        Pz[PzIdx + 1] = -1;
+        
         for (int z = 0; z < ylen; z++)
           {
-
           PxIdx = (z * ylen + y) * 2;
           if (pWallZY[PxIdx] >= 0)
             {
