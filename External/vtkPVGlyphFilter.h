@@ -12,11 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkPVGlyphFilter - Glyph filter
-//
-// .SECTION Description
-// This is a subclass of vtkGlyph3D that allows selection of input scalars
-
+// .NAME vtkPVGlyphFilter -
 #ifndef __vtkPVGlyphFilter_h
 #define __vtkPVGlyphFilter_h
 
@@ -43,10 +39,6 @@ public:
   virtual void SetInput(vtkDataSet *input);
   
   // Description:
-  // Get the number of processes used to run this filter.
-  //vtkGetMacro(NumberOfProcesses, int);
-  
-  // Description:
   // Set/get whether to mask points
   vtkSetMacro(UseMaskPoints, int);
   vtkGetMacro(UseMaskPoints, int);
@@ -64,11 +56,8 @@ protected:
   
   vtkMaskPoints *MaskPoints;
   int MaximumNumberOfPoints;
-  //int NumberOfProcesses;
   int UseMaskPoints;
   
-  virtual void ReportReferences(vtkGarbageCollector*);
-  virtual void RemoveReferences();
 private:
   vtkPVGlyphFilter(const vtkPVGlyphFilter&);  // Not implemented.
   void operator=(const vtkPVGlyphFilter&);  // Not implemented.

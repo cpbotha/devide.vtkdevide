@@ -96,8 +96,6 @@ protected:
   vtkExtractGrid* ExtractGrid;
   vtkExtractRectilinearGrid* ExtractRG;
 
-  virtual void ReportReferences(vtkGarbageCollector*);
-  virtual void RemoveReferences();
 private:
   vtkPVExtractVOI(const vtkPVExtractVOI&);  // Not implemented.
   void operator=(const vtkPVExtractVOI&);  // Not implemented.

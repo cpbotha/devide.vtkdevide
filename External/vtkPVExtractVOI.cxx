@@ -18,16 +18,13 @@
 #include "vtkExtractGrid.h"
 #include "vtkExtractVOI.h"
 #include "vtkExtractRectilinearGrid.h"
-#include "vtkGarbageCollector.h"
 #include "vtkImageData.h"
-#include "vtkInformation.h"
 #include "vtkInstantiator.h"
 #include "vtkObjectFactory.h"
 #include "vtkRectilinearGrid.h"
-#include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkStructuredGrid.h"
 
-vtkCxxRevisionMacro(vtkPVExtractVOI, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkPVExtractVOI, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkPVExtractVOI);
 
 //----------------------------------------------------------------------------
@@ -49,18 +46,9 @@ vtkPVExtractVOI::vtkPVExtractVOI()
 //----------------------------------------------------------------------------
 vtkPVExtractVOI::~vtkPVExtractVOI()
 {
-  if(this->ExtractVOI)
-    {
-    this->ExtractVOI->Delete();
-    }
-  if(this->ExtractGrid)
-    {
-    this->ExtractGrid->Delete();
-    }
-  if(this->ExtractRG)
-    {
-    this->ExtractRG->Delete();
-    }
+  this->ExtractGrid->Delete();
+  this->ExtractVOI->Delete();
+  this->ExtractRG->Delete();
 }
 
 //----------------------------------------------------------------------------
@@ -105,11 +93,7 @@ void vtkPVExtractVOIComputeInputUpdateExtents(
   filter->SetVOI(self->GetVOI());
   filter->SetSampleRate(self->GetSampleRate());
   filter->SetInput(input);
-  vtkInformation* innerInfo = filter->GetOutput()->GetPipelineInformation();
-  vtkInformation* outerInfo = output->GetPipelineInformation();
-  innerInfo->CopyEntry(outerInfo, vtkStreamingDemandDrivenPipeline::UPDATE_EXTENT());
-  innerInfo->CopyEntry(outerInfo, vtkStreamingDemandDrivenPipeline::UPDATE_EXTENT_INITIALIZED());
-  filter->GetOutput()->PropagateUpdateExtent();
+  filter->PropagateUpdateExtent(output);
 }
 
 //----------------------------------------------------------------------------
@@ -169,7 +153,7 @@ void vtkPVExtractVOIExecuteInformation(
   filter->SetVOI(self->GetVOI());
   filter->SetSampleRate(self->GetSampleRate());
   filter->SetInput(input);
-  filter->GetOutput()->UpdateInformation();
+  filter->UpdateInformation();
   self->GetOutput()->ShallowCopy(filter->GetOutput());
 }
 
@@ -289,36 +273,6 @@ void vtkPVExtractVOI::SetSampleRateK(int ratek)
   
   this->SampleRate[2] = ratek;
   this->Modified();
-}
-
-//-----------------------------------------------------------------------------
-void vtkPVExtractVOI::ReportReferences(vtkGarbageCollector* collector)
-{
-  this->Superclass::ReportReferences(collector);
-  collector->ReportReference(this->ExtractVOI, "ExtractVOI");
-  collector->ReportReference(this->ExtractGrid, "ExtractGrid");
-  collector->ReportReference(this->ExtractRG, "ExtractRG");
-}
-
-//-----------------------------------------------------------------------------
-void vtkPVExtractVOI::RemoveReferences()
-{
-  if(this->ExtractVOI)
-    {
-    this->ExtractVOI->Delete();
-    this->ExtractVOI = 0;
-    }
-  if(this->ExtractGrid)
-    {
-    this->ExtractGrid->Delete();
-    this->ExtractGrid = 0;
-    }
-  if(this->ExtractRG)
-    {
-    this->ExtractRG->Delete();
-    this->ExtractRG = 0;
-    }
-  this->Superclass::RemoveReferences();
 }
 
 //----------------------------------------------------------------------------
