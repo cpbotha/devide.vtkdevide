@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.11 2003/12/29 15:45:09 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.12 2003/12/30 13:20:11 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -82,7 +82,7 @@ void DrawVoxelSplat(ShellVoxel* Dptr,
    static GLfloat ambiento;
    static GLfloat diffuseo;
    if (vtkShellExtractor::shell_noc_visibility_lut[octantIdx][Dptr->nbrOCode])
-   //if (1)
+       //if (1)
    {
       if (Dptr->Red != prev_colour[0] || Dptr->Green != prev_colour[1] ||
           Dptr->Blue != prev_colour[2] || Dptr->Opacity != prev_colour[3])
@@ -1067,8 +1067,19 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       } // CORNER-ON
 
    } // else PERSPECTIVE rendering, PBTF
+
+
+   // ------------------------------------------------------------------------
    else // PERSPECTIVE rendering, iPBTF
    {
+       // variables used for traversal of P and D
+       int Pidx;
+       ShellVoxel *Dptr;
+
+       // materials caching
+       GLfloat prev_colour[4];
+       prev_colour[0] = prev_colour[1] = prev_colour[2] = prev_colour[3] = -1;
+       
       // check whether it's volume-on, face-on, edge-on or corner-on
       int xin = 0, yin = 0, zin = 0, xyztot = 0;
       if (camVoxelPos[0] >= 0 && camVoxelPos[0] < inputDims[0])
@@ -1238,20 +1249,157 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
          int edge_idx = 0;
          if (zin)
          {
+
             ps = vtkMath::Round(camVoxelPos[2]);
             ps = (ps >= zdim) ? zdim - 1 : ps;
+            cout << "HONK: edge-on, zin, ps == " << ps << endl;            
+
+            int x0, x1, xinc, y0, y1, yinc;            
             if (camVoxelPos[0] >= xdim)
-               edge_idx |= 0x1;
+            {
+                x0 = 0;
+                x1 = xdim;
+                xinc = 1;
+                edge_idx |= 0x1;                
+            }
+            else
+            {
+                x0 = xdim - 1;
+                x1 = -1; // we're going to use != x1 as end condition
+                xinc = -1;
+            }
             if (camVoxelPos[1] >= ydim)
+            {
+                y0 = 0;
+                y1 = ydim;
+                yinc = 1;
                edge_idx |= 0x2;
+            }
+            else
+            {
+                y0 = ydim - 1;
+                y1 = -1;
+                yinc = -1;
+            }
+
+
             // this is sorted, really
-            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
-            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+//            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
+//            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
 
 	    // start of experimental iPBTF code -----------------------------
 	    // hmmm... split outer loop
 	    int seg1len = ps;
             int seg2len = zdim - ps;
+
+            int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz;
+            unsigned char bigOctantIdx, smallOctantIdx;
+            if (seg1len >= seg2len)
+            {
+                smallz = zdim - 1;
+                bigzStart = 0;
+                bigzEnd = ps;
+                bigzInc = 1;
+                // if bigz >= bigThresh, it means we have to interleave
+                bigzThresh = seg1len - seg2len;
+                bigOctantIdx = edge_idx + 4;
+                smallOctantIdx = edge_idx;
+            }
+            else
+            {
+                smallz = 0;
+                bigzStart = zdim - 1;
+                bigzEnd = ps - 1; // our loop is going to use !=
+                bigzInc = -1;
+                bigzThresh = seg1len * 2 - 1;
+                bigOctantIdx = edge_idx;
+                smallOctantIdx = edge_idx + 4;
+            }
+
+            
+            bool interleaving;
+            if (bigzStart == bigzThresh)
+                interleaving = true;
+            else
+                interleaving = false;
+            
+            for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
+            {
+                if (interleaving)
+                {
+
+                    // double loop
+                    for (int y = y0; y != y1; y += yinc)
+                    {
+                        Pidx = (bigz * ydim + y) * 2;
+                        if (P[Pidx] != -1)
+                        {
+                            Dptr = D + P[Pidx];
+                            if (xinc == -1)
+                                Dptr += (P[Pidx + 1] - 1);
+
+                            for (int x = 0; x < P[Pidx + 1]; x++)
+                            {
+                                DrawVoxel(Dptr, bigOctantIdx, y, bigz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                Dptr += xinc;
+                            } // for (int x ...
+                        } // if (P[Pidx] != -1 ...
+
+                        // --------------------------------------------------
+                        // SMALL Z
+                        // --------------------------------------------------
+                        Pidx = (smallz * ydim + y) * 2;
+                        if (P[Pidx] != -1)
+                        {
+                            Dptr = D + P[Pidx];
+                            if (xinc == -1)
+                                Dptr += (P[Pidx + 1] - 1);
+
+                            for (int x = 0; x < P[Pidx + 1]; x++)
+                            {
+                                DrawVoxel(Dptr, smallOctantIdx, y, smallz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                Dptr += xinc;
+                            } // for (int x ...
+                        } // if (P[Pidx] != -1 ...
+                        
+                    } // for (int y ...
+
+                    // we're interleaving, so increment smallz (opposite dir)
+                    smallz -= bigzInc;
+                
+                } // if (interleaving) ...
+                else
+                {
+                    // single loop
+                    for (int y = y0; y != y1; y += yinc)
+                    {
+                        Pidx = (bigz * ydim + y) * 2;
+                        if (P[Pidx] != -1)
+                        {
+                            Dptr = D + P[Pidx];
+                            if (xinc == -1)
+                                Dptr += (P[Pidx + 1] - 1);
+
+                            for (int x = 0; x < P[Pidx + 1]; x++)
+                            {
+                                DrawVoxel(Dptr, bigOctantIdx, y, bigz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                Dptr += xinc;
+                            } // for (int x ...
+                        } // if (P[Pidx] != -1 ...
+                    
+
+                        // see whether we have to interleave on the next loop
+                        if (bigz + bigzInc == bigzThresh)
+                        {
+                            interleaving = true;
+                            cout << "interleave " << bigz + bigzInc << endl;
+                        }
+                    } // for (int y ...
+                } // else interleaving ...
+            } // for (int bigz ... 
 	    
 	    // first do the balance of the largest segment (ugh)
 	    int bigseglen = seg1len > seg2len ? seg1len : seg2len;
