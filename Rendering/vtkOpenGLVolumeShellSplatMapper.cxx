@@ -1,14 +1,14 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.44 2004/07/05 10:07:05 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.45 2004/11/30 22:27:13 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
- * This software is licensed exclusively for research use by Jorit Schaap.
- * Any modifications made to this software shall be sent to the author for 
- * possible inclusion in future versions.  Ownership and copyright of said 
- * modifications shall be ceded to the author.
+ * This software is licensed exclusively for research use.  Any
+ * modifications made to this software shall be sent to the author for
+ * possible inclusion in future versions.  Ownership and copyright of
+ * said modifications shall be ceded to the author.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT

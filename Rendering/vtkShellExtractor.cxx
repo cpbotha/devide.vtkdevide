@@ -1,14 +1,14 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.20 2004/11/28 02:07:50 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.21 2004/11/30 22:27:13 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
- * This software is licensed exclusively for research use by Jorit Schaap.
- * Any modifications made to this software shall be sent to the author for 
- * possible inclusion in future versions.  Ownership and copyright of said 
- * modifications shall be ceded to the author.
+ * This software is licensed exclusively for research use.  Any
+ * modifications made to this software shall be sent to the author for
+ * possible inclusion in future versions.  Ownership and copyright of
+ * said modifications shall be ceded to the author.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -147,7 +147,7 @@ static void ExtractShell(T* data_ptr,
         temp_sv.Opacity = (float)(OpacityTF->GetValue(tempValue));
         
         // first check if it's opaque enough
-        
+        if (temp_sv.Opacity > OmegaL)
           {
           // initially, we assume none of the neighbouring voxels
           // is < OmegaH

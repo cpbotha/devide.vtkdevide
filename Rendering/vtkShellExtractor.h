@@ -1,14 +1,14 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.h,v 1.8 2004/06/29 15:44:56 cpbotha Exp $
+// $Id: vtkShellExtractor.h,v 1.9 2004/11/30 22:27:14 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
- * This software is licensed exclusively for research use by Jorit Schaap.
- * Any modifications made to this software shall be sent to the author for 
- * possible inclusion in future versions.  Ownership and copyright of said 
- * modifications shall be ceded to the author.
+ * This software is licensed exclusively for research use.  Any
+ * modifications made to this software shall be sent to the author for
+ * possible inclusion in future versions.  Ownership and copyright of
+ * said modifications shall be ceded to the author.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -31,7 +31,6 @@
 #include "vtkObject.h"
 #include "vtkPiecewiseFunction.h"
 #include "vtkTimeStamp.h"
-#include "vtkdevideRenderingWin32Header.h"
 
 struct ShellVoxel
 {
@@ -69,7 +68,7 @@ struct ShellVoxel
  * Jayaram K. Udupa and Dewey Odhner, "Shell Rendering", IEEE Computer Graphics
  * and Applications, 1993, pp 58--67.
  */
-class VTK_DEVIDE_RENDERING_EXPORT vtkShellExtractor : public vtkObject
+class VTK_EXPORT vtkShellExtractor : public vtkObject
 {
 public:
   vtkTypeMacro(vtkShellExtractor, vtkObject);
