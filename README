@@ -1,5 +1,6 @@
 Getting this to build in Visual C++ 6.0
 ---------------------------------------
+
 - VERY important: make sure that VTK_USE_ANSI_STDLIB is set to ON in your
   VTK cmake configuration!
 
@@ -12,4 +13,8 @@ Getting this to build in Visual C++ 6.0
 - Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
   have to build ofstd and dcmdata
 
+- If you're going to build a Debug release, you'll notice a missing
+  python22_d.lib.  To workaround this if you don't really need debugging in
+  the python library, edit pyconfig.h: change the ref to python22_d.lib to
+  just python22.lib and comment out #define Py_DEBUG
 
