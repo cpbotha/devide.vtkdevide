@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained()
@@ -1080,12 +1080,50 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
+  // BEGIN cpbotha
+
+  // if we're constrained, constrain man!
+  if (this->ConstrainToPlane)
+  {
+	double blaat[3];
+	vtkMath::Cross(vpn, v, blaat);
+
+	double bdp = vtkMath::Dot(v, this->ConstrainPlaneNormal);
+	double badvector[3];
+	for (int i=0; i<3; i++)
+	{
+		badvector[i] = bdp * this->ConstrainPlaneNormal[i];
+		v[i] -= badvector[i];
+		axis[i] = this->ConstrainPlaneNormal[i];
+	}
+
+	
+	if (vtkMath::Dot(axis, blaat) < 0)
+	{
+		for (int i=0; i<3; i++)
+		{
+			axis[i] *= -1;
+		}
+	}
+
+  }
+  else
+  {
+
+  // END cpbotha
+
+
   // Create axis of rotation and angle of rotation
   vtkMath::Cross(vpn,v,axis);
   if ( vtkMath::Normalize(axis) == 0.0 )
     {
     return;
     }
+
+  // BEGIN cpbotha
+  }
+  // END cpbotha
+
   int *size = this->CurrentRenderer->GetSize();
   double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
   theta = 360.0 * sqrt(l2/((double)size[0]*size[0]+size[1]*size[1]));
