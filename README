@@ -1,8 +1,29 @@
 Getting this to build in Visual C++ 6.0
 ---------------------------------------
 
+General
+-------
+
+- If you're going to build a Debug release, you'll notice a missing
+  python22_d.lib.  To workaround this if you don't really need debugging in
+  the python library, edit pyconfig.h: change the ref to python22_d.lib to
+  just python22.lib and comment out #define Py_DEBUG
+
+Your VTK build
+--------------
+
+- You're going to build with Python wrapping, so you need Tcl installed.  
+  Makes sense, doesn't it?  Because Python 2.2.3 itself makes use of tcl/tk
+  8.3, I installed ActiveTcl 8.3.5.0-2 (from activestate.com); most of the tk 
+  thingies required by cmake are in f:\tcl\include and lib.  TK_INTERNAL_PATH
+  is of course in the VTK/Rendering/tkInternals/tk<version>.
+
 - VERY important: make sure that VTK_USE_ANSI_STDLIB is set to ON in your
   VTK cmake configuration!
+
+
+The vtkdscas config
+-------------------
 
 - Add wsock32.lib and netapi32.lib to the standard libraries
   (CMAKE_STANDARD_LIBRARIES).  Both HDF and DCMTK require this.
@@ -12,9 +33,3 @@ Getting this to build in Visual C++ 6.0
 
 - Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
   have to build ofstd and dcmdata
-
-- If you're going to build a Debug release, you'll notice a missing
-  python22_d.lib.  To workaround this if you don't really need debugging in
-  the python library, edit pyconfig.h: change the ref to python22_d.lib to
-  just python22.lib and comment out #define Py_DEBUG
-
