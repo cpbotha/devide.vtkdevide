@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.13 2003/08/06 16:16:39 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.14 2003/08/07 21:55:13 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -371,7 +371,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    for (si_iterator = series_instances.begin(); si_iterator != series_instances.end(); si_iterator++)
    {
       // sort dicom_files according to SliceLocation, hmmmmkay?
-      sort((*si_iterator).dicom_files.begin(), (*si_iterator).dicom_files.end());
+      std::sort((*si_iterator).dicom_files.begin(), (*si_iterator).dicom_files.end());
       vtkDebugMacro(<<"Sorted SeriesInstanceUID " << (*si_iterator).SeriesInstanceUID.c_str() << ", " << (*si_iterator).BitsAllocated << ", " << (*si_iterator).dicom_files.size() << " files.");
    }
 
@@ -779,7 +779,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.13 2003/08/06 16:16:39 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.14 2003/08/07 21:55:13 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
