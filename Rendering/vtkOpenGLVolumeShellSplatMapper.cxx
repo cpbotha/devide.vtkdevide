@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.35 2004/06/28 15:38:40 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.36 2004/06/28 21:27:39 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -2637,11 +2637,6 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 octantIdxSYBX |= 0x2; octantIdxSYSX = octantIdxSYBX;
             }
 
-            cout << bigyStart << " -> " << bigyEnd << " with "
-                 << bigyInc << endl;
-            cout << initsmally << " | " << bigyThresh << endl;
-
-            
             int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
 
             if (pq >= (xdim - pq))
@@ -2665,7 +2660,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
             
             bool yInterleaved;
-            bool xInterleaved;
+            //bool xInterleaved;
 
             ShellVoxel *DptrBY, *DptrBYBX, *DptrBYSX;
             ShellVoxel *DptrBYBX1, *DptrBYSX1;
@@ -2687,10 +2682,10 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 smally = initsmally;
                 for (int bigy = bigyStart; bigy != bigyEnd; bigy += bigyInc)
                 {
-                    if (bigxStart == bigxThresh)
-                        xInterleaved = true;
-                    else
-                        xInterleaved = false;
+//                     if (bigxStart == bigxThresh)
+//                         xInterleaved = true;
+//                     else
+//                         xInterleaved = false;
 
                     smallx = initsmallx;
                     
@@ -2711,7 +2706,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                             // checks though, it can easily wander over into
                             // the next y-z line and strike a correct ->x == x
                             DptrBYBX1 = DptrBYSX + 1;
-                            DptrBYSX1 = DptrBYBX - 1;;
+                            DptrBYSX1 = DptrBYBX - 1;
                         }
                         else
                         {
@@ -2720,6 +2715,16 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
                             DptrBYBX1 = DptrBYSX - 1;
                             DptrBYSX1 = DptrBYBX + 1;
+
+                            if (bigy == 139 && z == 239)
+                              {
+                              cout << hex << DptrBY <<
+                                ":" << hex << DptrBYBX <<
+                                ":" << hex << DptrBYBX1 <<
+                                ":" << dec << P[PidxBY + 1] - 1 <<
+                                ":" << P[PidxBY] << ":"
+                                   << ydim << "," << bigy << "," << z << endl;
+                              }
                         }
                     }
                     else
@@ -2821,8 +2826,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                             }
                           } // if (DptrBYBX)... 
 
-                        if (0)
-                          //if (DptrBYSX)
+                        if (DptrBYSX)
                           {
                           tempX = DptrBYSX->x;
                           tempDistance = tempX - pq;
@@ -2866,9 +2870,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                           } // if (DptrBYSX) ...
                         } // if (DptrBY) ...
 
-
-                      if (0)
-                        //if (yInterleaved && DptrSY)
+                      if (yInterleaved && DptrSY)
                         {
                         if (DptrSYBX)
                           {
