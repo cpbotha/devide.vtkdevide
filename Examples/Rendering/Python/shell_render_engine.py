@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.2 2003/03/08 00:19:56 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.3 2003/09/03 11:13:13 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -111,7 +111,7 @@ volume.SetMapper(splatmapper)
 ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
-ren.GetActiveCamera().ParallelProjectionOn()
+#ren.GetActiveCamera().ParallelProjectionOn()
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)

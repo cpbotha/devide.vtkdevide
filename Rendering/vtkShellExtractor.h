@@ -1,6 +1,27 @@
-// vtkShellExtractor.h copyright (c) 2002 by Charl P. Botha http://cpbotha.net/
-// $Id: vtkShellExtractor.h,v 1.2 2003/05/06 11:34:47 cpbotha Exp $
+// vtkShellExtractor.h copyright (c) 2003 
+// by Charl P. Botha cpbotha@ieee.org 
+// and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
+// $Id: vtkShellExtractor.h,v 1.3 2003/09/03 11:13:13 cpbotha Exp $
 // vtk class for extracting Udupa Shells
+
+/*
+ * This software is licensed exclusively for research use by Jorit Schaap.
+ * Any modifications made to this software shall be sent to the author for 
+ * possible inclusion in future versions.  Ownership and copyright of said 
+ * modifications shall be ceded to the author.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #ifndef __vtkShellExtractor_h
 #define __vtkShellExtractor_h
