@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.14 2003/12/30 17:02:25 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.15 2003/12/31 13:14:29 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1146,36 +1146,218 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             pq = (pq >= xdim) ? xdim - 1 : pq;
             pr = vtkMath::Round(camVoxelPos[1]);
             pr = (pr >= ydim) ? ydim - 1 : pr;
+
+            cout << "HINK: face-on, zin == 0, pq == "
+                 << pq << " pr == " << pr << endl;
+
+            
+
+            int z0, z1, zinc;
+            unsigned char octantIdxBYBX, octantIdxBYSX;
+            unsigned char octantIdxSYBX, octantIdxSYSX;
+            
             if (camVoxelPos[2] >= zdim)
             {
-#ifdef SSM_VERBOSE_OUTPUT                
-               cout << "z >= zdim" <<endl;
-#endif               
-               // quadrant LU
-               this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   5, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant LD
-               this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, zdim,   7, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RU
-               this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, zdim,   4, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RD
-               this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, zdim,   6, D, P, inputDims[1], ambient, diffuse, u, v);
+                z0 = 0;
+                z1 = zdim;
+                zinc = 1;
+                // z is > zdim, so we can set this so long
+                octantIdxBYBX =
+                    octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0x4;
             }
             else
             {
-#ifdef SSM_VERBOSE_OUTPUT                
-               cout << "z < 0" <<endl;
-#endif               
-               // MIRROR of clause above, only shell rendering octantIdx changes
-               // quadrant LU
-               this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant LD
-               this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, zdim,   3, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RU
-               this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, zdim,   0, D, P, inputDims[1], ambient, diffuse, u, v);
-               // quadrant RD
-               this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, zdim,   2, D, P, inputDims[1], ambient, diffuse, u, v);
+                z0 = zdim - 1;
+                z1 = -1; // we're going to use != z1 as end cond
+                zinc = -1;
+                octantIdxBYBX =
+                    octantIdxBYSX = octantIdxSYBX = octantIdxSYSX = 0;
             }
-         }
+
+            // now partition y and x
+            int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
+
+            if (pr >= (ydim - pr))
+            {
+                bigyStart = 0;
+                bigyEnd = pr;
+                bigyInc = 1;
+                bigyThresh = pr - (ydim - pr); // biglen - small_len
+                initsmally = ydim - 1;
+                octantIdxBYBX |= 0x2; octantIdxBYSX = octantIdxBYBX;
+            }
+            else
+            {
+                bigyStart = ydim - 1;
+                bigyEnd = pr - 1; // loop uses != bigyEnd
+                bigyInc = -1;
+                bigyThresh = pr * 2 - 1;
+                initsmally = 0;
+                octantIdxSYBX |= 0x2; octantIdxSYSX = octantIdxSYBX;
+            }
+
+            
+            int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
+
+            if (pq >= (xdim - pq))
+            {
+                bigxStart = 0;
+                bigxEnd = pq;
+                bigxInc = 1;
+                bigxThresh = pq - (xdim - pq); // biglen - small_len
+                initsmallx = xdim - 1;
+                octantIdxBYBX |= 0x1; octantIdxSYBX = octantIdxBYBX;
+            }
+            else
+            {
+                bigxStart = xdim - 1;
+                bigxEnd = pq - 1; // loop uses != bigyEnd
+                bigxInc = -1;
+                bigxThresh = pq * 2 - 1;
+                initsmallx = 0;
+                octantIdxBYSX |= 0x1; octantIdxSYSX = octantIdxBYSX;
+            }
+
+            
+            // we can set up these initial variables now!
+            bool yInterleaved;
+            if (bigyStart == bigyThresh)
+                yInterleaved = true;
+            else
+                yInterleaved = false;
+
+            bool xInterleaved;
+            if (bigxStart == bigxThresh)
+                xInterleaved = true;
+            else
+                xInterleaved = false;
+
+
+            ShellVoxel *DptrBY, *DptrBYBX, *DptrBYSX;
+            ShellVoxel *DptrSY, *DptrSYBX, *DptrSYSX;
+            int PidxBY, PidxSY;
+            
+            for (int z = z0; z != z1; z += zinc)
+            {
+                smally = initsmally;
+                for (int bigy = bigyStart; bigy != bigyEnd; bigy += bigyInc)
+                {
+
+                    PidxBY = (z * ydim + bigy) * 2;
+                    if (P[PidxBY] != -1)
+                    {
+                        DptrBY = D + P[PidxBY];
+                        if (bigxInc == 1)
+                        {
+                            DptrBYBX = DptrBY;
+                            DptrBYSX = DptrBY + P[PidxBY + 1] - 1;
+                        }
+                        else
+                        {
+                            DptrBYBX = DptrBY + P[PidxBY + 1] - 1;
+                            DptrBYSX = DptrBY;
+                        }
+                    }
+                    else
+                    {
+                        DptrBY = (ShellVoxel*)NULL;
+                    }
+
+                    PidxSY = (z * ydim + smally) * 2;
+                    if (P[PidxSY] != -1)
+                    {
+                        DptrSY = D + P[PidxSY];
+                        if (bigxInc == 1)
+                        {
+                            DptrSYBX = DptrSY;
+                            DptrSYSX = DptrSY + P[PidxSY + 1] - 1;
+                        }
+                        else
+                        {
+                            DptrSYBX = DptrSY + P[PidxSY + 1] - 1;
+                            DptrSYSX = DptrSY;
+                        }
+                        
+                    }
+                    else
+                    {
+                        DptrSY = (ShellVoxel*)NULL;
+                    }
+                    
+                    smallx = initsmallx;
+                    for (int bigx = bigxStart; bigx != bigxEnd;
+                         bigx += bigxInc)
+                    {
+
+                        // -----------
+                        
+                        if (DptrBY)
+                        {
+                            if (DptrBYBX->x == bigx)
+                            {
+                                // render BYBX here
+                                DrawVoxel(DptrBYBX, octantIdxBYBX, bigy, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrBYBX += bigxInc;
+                            }
+                            
+                            if (xInterleaved && DptrBYSX->x == smallx)
+                            {
+                                // render BYSX here
+                                DrawVoxel(DptrBYSX, octantIdxBYSX, bigy, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrBYSX -= bigxInc;
+                            }
+                        }
+
+                        if (yInterleaved && DptrSY)
+                        {
+                            if (DptrSYBX->x == bigx)
+                            {
+                                // render SYBX here
+                                DrawVoxel(DptrSYBX, octantIdxSYBX, smally, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrSYBX += bigxInc;
+                            }
+
+                            if (xInterleaved && DptrSYSX->x == smallx)
+                            {
+                                DrawVoxel(DptrSYSX, octantIdxSYSX, smally, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrSYSX -= bigxInc;
+                            }
+                        }
+
+
+                        // -----------
+
+
+                        if (xInterleaved)
+                        {
+                            smallx -= bigxInc;
+                        }
+                        else
+                        {
+                            if (bigx + bigxInc == bigxThresh)
+                                xInterleaved = true;
+                        }
+                        
+                    } // for (int bigx ...
+
+                    if (yInterleaved)
+                    {
+                        smally -= bigyInc;
+                    }
+                    else
+                    {
+                        if (bigy + bigyInc == bigyThresh)
+                            yInterleaved = true;
+                    }
+                    
+                } // for (int bigy ...
+            } // for (int z ...
+         } // if (zin == 0) ...
+         
          else if (yin == 0)
          {
             pq = vtkMath::Round(camVoxelPos[0]);
