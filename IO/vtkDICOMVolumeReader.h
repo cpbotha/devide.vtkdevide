@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.12 2003/08/05 10:28:09 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.13 2003/08/05 14:20:17 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -62,7 +62,7 @@
 
 // we need this else Visual C++ doesn't like our STL thingies
 // in addition, this header should be included LAST in vtkDICOMVolumeReader.cxx
-using namespace std;
+//using namespace std;
 
 //BTX
 class DcmObject;
@@ -78,7 +78,7 @@ class DcmStack;
 class dicom_file
 {
 public:
-   string filename;
+   std::string filename;
    //DcmFileStream* filestream;
    DcmFileFormat* fileformat;
    double SliceLocation;
@@ -95,8 +95,8 @@ public:
 class series_instance_misc_metadata_t
 {
 public:
-   string StudyDescription;
-   string ReferringPhysician;
+   std::string StudyDescription;
+   std::string ReferringPhysician;
 };
 
 /**
@@ -107,7 +107,7 @@ public:
 class series_instance
 {
 public:
-   string SeriesInstanceUID;
+   std::string SeriesInstanceUID;
    double SliceThickness;
    double PixelSpacingx;
    double PixelSpacingy;
@@ -116,7 +116,7 @@ public:
    unsigned short BitsAllocated;
    unsigned short PixelRepresentation;
    unsigned short BitsStored;
-   vector<dicom_file> dicom_files;
+   std::vector<dicom_file> dicom_files;
    series_instance_misc_metadata_t misc_metadata;
 };
 //ETX
@@ -139,14 +139,14 @@ protected:
    /// List of all the DICOM image files that are going to be read by us.
    //BTX
    /// stores list of dicom filenames that are going to be read
-   vector<string> dicom_filenames;
+   std::vector<std::string> dicom_filenames;
    /**
     * Filenames live here right after they've been add_dicom_filename()ed.
     * When this->GetModified() is called, this buffer is compared with the
     * internal dicom_filenames vector.  If these are different, then MTime()
     * is timestamped and the list is copied to the internal vector.
     */
-   vector<string> dicom_filenames_buffer;
+   std::vector<std::string> dicom_filenames_buffer;
    //ETX
    /// Index into internal vectors of filenames, each vector with unique
    /// SeriesInstanceUID
@@ -156,7 +156,7 @@ protected:
     * This list  contains series_instance classes, each with all the info
     * pertaining to a specific series instance.
     */
-   list<series_instance> series_instances;
+   std::list<series_instance> series_instances;
    //ETX
    double WindowCenter;
    double WindowWidth;
@@ -179,7 +179,7 @@ protected:
    void ExecuteInformation(void);
    void ExecuteData(vtkDataObject* out);
    //BTX
-   list<series_instance>::iterator find_si_iterator(int idx);
+   std::list<series_instance>::iterator find_si_iterator(int idx);
    //ETX
 
 public:

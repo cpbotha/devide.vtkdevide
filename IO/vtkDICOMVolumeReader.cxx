@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.11 2003/08/05 10:28:09 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.12 2003/08/05 14:20:17 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -73,12 +73,12 @@ vtkDICOMVolumeReader* vtkDICOMVolumeReader::New()
 void vtkDICOMVolumeReader::deinit_dcmtk(void)
 {
    vtkDebugMacro(<<"vtkDICOMVolumeReader::deinit_dcmtk() - START.");
-   list<series_instance>::iterator si_iterator;
+   std::list<series_instance>::iterator si_iterator;
    // go through all series instances
    for (si_iterator = series_instances.begin(); si_iterator != series_instances.end(); si_iterator++)
    {
       // in each series instance, call dtor of fileformats
-      vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
+      std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
       for (unsigned i = 0; i < dicom_files_p->size(); i++)
       {
          if ((*dicom_files_p)[i].fileformat) delete (*dicom_files_p)[i].fileformat;
@@ -170,7 +170,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
    double temp_SliceLocation;
    char* SeriesInstanceUID_cp;
-   list<series_instance>::iterator si_iterator;
+   std::list<series_instance>::iterator si_iterator;
 
    for (unsigned i = 0; i < dicom_filenames.size(); i++)
    {
@@ -202,7 +202,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          continue;
       }
 
-      string SeriesInstanceUID_str = string(SeriesInstanceUID_cp);
+      std::string SeriesInstanceUID_str = std::string(SeriesInstanceUID_cp);
 
       // check if this series_instance exists...
 
@@ -297,17 +297,17 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          DcmStack StudyDescription_stack;
          DcmElement *StudyDescription_obj = search_object(0x0008,0x1030, *(temp_dicom_file.fileformat), StudyDescription_stack); // StudyDescription
          if (!StudyDescription_obj || StudyDescription_obj->getString(StudyDescription_cp) != EC_Normal || StudyDescription_cp == NULL)
-            temp_series_instance.misc_metadata.StudyDescription = string("N/A");
+            temp_series_instance.misc_metadata.StudyDescription = std::string("N/A");
          else
-            temp_series_instance.misc_metadata.StudyDescription = string(StudyDescription_cp);
+            temp_series_instance.misc_metadata.StudyDescription = std::string(StudyDescription_cp);
 
          char *ReferringPhysician_cp;
          DcmStack ReferringPhysician_stack;
          DcmElement *ReferringPhysician_obj = search_object(0x0008,0x0090, *(temp_dicom_file.fileformat), ReferringPhysician_stack); // ReferringPhysician
          if (!ReferringPhysician_obj || ReferringPhysician_obj->getString(ReferringPhysician_cp) != EC_Normal || ReferringPhysician_cp == NULL)
-            temp_series_instance.misc_metadata.ReferringPhysician = string("N/A");
+            temp_series_instance.misc_metadata.ReferringPhysician = std::string("N/A");
          else
-            temp_series_instance.misc_metadata.ReferringPhysician = string(ReferringPhysician_cp);
+            temp_series_instance.misc_metadata.ReferringPhysician = std::string(ReferringPhysician_cp);
 
 
          // store all the other thingies we've just extracted
@@ -455,11 +455,11 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
    int numpixels_perslice = DataDimensions[0] * DataDimensions[1];
 
    // find the iterator corresponding to the current seriesinstance
-   list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+   std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
    if (si_iterator == series_instances.end())
       si_iterator--;
 
-   vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
+   std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
    
    // it's all sorted, so we can just load the pixel data and stuff it a slice at a time into our allocated memory
    int last_progress_i = -1;
@@ -663,11 +663,11 @@ unsigned long vtkDICOMVolumeReader::GetMTime(void)
    return mtime;
 }
 
-list<series_instance>::iterator vtkDICOMVolumeReader::find_si_iterator(int idx)
+std::list<series_instance>::iterator vtkDICOMVolumeReader::find_si_iterator(int idx)
 {
    // the following depends on the currently selected SeriesInstanceIdx
    int si_cd = 0;
-   list<series_instance>::iterator si_iterator;
+   std::list<series_instance>::iterator si_iterator;
 
    for (si_iterator = series_instances.begin(); si_cd != SeriesInstanceIdx && si_iterator != series_instances.end(); si_iterator++)
    {
@@ -682,7 +682,7 @@ void vtkDICOMVolumeReader::add_dicom_filename(const char* dicom_filename)
    // only the buffer changes, so we do not update MTime yet... only when
    // GetMTime() is called, we check for differences between this list
    // and dicom_filenames.  If there's no difference, MTime is NOT adapted
-   dicom_filenames_buffer.push_back(string(dicom_filename));
+   dicom_filenames_buffer.push_back(std::string(dicom_filename));
 }
 
 void vtkDICOMVolumeReader::clear_dicom_filenames(void)
@@ -713,7 +713,7 @@ const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 {
    // we have to make sure that our data-structures are up-to-date
    this->UpdateInformation();
-   list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+   std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
    if (si_iterator == this->series_instances.end())
    {
       return NULL;
@@ -727,7 +727,7 @@ const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 const char *vtkDICOMVolumeReader::GetStudyDescription(void)
 {
    this->UpdateInformation();
-   list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+   std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
    if (si_iterator == this->series_instances.end())
    {
       return NULL;
@@ -741,7 +741,7 @@ const char *vtkDICOMVolumeReader::GetStudyDescription(void)
 const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 {
    this->UpdateInformation();
-   list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+   std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
    if (si_iterator == this->series_instances.end())
    {
       return NULL;
@@ -760,7 +760,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.11 2003/08/05 10:28:09 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.12 2003/08/05 14:20:17 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
