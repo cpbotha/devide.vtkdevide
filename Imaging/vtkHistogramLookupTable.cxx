@@ -1,9 +1,10 @@
 #include "vtkHistogramLookupTable.h"
 
 #include "vtkImageData.h"
+#include "vtkImageProgressIterator.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.3 $");
+vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.4 $");
 vtkStandardNewMacro(vtkHistogramLookupTable);
 
 //----------------------------------------------------------------------------
@@ -79,6 +80,19 @@ void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
                                     I1T *, I2T *)
 
 {
+  
+  vtkImageIterator<I1T> in1It(in1Data, outExt);
+  vtkImageIterator<I2T> in2It(in2Data, outExt);
+
+  // we're single-threaded, so we can pass thread-id 0
+  vtkImageProgressIterator<unsigned short> outIt(outData, outExt, self, 0);
+
+  while (!outIt.IsAtEnd())
+    {
+    
+    } // while (!outIt.IsAtEnd()) ...
+
+  
     // store these ranges in our own ivars as well!
     double in1range[2], in2range[2];
     in1Data->GetScalarRange(in1range);
