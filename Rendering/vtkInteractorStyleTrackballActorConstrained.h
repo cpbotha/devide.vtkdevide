@@ -1,5 +1,5 @@
 // vtkInteractorStyleTrackballActorConstrained copyright (c) 2003 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.2 2003/06/24 15:41:01 cpbotha Exp $
+// $Id: vtkInteractorStyleTrackballActorConstrained.h,v 1.3 2003/06/29 18:26:36 cpbotha Exp $
 // interactorstyle that can constrain object manipulation to planes, lines and objects
 
 #ifndef __vtkInteractorStyleTrackballActorConstrained_h
@@ -45,6 +45,16 @@ public:
     * If the parameter is NULL, just clear the list.
     */
    void SetActiveProp(vtkProp3D *theProp);
+
+   /**	
+    * Return the current InteractionProp.  This can be queried after the last
+	* interaction (e.g. during an EndInteraction observer) to find out if an object
+	* was actually moved around.
+	*/
+   vtkProp3D* GetInteractionProp(void)
+   {
+	   return this->InteractionProp;
+   }
 
 protected:
    vtkInteractorStyleTrackballActorConstrained();
