@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.14 2003/08/06 16:16:39 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.15 2003/10/07 16:40:48 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -21,11 +21,6 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
- * TODO
- *   - SliceThickness + SpacingBetweenSlices for MRI
  */
 
 /*
@@ -109,6 +104,7 @@ class series_instance
 public:
    std::string SeriesInstanceUID;
    double SliceThickness;
+   double SpacingBetweenSlices;
    double PixelSpacingx;
    double PixelSpacingy;
    unsigned short Rows;

@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.15 2003/09/24 10:45:11 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.16 2003/10/07 16:40:48 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -228,7 +228,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          temp_series_instance.SeriesInstanceUID = SeriesInstanceUID_str;
 
          // now make sure SliceThickness, PixelSpacing, Rows, Columns are all present
-         double temp_SliceThickness;
+         double temp_SliceThickness, temp_SpacingBetweenSlices;
          double temp_PixelSpacingx, temp_PixelSpacingy;
          unsigned short temp_Rows, temp_Columns;
          unsigned short temp_BitsAllocated;
@@ -251,6 +251,15 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
              temp_SliceThickness = 1;
              }
          }
+
+         DcmStack SpacingBetweenSlices_stack;
+         DcmElement* SpacingBetweenSlices_obj = search_object(0x0018, 0x0088, *(temp_dicom_file.fileformat), SpacingBetweenSlices_stack); // SpacingBetweenSlices
+         if (!SpacingBetweenSlices_obj || SpacingBetweenSlices_obj->getFloat64(temp_SpacingBetweenSlices) != EC_Normal)
+         {
+             // this is normal: only some MRI datasets make use of this
+             temp_SpacingBetweenSlices = -1;
+         }
+         
 
          DcmStack PixelSpacing_stack;
          DcmElement* PixelSpacing_obj = search_object(0x0028, 0x0030, *(temp_dicom_file.fileformat), PixelSpacing_stack); // PixelSpacing
@@ -331,6 +340,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
          // store all the other thingies we've just extracted
          temp_series_instance.SliceThickness = temp_SliceThickness;
+         temp_series_instance.SpacingBetweenSlices = temp_SpacingBetweenSlices;
          temp_series_instance.PixelSpacingx = temp_PixelSpacingx;
          temp_series_instance.PixelSpacingy = temp_PixelSpacingy;
          temp_series_instance.Rows = temp_Rows;
@@ -393,7 +403,15 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    DataDimensions[2] = (*si_iterator).dicom_files.size();
    DataSpacing[0] = (*si_iterator).PixelSpacingx;
    DataSpacing[1] = (*si_iterator).PixelSpacingy;
-   DataSpacing[2] = (*si_iterator).SliceThickness;
+   // SpacingBetweenSlices is preferred for the axial spacing.
+   if ((*si_iterator).SpacingBetweenSlices > 0)
+   {
+       DataSpacing[2] = (*si_iterator).SpacingBetweenSlices;
+   }
+   else
+   {
+       DataSpacing[2] = (*si_iterator).SliceThickness;
+   }
 
    // get pointer to our output vtkStructuredPoints
    vtkStructuredPoints* output = this->GetOutput();
@@ -779,7 +797,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.15 2003/09/24 10:45:11 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.16 2003/10/07 16:40:48 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
