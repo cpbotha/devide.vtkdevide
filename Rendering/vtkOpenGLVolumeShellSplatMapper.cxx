@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.30 2004/06/16 21:44:52 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.31 2004/06/22 12:09:23 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1270,33 +1270,39 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                         DptrBY = (ShellVoxel*)NULL;
                     }
 
-                    // FIXME: only necessary if yInterleaved (see yin == 0)
-                    PidxSY = (z * ydim + smally) * 2;
-                    if (P[PidxSY] != -1)
-                    {
+                    if (yInterleaved)
+                      {
+                      PidxSY = (z * ydim + smally) * 2;
+                      if (P[PidxSY] != -1)
+                        {
                         DptrSY = D + P[PidxSY];
                         if (bigxInc == 1)
-                        {
-                            DptrSYBX = DptrSY;
-                            DptrSYSX = DptrSY + P[PidxSY + 1] - 1;
-
-                            DptrSYBX1 = DptrSYSX + 1;
-                            DptrSYSX1 = DptrSYBX - 1;
-                        }
+                          {
+                          DptrSYBX = DptrSY;
+                          DptrSYSX = DptrSY + P[PidxSY + 1] - 1;
+                            
+                          DptrSYBX1 = DptrSYSX + 1;
+                          DptrSYSX1 = DptrSYBX - 1;
+                          }
                         else
-                        {
-                            DptrSYBX = DptrSY + P[PidxSY + 1] - 1;
-                            DptrSYSX = DptrSY;
-
-                            DptrSYBX1 = DptrSYSX - 1;
-                            DptrSYSX1 = DptrSYBX + 1;
-                        }
+                          {
+                          DptrSYBX = DptrSY + P[PidxSY + 1] - 1;
+                          DptrSYSX = DptrSY;
+                          
+                          DptrSYBX1 = DptrSYSX - 1;
+                          DptrSYSX1 = DptrSYBX + 1;
+                          }
                         
-                    }
-                    else
-                    {
+                        }
+                      else
+                        {
                         DptrSY = (ShellVoxel*)NULL;
-                    }
+                        }
+                      }
+                    else
+                      {
+                      DptrSY = (ShellVoxel*)NULL;
+                      }
                     
 
                     for (int bigx = bigxStart; bigx != bigxEnd;
