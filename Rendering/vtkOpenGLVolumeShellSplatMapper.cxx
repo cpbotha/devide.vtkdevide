@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.18 2004/01/07 22:35:04 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.19 2004/01/08 11:01:17 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -60,7 +60,7 @@
 
 // discrete Gaussian will be N x N
 #define OGLVSM_RF_N 64
-//#define SSM_VERBOSE_OUTPUT
+#define SSM_VERBOSE_OUTPUT
 
 // stupid global variable we can use
 long voxels_drawn;
@@ -1623,7 +1623,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                  << pr << " ps == " << ps << endl;
 
 
-            // y is th slowest changing dimension
+            // x is the slowest changing dimension
             int x0, x1, xinc;
             unsigned char octantIdxBZBY, octantIdxBZSY;
             unsigned char octantIdxSZBY, octantIdxSZSY;
@@ -1631,24 +1631,22 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             
             if (camVoxelPos[0] >= xdim)
             {
-	      // FIXME: continue here...
-	      x0 = 0;
-	      x1 = xdim;
-	      xinc = 1;
-	      // zyx == 001b == 0x1
-	      octantIdxBZBY = 
-		octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0x1;
+                x0 = 0;
+                x1 = xdim;
+                xinc = 1;
+                // zyx == 001b == 0x1
+                octantIdxBZBY = 
+                    octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0x1;
             }
             else
             {
-	      x0 = xdim - 1;
-	      x1 = -1; // we're going to use != x1 as end cond
-	      xinc = -1;
-	      octantIdxBZBY =
-		  octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0;
+                x0 = xdim - 1;
+                x1 = -1; // we're going to use != x1 as end cond
+                xinc = -1;
+                octantIdxBZBY =
+                    octantIdxBZSY = octantIdxSZBY = octantIdxSZSY = 0;
             }
 
-	    // FIXME: continue here...
 
             // setup split-loop for z
             int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz, initsmallz;
@@ -1659,7 +1657,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 bigzInc = 1;
                 bigzThresh = ps - (zdim - ps); // biglen - small_len
                 initsmallz = zdim - 1;
-                octantIdxBZBX |= 0x04; octantIdxBZSX = octantIdxBZBX;
+                octantIdxBZBY |= 0x04; octantIdxBZSY = octantIdxBZBY;
             }
             else
             {
@@ -1668,43 +1666,69 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 bigzInc = -1;
                 bigzThresh = ps * 2 - 1;
                 initsmallz = 0;
-                octantIdxSZBX |= 0x4; octantIdxSZSX = octantIdxSZBX;
+                octantIdxSZBY |= 0x4; octantIdxSZSY = octantIdxSZBY;
             }
             
-
-            // setup split-loop for x
-            int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
-            if (pq >= (xdim - pq))
+            // setup split-loop for y
+            int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
+            if (pr >= (ydim - pr))
             {
-                bigxStart = 0;
-                bigxEnd = pq;
-                bigxInc = 1;
-                bigxThresh = pq - (xdim - pq); // biglen - small_len
-                initsmallx = xdim - 1;
-                octantIdxBZBX |= 0x1; octantIdxSZBX = octantIdxBZBX;
+                bigyStart = 0;
+                bigyEnd = pr;
+                bigyInc = 1;
+                bigyThresh = pr - (ydim - pr); // biglen - small_len
+                initsmally = ydim - 1;
+                octantIdxBZBY |= 0x2; octantIdxSZBY = octantIdxBZBY;
             }
             else
             {
-                bigxStart = xdim - 1;
-                bigxEnd = pq - 1; // loop uses != bigxEnd
-                bigxInc = -1;
-                bigxThresh = pq * 2 - 1;
-                initsmallx = 0;
-                octantIdxBZSX |= 0x1; octantIdxSZSX = octantIdxBZSX;
+                bigyStart = ydim - 1;
+                bigyEnd = pr - 1; // loop uses != bigyEnd
+                bigyInc = -1;
+                bigyThresh = pr * 2 - 1;
+                initsmally = 0;
+                octantIdxBZSY |= 0x2; octantIdxSZSY = octantIdxBZSY;
             }
 
             bool zInterleaved;
-            bool xInterleaved;
+            bool yInterleaved;
 
-            ShellVoxel *DptrBZ, *DptrBZBX, *DptrBZSX;
-            DptrBZ = DptrBZBX = DptrBZSX = (ShellVoxel*)NULL;
-            
-            ShellVoxel *DptrSZ, *DptrSZBX, *DptrSZSX;
-            DptrSZ = DptrSZBX = DptrSZSX = (ShellVoxel*)NULL;
-            
-            int PidxBZ, PidxSZ;
+            // now setup large Dptr matrix... x iteratates slowly,
+            // for each new x, we might have to render something from
+            // a max of 4 Dptr.  Each time we render, that specific Dptr
+            // is incremented/decremented depending on the direction of x
+            ShellVoxel **DptrMatrix;
+            DptrMatrix = new ShellVoxel*[zdim * ydim];
 
-            for (int y = y0; y != y1; y += yinc)
+            int curIdx, curPidx;
+            for (int z = 0; z < zdim; z++)
+            {
+                for (int y = 0; y < ydim; y++)
+                {
+                    curIdx = z * ydim + y;
+                    curPidx = 2 * curIdx;
+                    
+                    if (P[curPidx] != -1)
+                    {
+                        DptrMatrix[curIdx] = D + P[curPidx];
+                        if (xinc == -1)
+                        {
+                            // if x is moving "backwords", we have to
+                            // initialize to the Dptr at the end
+                            DptrMatrix[curIdx] += (P[curPidx + 1] - 1);
+                        }
+                    }
+                    else
+                    {
+                        DptrMatrix[curIdx] = (ShellVoxel*)NULL;
+                    }
+                } // for (int y = 0...
+            } // for (int z = 0...
+
+            int curBZBYidx, curBZSYidx, curSZBYidx, curSZSYidx;
+            ShellVoxel *curDptr;
+
+            for (int x = x0; x != x1; x += xinc)
             {
                 if (bigzStart == bigzThresh)
                     zInterleaved = true;
@@ -1715,117 +1739,85 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
                 for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
                 {
-                    if (bigxStart == bigxThresh)
-                        xInterleaved = true;
+                    if (bigyStart == bigyThresh)
+                        yInterleaved = true;
                     else
-                        xInterleaved = false;
+                        yInterleaved = false;
 
-                    smallx = initsmallx;
+                    smally = initsmally;
 
-                    PidxBZ = (bigz * ydim + y) * 2;
-                    if (P[PidxBZ] != -1)
+                    // we can start setting this up here (saves time in the
+                    // inner loop)
+                    curBZBYidx = curBZSYidx = bigz * ydim;
+                    curSZBYidx = curSZSYidx = smallz * ydim;
+                    
+                    for (int bigy = bigyStart; bigy != bigyEnd;
+                         bigy += bigyInc)
                     {
-                        // ?? if !zInterleaved, we don't get here either!
-                        DptrBZ = D + P[PidxBZ];
-                        if (bigxInc == 1)
+
+                        curBZBYidx = bigz * ydim + bigy;
+                        curDptr = DptrMatrix[curBZBYidx];
+
+                        if (curDptr && curDptr->x == x)
                         {
-                            // bigx is increasing, this means that the Dptr
-                            // for bigx is at the start of the sparse X
-                            // structure
-                            DptrBZBX = DptrBZ;
-                            DptrBZSX = DptrBZ + P[PidxBZ + 1] - 1;
+                            DrawVoxel(curDptr, octantIdxBZBY, bigy, bigz,
+                                      prev_colour, ambient, diffuse, u, v);
+                            //DptrMatrix[curBZBYidx] += xinc;
+                            //DptrMatrix[curBZBYidx] = curDptr + xinc;
+                        }
+
+#if 0                            
+                        if (zInterleaved)
+                        {
+                            curSZBYidx = smallz * ydim + bigy;
+                            curDptr = DptrMatrix[curSZBYidx];
+                            if (curDptr && curDptr->x == x)
+                            {
+                                DrawVoxel(curDptr, octantIdxSZBY, bigy, smallz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrMatrix[curSZBYidx] += xinc;
+                            }
+
+                            
+                            if (yInterleaved)
+                            {
+                                curSZSYidx = smallz * ydim + smally;
+                                curDptr = DptrMatrix[curSZSYidx];
+                                if (curDptr && curDptr->x == x)
+                                {
+                                    DrawVoxel(curDptr, octantIdxSZSY,
+                                              smally, smallz, prev_colour,
+                                              ambient, diffuse, u, v);
+                                    DptrMatrix[curSZSYidx] += xinc;
+                                }
+                            }
+
+                        } // if (zInterleaved)...
+                        
+                        if (yInterleaved)
+                        {
+                            curBZSYidx = bigz * ydim + smally;
+                            curDptr = DptrMatrix[curBZSYidx];
+                            if (curDptr && curDptr->x == x)
+                            {
+                                DrawVoxel(curDptr, octantIdxBZSY, smally, bigz,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrMatrix[curBZSYidx] += xinc;
+                            }
+
+                            smally -= bigyInc;
                         }
                         else
                         {
-                            DptrBZBX = DptrBZ + P[PidxBZ + 1] - 1;
-                            DptrBZSX = DptrBZ;
+                            // check if next y-loop will be interleaved
+                            if (bigy + bigyInc == bigyThresh)
+                                yInterleaved = true;
                         }
-                    }
-                    else
-                    {
-                        DptrBZ = (ShellVoxel*)NULL;
-                    }
 
-                    if (zInterleaved)
-                    {
-                        PidxSZ = (smallz * ydim + y) * 2;
-                        if (P[PidxSZ] != -1)
-                        {
-                            DptrSZ = D + P[PidxSZ];
-                            if (bigxInc == 1)
-                            {
-                                DptrSZBX = DptrSZ;
-                                DptrSZSX = DptrSZ + P[PidxSZ + 1] - 1;
-                            }
-                            else
-                            {
-                                DptrSZBX = DptrSZ + P[PidxSZ + 1] - 1;
-                                DptrSZSX = DptrSZ;
-                            }
-                        }
-                        else
-                        {
-                            DptrSZ = (ShellVoxel*)NULL;
-                        }
-                    }
-                    else
-                    {
-                        // zInterleaved == false, so we set this for safety
-                        DptrSZ = (ShellVoxel*)NULL;
-                    }
-
-                    for (int bigx = bigxStart; bigx != bigxEnd;
-                         bigx += bigxInc)
-                    {
-
-                        if (DptrBZ)
-                        {
-                            // ?? if !zInterleaved, we never get here!!
-                            if (DptrBZBX->x == bigx)
-                            {
-                                DrawVoxel(DptrBZBX, octantIdxBZBX, y, bigz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrBZBX += bigxInc;
-                            }
-
-                            if (xInterleaved && DptrBZSX->x == smallx)
-                            {
-                                DrawVoxel(DptrBZSX, octantIdxBZSX, y, bigz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrBZSX -= bigxInc;
-                            }
-                        } // if (DptrBZ) ...
-
-                        if (zInterleaved && DptrSZ)
-                        {
-                            if (DptrSZBX->x == bigx)
-                            {
-                                DrawVoxel(DptrSZBX, octantIdxSZBX, y, smallz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrSZBX += bigxInc;
-                            }
-
-                            if (xInterleaved && DptrSZSX->x == smallx)
-                            {
-                                DrawVoxel(DptrSZSX, octantIdxSZSX, y, smallz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrSZSX -= bigxInc;
-                            }
-                        } // if (zInterleaved && DptrSZ) ...
-
-
-                        if (xInterleaved)
-                        {
-                            smallx -= bigxInc;
-                        }
-                        else
-                        {
-                            if (bigx + bigxInc == bigxThresh)
-                                xInterleaved = true;
-                        }
+#endif                        
                         
                         
-                    } // for (int bigx == bigxStart ...
+                    } // for (int bigy == bigyStart ... INNER LOOP
 
                     if (zInterleaved)
                     {
@@ -1840,6 +1832,10 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 } // for (int bigz == bigzStart ...
                 
             } // for (int x = x0 ...
+
+            // get rid of the DptrMatrix
+            delete DptrMatrix;
+            
          } // else (xin == 0 face-on case)
       } // FACE-ON
 
