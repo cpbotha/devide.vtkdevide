@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.13 2003/08/05 14:20:17 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.14 2003/08/06 16:16:39 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -161,6 +161,10 @@ protected:
    double WindowCenter;
    double WindowWidth;
 
+   /// When on, this reader will be far more lenient with the files it
+   /// has to parse.
+   int Leniency;
+
    vtkDICOMVolumeReader();
    ~vtkDICOMVolumeReader();
 
@@ -217,6 +221,11 @@ public:
    const char *get_dicom_filename(int idx);
    vtkGetMacro(WindowCenter, double);
    vtkGetMacro(WindowWidth, double);
+
+   vtkSetMacro(Leniency, int);
+   vtkGetMacro(Leniency, int);
+   vtkBooleanMacro(Leniency, int);
+
    /// This will also make sure that ->Modified is set.
    vtkSetMacro(SeriesInstanceIdx, int);
    vtkGetMacro(SeriesInstanceIdx, int);

@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.12 2003/08/05 14:20:17 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.13 2003/08/06 16:16:39 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -53,6 +53,8 @@ vtkDICOMVolumeReader::vtkDICOMVolumeReader()
    DataOrigin[0] = DataOrigin[1] = DataOrigin[2] = 0.0;
    DataDimensions[0] = DataDimensions[1] = DataDimensions[2] = 0;
    WindowWidth = WindowCenter = 0.0;
+
+   this->LeniencyOff();
 }
 
 vtkDICOMVolumeReader::~vtkDICOMVolumeReader()
@@ -236,10 +238,18 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          DcmElement* SliceThickness_obj = search_object(0x0018, 0x0050, *(temp_dicom_file.fileformat), SliceThickness_stack); // SliceThickness
          if (!SliceThickness_obj || SliceThickness_obj->getFloat64(temp_SliceThickness) != EC_Normal)
          {
-            vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
-            if (temp_dicom_file.fileformat)
+           if (!this->GetLeniency())
+             {
+             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
+             if (temp_dicom_file.fileformat)
                delete temp_dicom_file.fileformat;
-            continue;
+             continue;
+             }
+           else
+             {
+             vtkWarningMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", assuming 1mm.");
+             temp_SliceThickness = 1;
+             }
          }
 
          DcmStack PixelSpacing_stack;
@@ -248,10 +258,19 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
              PixelSpacing_obj->getFloat64(temp_PixelSpacingx,0) != EC_Normal ||
              PixelSpacing_obj->getFloat64(temp_PixelSpacingy,1) != EC_Normal)
          {
-            vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read PixelSpacing from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
-            if (temp_dicom_file.fileformat)
+           if (!this->GetLeniency())
+             {
+             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read PixelSpacing from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
+             if (temp_dicom_file.fileformat)
                delete temp_dicom_file.fileformat;
-            continue;
+             continue;
+             }
+           else
+             {
+             vtkWarningMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read PixelSpacing from " << temp_dicom_file.filename.c_str() << ", assuming 1mm.");
+             temp_PixelSpacingx = 1;
+             temp_PixelSpacingy = 1;
+             }
          }
 
          DcmStack Rows_stack, Columns_stack;
@@ -334,7 +353,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       DcmElement* SliceLocation_obj = search_object(0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack); // SliceLocation
       if (!SliceLocation_obj || (SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
       {
-         vtkErrorMacro(<<"vtkDICOMVolumeReader::ExecuteInfo() - Unable to extract SliceLocation from " << temp_dicom_file.filename.c_str() << ", assuming 0.");
+         vtkWarningMacro(<<"vtkDICOMVolumeReader::ExecuteInfo() - Unable to extract SliceLocation from " << temp_dicom_file.filename.c_str() << ", assuming 0.");
          temp_SliceLocation = 0;
       }
 
@@ -760,7 +779,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.12 2003/08/05 14:20:17 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.13 2003/08/06 16:16:39 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
