@@ -5,7 +5,8 @@
 #
 
 SET (External_SRCS
-     vtkPVExtractVOI.cxx)
+     vtkPVExtractVOI.cxx
+     vtkPVGlyphFilter.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
