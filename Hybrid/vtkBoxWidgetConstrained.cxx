@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.10 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.11 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
@@ -103,7 +103,6 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   double axis[3]; //axis of rotation
   double theta; //rotation angle
   int i;
-  double pa1[3], pa2[3];
 
   v[0] = p2[0] - p1[0];
   v[1] = p2[1] - p1[1];
@@ -118,7 +117,7 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
     // in the case of the plane constraint, the plane normal is rot. axis
     // i.e. in both cases the ConstraintVector
     double bdp = vtkMath::Dot(v, this->ConstraintVector);
-    for (int i=0; i<3; i++)
+    for (i=0; i<3; i++)
       {
       v[i] -= this->ConstraintVector[i] * bdp;
       axis[i] = this->ConstraintVector[i];
@@ -132,7 +131,7 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
     // the hemisphere determines the correct rotation direction
     // so let's determine the hemisphere of p2
     double p2v[3];
-    for (int i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++)
       {
       p2v[i] = p2[i] - center[i];
       }
@@ -141,7 +140,7 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
     double hdp = vtkMath::Dot(p2v, avc);
     if (hdp >= 0)
       {
-      for (int i = 0; i < 3; i++)
+      for (i = 0; i < 3; i++)
         {
         axis[i] *= -1;
         }
