@@ -1,6 +1,6 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2002 by Charl P. Botha 
 // http://cpbotha.net/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.4 2003/04/29 21:14:42 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.5 2003/05/06 11:34:47 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 // TODO:
@@ -230,6 +230,8 @@ vtkOpenGLVolumeShellSplatMapper::vtkOpenGLVolumeShellSplatMapper()
    // alpha values to make this a luminance-alpha buffer
    this->normalised_integrated_rfunc = new float[OGLVSM_RF_N * OGLVSM_RF_N * 2];
 
+   this->GradientImageData = NULL;
+
    // this will set the Gaussian parameters and initialise the textures themselves
    this->SetRenderMode(0);
 }
@@ -248,7 +250,8 @@ vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
    ViewToVoxelsMatrix->Delete();
    PerspectiveMatrix->Delete();
 
-   SetInput(NULL);
+   this->SetGradientImageData(NULL);
+   this->SetInput(NULL);
    if (ShellExtractor)
       ShellExtractor->Delete();
 }
@@ -377,6 +380,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    // parameter differs from the variable, so we don't have to
    // worry that the ShellExtractor is going to run unnecessarily
    ShellExtractor->SetInput(this->GetInput());
+   ShellExtractor->SetGradientImageData(this->GradientImageData);
    ShellExtractor->SetOpacityTF(OpacityTF);
    ShellExtractor->SetColourTF(ColourTF);
    ShellExtractor->SetOmegaL(this->OmegaL);

@@ -1,5 +1,5 @@
 // vtkShellExtractor.h copyright (c) 2002 by Charl P. Botha http://cpbotha.net/
-// $Id: vtkShellExtractor.h,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkShellExtractor.h,v 1.2 2003/05/06 11:34:47 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 #ifndef __vtkShellExtractor_h
@@ -78,6 +78,12 @@ public:
    vtkSetObjectMacro(ColourTF, vtkColorTransferFunction);
    vtkGetObjectMacro(ColourTF, vtkColorTransferFunction);
    /**
+    * Set optional imagedata member that will be used only for calculating
+    * rendering gradient.  No checking is done on the validity of this data,
+    * so it's probably your responsibility.
+    */
+   vtkSetObjectMacro(GradientImageData, vtkImageData);
+   /**
     * Set lower opacity bound for shell extraction.  This also calls
     * this->Modified() to indicate that the current output is invalidated.
     * Remember: 0.0 < OmegaL <= OmegaH < 1.0.
@@ -117,6 +123,7 @@ protected:
    vtkColorTransferFunction* ColourTF;
    float OmegaL;
    float OmegaH;
+   vtkImageData* GradientImageData;
 
    /**
     * The time at which the last shell extraction was done.
