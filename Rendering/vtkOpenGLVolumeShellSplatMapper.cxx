@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.10 2003/12/25 00:26:51 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.11 2003/12/29 15:45:09 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1250,10 +1250,11 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
 	    // start of experimental iPBTF code -----------------------------
 	    // hmmm... split outer loop
-	    int seg1len = ps, seg2len = zdim - ps;
+	    int seg1len = ps;
+            int seg2len = zdim - ps;
 	    
 	    // first do the balance of the largest segment (ugh)
-	    int bigseglen = seg1len > seg2len ? sig1len : sig2len;
+	    int bigseglen = seg1len > seg2len ? seg1len : seg2len;
 	    
 	    // make 2 element arrays, always parameter of biggest seg
 	    // first... argh! this is difficult!
