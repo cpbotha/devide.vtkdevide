@@ -12,7 +12,11 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkPVGlyphFilter -
+// .NAME vtkPVGlyphFilter - Glyph filter
+//
+// .SECTION Description
+// This is a subclass of vtkGlyph3D that allows selection of input scalars
+
 #ifndef __vtkPVGlyphFilter_h
 #define __vtkPVGlyphFilter_h
 
@@ -56,8 +60,10 @@ protected:
   
   vtkMaskPoints *MaskPoints;
   int MaximumNumberOfPoints;
+  int NumberOfProcesses;
   int UseMaskPoints;
   
+  virtual void ReportReferences(vtkGarbageCollector*);
 private:
   vtkPVGlyphFilter(const vtkPVGlyphFilter&);  // Not implemented.
   void operator=(const vtkPVGlyphFilter&);  // Not implemented.

@@ -14,13 +14,15 @@
 =========================================================================*/
 #include "vtkPVGlyphFilter.h"
 
+#include "vtkGarbageCollector.h"
 #include "vtkMaskPoints.h"
 #include "vtkObjectFactory.h"
 #include "vtkPolyData.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.5 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.6 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
+//-----------------------------------------------------------------------------
 vtkPVGlyphFilter::vtkPVGlyphFilter()
 {
   this->SetColorModeToColorByScalar();
@@ -30,44 +32,56 @@ vtkPVGlyphFilter::vtkPVGlyphFilter()
   this->UseMaskPoints = 1;
 }
 
+//-----------------------------------------------------------------------------
 vtkPVGlyphFilter::~vtkPVGlyphFilter()
 {
-  this->MaskPoints->Delete();
+  if(this->MaskPoints)
+    {
+    this->MaskPoints->Delete();
+    }
 }
 
+//-----------------------------------------------------------------------------
 void vtkPVGlyphFilter::SetInput(vtkDataSet *input)
 {
   this->MaskPoints->SetInput(input);
   this->Superclass::SetInput(this->MaskPoints->GetOutput());
 }
 
+//-----------------------------------------------------------------------------
 void vtkPVGlyphFilter::SetRandomMode(int mode)
 {
   this->MaskPoints->SetRandomMode(mode);
 }
 
+//-----------------------------------------------------------------------------
 int vtkPVGlyphFilter::GetRandomMode()
 {
   return this->MaskPoints->GetRandomMode();
 }
 
+//-----------------------------------------------------------------------------
 void vtkPVGlyphFilter::Execute()
 {
-  if (this->MaskPoints->GetInput() == NULL)
-    {
-    vtkErrorMacro(<<"No input set.");
-    return;
-    }
-  
   if (this->UseMaskPoints)
     {
+    vtkPolyData* output = this->GetOutput();
     this->Superclass::SetInput(this->MaskPoints->GetOutput());
+    vtkIdType maxNumPts = this->MaximumNumberOfPoints;
     vtkIdType numPts = this->MaskPoints->GetInput()->GetNumberOfPoints();
-    vtkIdType maxNumPts =
-      this->MaximumNumberOfPoints; //  / this->NumberOfProcesses;
+    // Although this is not perfectly process invariant, it is better
+    // than we had before (divide by number of processes).
+    vtkIdType totalNumPts = numPts;
+
     maxNumPts = (maxNumPts < 1) ? 1 : maxNumPts;
     this->MaskPoints->SetMaximumNumberOfPoints(maxNumPts);
     this->MaskPoints->SetOnRatio(numPts / maxNumPts);
+    // I do not like connecting internal filters to the actual input, but
+    // This is the smallest change possible to fix the problem.
+    // This update caused input to be executed with number of piecces of 1.
+    this->MaskPoints->GetOutput()->SetUpdateNumberOfPieces(output->GetUpdateNumberOfPieces());
+    this->MaskPoints->GetOutput()->SetUpdatePiece(output->GetUpdatePiece());
+    this->MaskPoints->GetOutput()->SetUpdateGhostLevel(output->GetUpdateGhostLevel());
     this->MaskPoints->Update();
     }
   else
@@ -78,6 +92,14 @@ void vtkPVGlyphFilter::Execute()
   this->Superclass::Execute();
 }
 
+//-----------------------------------------------------------------------------
+void vtkPVGlyphFilter::ReportReferences(vtkGarbageCollector* collector)
+{
+  this->Superclass::ReportReferences(collector);
+  vtkGarbageCollectorReport(collector, this->MaskPoints, "MaskPoints");
+}
+
+//-----------------------------------------------------------------------------
 void vtkPVGlyphFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
