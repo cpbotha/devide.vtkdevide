@@ -73,5 +73,8 @@ ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
 LINK_LIBRARIES (
   vtkdevideExternal
+  vtkFiltering
+  vtkGraphics
+  vtkImaging
   vtkCommon
 )
