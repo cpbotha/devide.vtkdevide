@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.8 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.9 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
@@ -108,6 +108,29 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
+  // constrained to plane
+  if (this->ConstraintType == 2)
+    {
+    // FIXME: continue here
+    // center becomes origin on plane (and axis origin is at center)
+    // p1,p2 (relative to center) are projected on to plane
+
+    // by definition, the axis is the ConstraintVector
+    // we also flatten v to be in the plane
+    double bdp = vtkMath::Dot(v, this->ConstraintVector);
+    for (int i=0; i<3; i++)
+      {
+      v[i] -= this-ConstraintVector[i] * bdp;
+      axis[i] = this->ConstraintVector[i];
+      }
+
+    // NOTE:
+    // maybe center translated to on-screen, use same trick
+    // as trackballinteractor spinning - okay?
+    }
+  else
+    {
+
   // Create axis of rotation and angle of rotation
   vtkMath::Cross(vpn,v,axis);
   if ( vtkMath::Normalize(axis) == 0.0 )
@@ -115,21 +138,12 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
     return;
     }
 
-
-  // constrained to plane
-  if (this->ConstraintType == 2)
-    {
- 
-    double gdp = vtkMath::Dot(axis, this->ConstraintVector);
-    for (int i=0; i<3; i++)
-      {
-      axis[i] = gdp * this->ConstraintVector[i];
-      }
-    }
-  
   int *size = this->CurrentRenderer->GetSize();
-  double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
+  double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + 
+              (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
   theta = 360.0 * sqrt(l2/((double)size[0]*size[0]+size[1]*size[1]));
+
+    }
 
   //Manipulate the transform to reflect the rotation
   this->Transform->Identity();
