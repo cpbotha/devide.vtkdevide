@@ -308,7 +308,7 @@ Purpose:
 		}
 	}
 	
-	for ( i = 0; i < texture_num; ++i ) {
+	for ( int i = 0; i < texture_num; ++i ) {
 		if ( strcmp ( texture_name[i], "" ) == 0 ) {
 			strcpy ( texture_name[i], "Texture_0000" );
 		}
@@ -351,7 +351,7 @@ void IVCONV::materials_fixups()
 	/*
 	If a face has not been assigned a material, set it to material 0.
 	*/
-	for ( iface = 0; iface < face_num; iface++ ) {
+	for ( long iface = 0; iface < face_num; iface++ ) {
 		if ( face_material[iface] < 0 || face_material[iface] > material_num - 1 ) {
 			face_material[iface] = 0;
 		}
@@ -2075,7 +2075,7 @@ bool IVCONV::reverse_normals()
 		}
 	}
 	
-	for ( iface = 0; iface < face_num; iface++ ) {
+	for ( long iface = 0; iface < face_num; iface++ ) {
 		for ( long ivert = 0; ivert < face_order[iface]; ivert++ ) {
 			for ( int i = 0; i < 3; ++i ) {
 				vertex_normal[ivert][iface][i] = 
@@ -2123,7 +2123,7 @@ bool IVCONV::recompute_normals()
 		}
 	}
 	
-	for ( iface = 0; iface < face_num; iface++ ) {
+	for ( int iface = 0; iface < face_num; iface++ ) {
 		for ( int ivert = 0; ivert < face_order[iface]; ivert++ ) {
 			for ( int i = 0; i < 3; ++i ) {
 				vertex_normal[ivert][iface][i] = 0.0;
@@ -2153,7 +2153,7 @@ bool IVCONV::scale(float x, float y, float z)
 		}
 	}
 	
-	for ( iface = 0; iface < face_num; iface++ ) {
+	for ( int iface = 0; iface < face_num; iface++ ) {
 		for ( int ivert = 0; ivert < face_order[iface]; ivert++ ) {
 			for ( int i = 0; i < 3; ++i ) {
 				vertex_normal[ivert][iface][i] = 0.0;

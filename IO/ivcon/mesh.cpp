@@ -198,7 +198,7 @@ void write_file(char *rgb_file)
     out_file << "\tCoordinate3 {" << endl;
     out_file << "\t\tpoint [" << endl;
     // write all points
-    for (i=0; i<num_pts_tr; ++i) {
+    for (int i=0; i<num_pts_tr; ++i) {
       out_file << X[i_to_c[i]] << ' ' << Y[i_to_c[i]] << ' ' << Z[i_to_c[i]] ;
       if (i!=num_pts_tr-1)
 	out_file << ',';
@@ -209,7 +209,7 @@ void write_file(char *rgb_file)
     // write IndexedFaceSet node
     out_file << "\tIndexedFaceSet {" << endl;
     out_file << "\t\tcoordIndex [" << endl;
-    for (i=0; i<num_tr; ++i) {
+    for (int i=0; i<num_tr; ++i) {
 	out_file << tr[i][0] << ", " << tr[i][1] << ", " << tr[i][2] << ", -1";
 	if (i!=num_tr-1)
 	    out_file << ',';
@@ -326,7 +326,7 @@ void create_mesh()
     i_to_c = new long[num_valid_points];
 
     // PASS 2: generate triangles
-    for (i=0; i<ROWS-1; ++i)
+    for (int i=0; i<ROWS-1; ++i)
 	for (int j=0; j<COLS-1; ++j) {
 	    // get the 4 points, indexed counter clockwise [0 3; 1 2]
 	    np[0] = i*COLS + j;

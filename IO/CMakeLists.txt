@@ -12,7 +12,12 @@ IF (HAS_DCMTK)
    SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
 ENDIF (HAS_DCMTK)
 
+# include vtkIVCONDriver.cxx
 SET (IO_SRCS ${IO_SRCS} vtkIVCONDriver.cxx)
+
+INCLUDE_DIRECTORIES(${VTKDSCAS_SOURCE_DIR}/IO/ivcon)
+FILE(GLOB IVCON_SRCS ivcon/*.cpp)
+
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
@@ -22,11 +27,11 @@ SET (IO_SRCS ${IO_SRCS} vtkIVCONDriver.cxx)
 #
 
 IF (WIN32)
-   ADD_LIBRARY (vtkdscasIO IO_SRCS)
+   ADD_LIBRARY (vtkdscasIO IO_SRCS ${IVCON_SRCS})
 ELSE (WIN32)
    # under unix, we also want it to include a built-in dicom.dic
    # under windows, the Visual C++ builds already do this
-   ADD_LIBRARY (vtkdscasIO IO_SRCS dcdictzz)
+   ADD_LIBRARY (vtkdscasIO IO_SRCS ${IVCON_SRCS} dcdictzz)
 ENDIF (WIN32)
 
 
@@ -38,7 +43,7 @@ IF (VTK_WRAP_TCL AND VTKDSCAS_WRAP_TCL)
 
   VTK_WRAP_TCL (vtkdscasIOTCL IOTCL_SRCS IO_SRCS)
   ADD_LIBRARY (vtkdscasIOTCL SHARED IOTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdscasIOTCL 
+  TARGET_LINK_LIBRARIES (vtkdscasIOTCL
                          vtkIOTCL 
                          ${TCL_LIBRARY})
 

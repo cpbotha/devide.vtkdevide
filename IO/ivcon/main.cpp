@@ -546,7 +546,7 @@ John Burkardt
 /******************************************************************************/
 
 
-int main ( int argc, char **argv )
+int demoMain ( int argc, char **argv )
 {
 	printf("initializing...");
 	iv = new IVCONV();

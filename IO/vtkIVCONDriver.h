@@ -1,5 +1,5 @@
 // vtkIVCONDriver.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkIVCONDriver.h,v 1.1 2003/09/29 13:42:37 cpbotha Exp $
+// $Id: vtkIVCONDriver.h,v 1.2 2003/09/29 15:04:43 cpbotha Exp $
 // vtk class that wraps the invocation of ivcon to convert between 3d formats
 
 #ifndef __vtkIVCONDriver_h
@@ -30,6 +30,8 @@ protected:
 
   // name of the output filename.  SetStringMacro will allocate space for it.
   char *OutputFileName;
+
+  vtkTimeStamp ConvertTime;
 
 };
 

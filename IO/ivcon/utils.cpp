@@ -88,7 +88,8 @@ John Burkardt
 	int icol = -1;
 	
 	for ( int j = 0; j < n; ++j ) {
-		for ( int i = 0; i < 3; ++i ) 
+                int i;
+		for ( i = 0; i < 3; ++i ) 
 			if ( a[j][i] != r[i] ) break;
 		if (i==3) 
 			return j;

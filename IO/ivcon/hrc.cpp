@@ -1214,7 +1214,7 @@ John Burkardt
 	/*
 	TEXTURES
 	*/
-	for ( i = 0; i < texture_num; ++i ) {
+	for ( int i = 0; i < texture_num; ++i ) {
 		
 		fprintf ( fileout, "  texture [%d]\n", i );
 		fprintf ( fileout, "  {\n" );
