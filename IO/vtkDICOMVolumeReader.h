@@ -1,10 +1,14 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkDICOMVolumeReader.h,v 1.9 2003/08/05 09:22:18 cpbotha Exp $
+// and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
+// $Id: vtkDICOMVolumeReader.h,v 1.10 2003/08/05 09:30:40 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
  * This software is licensed exclusively for research use by Bart Kaptein
- * in the ModelBasedRSA package.
+ * in the ModelBasedRSA package.  Any modifications made to this software
+ * shall be sent to the author for possible inclusion in future versions.
+ * Ownership and copyright of said modifications shall be ceded to the
+ * author.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
