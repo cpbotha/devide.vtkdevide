@@ -1,5 +1,5 @@
 // vtkEventOutputWindow.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkEventOutputWindow.cxx,v 1.1 2003/09/23 14:21:11 cpbotha Exp $
+// $Id: vtkEventOutputWindow.cxx,v 1.2 2003/09/23 14:35:52 cpbotha Exp $
 // vtkOutputWindow derivative that InvokeEvents instead of trying to display by itself
 
 #include "vtkEventOutputWindow.h"
@@ -7,7 +7,7 @@
 #include "vtkObjectFactory.h"
 #include "string.h"
 
-vtkCxxRevisionMacro(vtkEventOutputWindow, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkEventOutputWindow, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkEventOutputWindow);
 
 #define MAX_TEXT_LEN 4095
@@ -16,7 +16,7 @@ vtkEventOutputWindow::vtkEventOutputWindow()
 {
   this->TextType = 0;
   this->Text = new char[MAX_TEXT_LEN + 1];
-  this->Text[MAX_TEXT_LEN] = (char)0;
+  this->Text[MAX_TEXT_LEN] = this->Text[0] = (char)0;
 }
 
 vtkEventOutputWindow::~vtkEventOutputWindow()
@@ -26,7 +26,7 @@ vtkEventOutputWindow::~vtkEventOutputWindow()
 
 void vtkEventOutputWindow::SetupForEvent(const char *text)
 {
-  int tlen = strlen(text);
+  int tlen = strlen(text) + 1; // add one for null termination
   // make sure we don't copy more than MAX_TEXT_LEN characters
   strncpy(this->Text, text, tlen < MAX_TEXT_LEN ? tlen : MAX_TEXT_LEN);
 }
