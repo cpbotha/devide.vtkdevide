@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.7 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.8 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
@@ -29,6 +29,22 @@ vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
   this->SetConstraintType(0);
   // vector is set to some default value
   this->SetConstraintVector(0.0, 0.0, 0.0);
+}
+
+void vtkBoxWidgetConstrained::SetConstraintVector(double v0, double v1, double v2)
+{
+  this->ConstraintVector[0] = v0;
+  this->ConstraintVector[1] = v1;
+  this->ConstraintVector[2] = v2;
+
+  // make sure it's normalised
+  vtkMath::Normalize(this->ConstraintVector);
+  this->Modified();
+}
+
+void vtkBoxWidgetConstrained::SetConstraintVector(double data[])
+{
+  this->SetConstraintVector(data[0], data[1], data[2]);
 }
 
 // Loop through all points and translate them
@@ -54,7 +70,7 @@ void vtkBoxWidgetConstrained::Translate(double *p1, double *p2)
       }
 
     }
-  if (this->GetConstraintType() == 2)
+  else if (this->GetConstraintType() == 2)
     {
     // calculate the component of the motion vector that is collinear
     // with the constraintvector
@@ -92,43 +108,25 @@ void vtkBoxWidgetConstrained::Rotate(int X, int Y, double *p1, double *p2, doubl
   v[1] = p2[1] - p1[1];
   v[2] = p2[2] - p1[2];
 
-  // if we're constrained, constrain man!
-  if (this->ConstraintType)
+  // Create axis of rotation and angle of rotation
+  vtkMath::Cross(vpn,v,axis);
+  if ( vtkMath::Normalize(axis) == 0.0 )
     {
-    double blaat[3];
-    vtkMath::Cross(vpn, v, blaat);
+    return;
+    }
 
-    double bdp = vtkMath::Dot(v, this->ConstraintVector);
-    double badvector[3];
+
+  // constrained to plane
+  if (this->ConstraintType == 2)
+    {
+ 
+    double gdp = vtkMath::Dot(axis, this->ConstraintVector);
     for (int i=0; i<3; i++)
       {
-      badvector[i] = bdp * this->ConstraintVector[i];
-      v[i] -= badvector[i];
-      axis[i] = this->ConstraintVector[i];
+      axis[i] = gdp * this->ConstraintVector[i];
       }
-
-	
-    if (vtkMath::Dot(axis, blaat) < 0)
-      {
-      for (int i=0; i<3; i++)
-        {
-        axis[i] *= -1;
-        }
-      }
-
     }
-  else
-    {
-
-    // Create axis of rotation and angle of rotation
-    vtkMath::Cross(vpn,v,axis);
-    if ( vtkMath::Normalize(axis) == 0.0 )
-      {
-      return;
-      }
-
-    }
-
+  
   int *size = this->CurrentRenderer->GetSize();
   double l2 = (X-this->Interactor->GetLastEventPosition()[0])*(X-this->Interactor->GetLastEventPosition()[0]) + (Y-this->Interactor->GetLastEventPosition()[1])*(Y-this->Interactor->GetLastEventPosition()[1]);
   theta = 360.0 * sqrt(l2/((double)size[0]*size[0]+size[1]*size[1]));

@@ -26,7 +26,8 @@ public:
   vtkSetMacro(ConstraintType, int);
   vtkGetMacro(ConstraintType, int);
 
-  vtkSetVector3Macro(ConstraintVector, double);
+  virtual void SetConstraintVector(double v0, double v1, double v2);
+  virtual void SetConstraintVector(double v[3]);
   vtkGetVector3Macro(ConstraintVector, double);
 
 protected:
