@@ -1,0 +1,6 @@
+Getting this to build in Visual C++ 6.0
+---------------------------------------
+
+- Add ws2_32.lib to the standard libraries.  Both HDF and DCMTK require this.
+- You might have to remove the /MD (multi-threading) switches, else VC++
+  doesn't want to use the HDF static libs.

@@ -1,0 +1,3 @@
+ADD_EXECUTABLE(ImagePlaneWidget_2 ImagePlaneWidget_2.cxx)
+TARGET_LINK_LIBRARIES(ImagePlaneWidget_2 vtkcpbothaTesting vtkIO vtkHybrid)
+
