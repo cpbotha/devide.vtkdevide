@@ -1,8 +1,11 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkDICOMVolumeReader.h,v 1.8 2003/08/05 09:10:55 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.9 2003/08/05 09:22:18 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
+ * This software is licensed exclusively for research use by Bart Kaptein
+ * in the ModelBasedRSA package.
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -20,6 +23,26 @@
  * TODO
  *   - SliceThickness + SpacingBetweenSlices for MRI
  */
+
+/*
+ * Example:
+ * dreader = vtkDICOMVolumeReader::New();
+ * dreader.add_dicom_filename('file1.dcm');
+ * dreader.add_dicom_filename('file2.dcm');
+ * ... rather do this with a loop: this code is robust enough to reject
+ *     incorrect files (at read time) and also to discern automatically
+ *     between different series
+ * // this will automatically call an UpdateInformation()
+ * maxsii = dreader.GetMaximumSeriesInstanceIdx();
+ * for (int i; i <= maxsii; i++) {
+ *   dreader.SetSeriesInstanceIdx(i);
+ *   do_stuff_with(dreader.GetOutput());
+ * }
+ *
+ * So, one uses SetSeriesInstanceIdx to select a different series from
+ * the DICOM dataset.  The GetOutput() will "change" into a different
+ * VTK dataset for each SeriesInstanceIdx.
+ */    
 
 #ifndef vtkDICOMVolumeReader_h
 #define vtkDICOMVolumeReader_h
