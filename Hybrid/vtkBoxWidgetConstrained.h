@@ -2,6 +2,7 @@
 #define __vtkBoxWidgetConstrained_h
 
 #include "vtk3DWidget.h"
+#include "vtkdscasHybridWin32Header.h"
 
 class vtkActor;
 class vtkCellPicker;
@@ -14,7 +15,7 @@ class vtkProperty;
 class vtkSphereSource;
 class vtkTransform;
 
-class VTK_HYBRID_EXPORT vtkBoxWidgetConstrained : public vtk3DWidget
+class VTK_DSCAS_HYBRID_EXPORT vtkBoxWidgetConstrained : public vtk3DWidget
 {
 public:
   // Description:
