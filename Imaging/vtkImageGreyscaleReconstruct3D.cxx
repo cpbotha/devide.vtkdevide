@@ -1,9 +1,10 @@
 #include "vtkImageGreyscaleReconstruct3D.h"
 
+#include <vtkstd/queue>
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
 
 //----------------------------------------------------------------------------
@@ -74,20 +75,45 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
 
   Npi[12] = -1;                   // x-1, y,   z
 
+  // Nminus neighbourhood pointers will be stored in this
+  T *NmPtrs[13];
+  // these are the Nmi offsets we need to extract the neighbourhood
+  int Nmi[13];
+
+  Nmi[0] = +ydim*xdim + xdim + 1; // x+1, y+1, z+1
+  Nmi[1] = +ydim*xdim + xdim;     // x,   y+1, z+1
+  Nmi[2] = +ydim*xdim + xdim - 1; // x-1, y+1, z+1
+
+  Nmi[3] = +ydim*xdim + 1;        // x+1, y,   z+1
+  Nmi[4] = +ydim*xdim;            // x,   y,   z+1
+  Nmi[5] = +ydim*xdim - 1;        // x-1, y,   z+1
+
+  Nmi[6] = +ydim*xdim - xdim + 1; // x+1, y-1, z+1
+  Nmi[7] = +ydim*xdim - xdim;     // x,   y-1, z+1
+  Nmi[8] = +ydim*xdim - xdim - 1; // x-1, y-1, z+1
+
+  Nmi[9] = +xdim + 1;             // x+1, y+1, z
+  Nmi[10] = +xdim;                // x,   y+1, z
+  Nmi[11] = +xdim - 1;            // x-1, y+1, z
+
+  Nmi[12] = +1;                   // x+1, y,   z
+  
+
   T *pPtr;
   T *Iptr;
   T minNp;
-  int i;
+  T minNm;
+  int x,y,z,i;
   if (Dual)
     {
     // 1. scan D1 in raster order
     pPtr = (T*)(outData->GetScalarPointer());
     Iptr = in1Ptr;
-    for (int z = 0; z < zdim; z++)
+    for (z = 0; z < zdim; z++)
       {
-      for (int y = 0; y < ydim; y++)
+      for (y = 0; y < ydim; y++)
         {
-        for (int x = 0; x < xdim; x++)
+        for (x = 0; x < xdim; x++)
           {
           // J(p) max(min(J(q), q E N+(p) U p) ,I(p))
           // i.e. find the minimum in the N+ neighbourhood of P and P
@@ -146,6 +172,75 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
         }
       }
     // 2. scan D1 in anti-raster order
+    pPtr = (T*)(outData->GetScalarPointer()) + xdim * ydim * zdim - 1;
+    Iptr = in1Ptr + xdim * ydim * zdim - 1;
+    for (z = zdim - 1; z >= 0; z--)
+      {
+      for (y = ydim - 1; y >= 0; y--)
+        {
+        for (x = xdim - 1; x >= 0; x--)
+          {
+          // J(p) max(min(J(q), q E N-(p) U p) ,I(p))
+          // i.e. find the minimum in the N- neighbourhood of P and P
+          // replace J(p = x,y,z) with the max of that minimum and
+          // I(p)
+
+          // a. determine minimum of Np neighbourhood
+          for (i = 0; i < 13; i++)
+            {
+            // calculate modified pointer
+            NmPtrs[i] = pPtr + Nmi[i];
+            }
+
+          // now zero things which are over the boundary
+          if (x == 0)
+            {
+            NmPtrs[2] = NmPtrs[5] = NmPtrs[8] = NmPtrs[11] = (T*)NULL;
+            }
+          else if (x == xdim - 1)
+            {
+            NmPtrs[0] = NmPtrs[3] = NmPtrs[6] = NmPtrs[9] =
+              NmPtrs[12] = (T*)NULL;
+            }
+          if (y == 0)
+            {
+            NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
+            }
+          else if (y == ydim - 1)
+            {
+            NmPtrs[0] = NmPtrs[1] = NmPtrs[2] =
+              NmPtrs[9] = NmPtrs[10] = NmPtrs[11] = (T*)NULL;
+            }
+          if (z == zdim - 1)
+            {
+            NmPtrs[0] = NmPtrs[1] = NmPtrs[2] = \
+              NmPtrs[3] = NmPtrs[4] = NmPtrs[5] =                \
+              NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
+            }
+          // there are no z-1 cases
+
+          // now determine the minimum
+          minNm = *pPtr;
+          for (i = 0; i < 13; i++)
+            {
+            if (NmPtrs[i] && *NmPtrs[i] < minNm)
+              {
+              minNm = *NmPtrs[i];
+              }
+            }
+          *pPtr = minNm > *Iptr ? minNm : *Iptr;
+
+          // extra step with anti-raster traversal: we have to start
+          // filling the fifo...
+          
+          
+          // decrement pointers
+          pPtr--;
+          Iptr--;
+          }
+        }
+      }
+    
 
     // 3. propagation step
     
