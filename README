@@ -65,3 +65,20 @@ The vtkdevide config
     and include/ofstd
   * then copy all .h files from dcmtksource/config/include to 
     dcmtkInstall/include
+
+UNIMPORTANT REMINDER :)
+--------------------
+
+PATH: C:\build\VTK-VS71\bin\relwithdebinfo;
+      C:\build\Insight-VS71\bin\relwithdebinfo;
+      C:\work\code\vtkdevide\bin\relwithdebinfo;
+      C:\build\InsightApplications-VS71\bin\relwithdebinfo
+
+PYTHONPATH: C:\build\VTK-VS71\bin\relwithdebinfo;
+            C:\build\VTK-VS71\Wrapping\Python;
+            C:\build\Insight-VS71\bin\relwithdebinfo;
+            C:\build\Insight-VS71\Wrapping\CSwig\Python\RelWithDebInfo;
+            C:\work\code\vtkdevide\bin\relwithdebinfo;
+            C:\work\code\vtkdevide\Wrapping\Python;
+            C:\build\InsightApplications-VS71\bin\relwithdebinfo;
+            C:\build\InsightApplications-VS71\ConnectVTKITK
