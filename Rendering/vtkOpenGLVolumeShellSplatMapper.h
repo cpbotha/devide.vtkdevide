@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.8 2004/01/15 11:00:55 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.9 2004/06/16 16:13:42 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -78,7 +78,7 @@ public vtkVolumeMapper
    * Sets current perspective ordering mode.  0 == PBTF.  1 == interleaved
    * PBTF, 2 == extra-special BTF
    */
-  vtkSetClampMacro(PerspectiveOrderingMode, int, 0, 2);
+  vtkSetClampMacro(PerspectiveOrderingMode, int, 0, 3);
   vtkGetMacro(PerspectiveOrderingMode, int);
 
   vtkSetMacro(EllipsoidDiameter, double);
