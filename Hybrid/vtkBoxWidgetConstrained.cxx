@@ -20,7 +20,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.6 $");
+vtkCxxRevisionMacro(vtkBoxWidgetConstrained, "$Revision: 1.7 $");
 vtkStandardNewMacro(vtkBoxWidgetConstrained);
 
 vtkBoxWidgetConstrained::vtkBoxWidgetConstrained() : vtkBoxWidget()
@@ -47,7 +47,7 @@ void vtkBoxWidgetConstrained::Translate(double *p1, double *p2)
     // calculate the component of the motion vector that is collinear
     // with the constraintvector
     double goodMagnitude = vtkMath::Dot(v, this->ConstraintVector);
-    for (int i; i < 3; i++)
+    for (int i = 0; i < 3; i++)
       {
       // that will be the new motion vector!
       v[i] = goodMagnitude * this->ConstraintVector[i];
