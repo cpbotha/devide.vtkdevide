@@ -1,4 +1,4 @@
-# $Id: shell_render_stanford_head.py,v 1.7 2004/07/02 10:22:20 cpbotha Exp $
+# $Id: shell_render_stanford_head.py,v 1.8 2004/07/02 10:22:51 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtk import *
@@ -150,7 +150,7 @@ volume.SetMapper(splatmapper)
 ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
-ren.GetActiveCamera().ParallelProjectionOn()
+#ren.GetActiveCamera().ParallelProjectionOn()
 
 cubeAxesActor2d = vtk.vtkCubeAxesActor2D()
 cubeAxesActor2d.SetFlyModeToOuterEdges()
