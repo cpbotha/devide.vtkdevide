@@ -19,7 +19,13 @@ ENDIF (HAS_DCMTK)
 # Create the vtkdscasIO C++ library
 #
 
-ADD_LIBRARY (vtkdscasIO IO_SRCS)
+IF (WIN32)
+   ADD_LIBRARY (vtkdscasIO IO_SRCS)
+ELSE (WIN32)
+   # under unix, we also want it to include a built-in dicom.dic
+   # under windows, the Visual C++ builds already do this
+   ADD_LIBRARY (vtkdscasIO IO_SRCS dcdictzz)
+ENDIF (WIN32)
 
 
 #
