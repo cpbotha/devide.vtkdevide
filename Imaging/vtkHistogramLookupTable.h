@@ -4,10 +4,6 @@
 #include "vtkImageTwoInputFilter.h"
 #include "vtkdevideImagingWin32Header.h"
 
-// FIXME:
-// we're going to take two inputs: a multi-component image and the
-// histogram... the output will be a single-component volume
-
 
 class VTK_DEVIDE_IMAGING_EXPORT vtkHistogramLookupTable :
 public vtkImageTwoInputFilter

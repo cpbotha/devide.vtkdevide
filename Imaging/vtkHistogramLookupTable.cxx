@@ -3,14 +3,13 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkHistogramLookupTable, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkHistogramLookupTable);
 
 //----------------------------------------------------------------------------
 vtkHistogramLookupTable::vtkHistogramLookupTable()
 {
 }
-
 
 //----------------------------------------------------------------------------
 // Grow the output image 
@@ -45,7 +44,7 @@ void vtkHistogramLookupTable::ExecuteInformation(
   outData->SetOrigin(inDatas[0]->GetOrigit());
   outData->SetSpacing(inDatas[0]->GetSpacing());
     
-  outData->SetExtent(inDatas[0]->GetExtent());
+  //outData->SetExtent(inDatas[0]->GetExtent());
   outData->SetWholeExtent(inDatas[0]->GetWholeExtent());
 
 }
@@ -72,11 +71,13 @@ void vtkHistogramLookupTable::ComputeInputUpdateExtent(int inExt[6],
 //----------------------------------------------------------------------------
 // This templated function executes the filter for any type of data.
 // Handles the two input operations
-template <class T>
+template <class I1T, class I2T>
 void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
-                                    vtkImageData *in1Data, T *in1Ptr,
-                                    vtkImageData *in2Data, T *in2Ptr,
-                                    vtkImageData *outData, double *outPtr)
+                                    vtkImageData *in1Data,
+                                    vtkImageData *in2Data,
+                                    vtkImageData *outData, int outExt[6],
+                                    I1T *, I2T *)
+
 {
     // store these ranges in our own ivars as well!
     double in1range[2], in2range[2];
@@ -139,6 +140,25 @@ void vtkHistogramLookupTableExecute(vtkHistogramLookupTable *self,
     self->UpdateProgress(1.0);
 }
 
+template <class T>
+void vtkHistogramLookupTableExecute1(vtkHistogramLookupTable *self,
+                                     vtkImageData *input1,
+                                     vtkImageData *input2,
+                                     vtkImageData *output, int outExt[6],
+                                     T *)
+{
+  // second stage of type specialization
+  switch (input1->GetScalarType())
+    {
+    vtkTemplateMacro7(vtkHistogramLookupTableExecute, self,
+                      input1, input2, output, outExt,
+                      static_cast<T *>(0), static_cast<VTK_TT *>(0));
+    default:
+      vtkErrorMacro(<< "Execute: Unknown ScalarType for second input.");
+      return;
+    }
+}
+
 
 void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
 {
@@ -177,19 +197,20 @@ void vtkHistogramLookupTable::ExecuteData(vtkDataObject *out)
   this->GetInput1()->Update();
   this->GetInput2()->Update();
 
+  int outExt[6];
+  output->GetUpdateExtent(outExt);
+  
   switch (this->GetInput1()->GetScalarType())
-  {
-      vtkTemplateMacro(
-          vtkHistogramLookupTableExecute(
-              this,
-              this->GetInput1(), static_cast<VTK_TT*>(in1Ptr),
-              this->GetInput2(), static_cast<VTK_TT*>(in2Ptr),
-              output, outPtr
-              )
-          );
+    {
+    // first part of a two step specialization - first we do the
+    // input1 type
+    vtkTemplateMacro6(vtkHistogramLookupTableExecute1, this,
+                      this->GetInput1(), this->GetInput2(),
+                      output, outExt,
+                      static_cast<VTK_TT *>(0));
 
     default:                              
-      vtkErrorMacro(<< "Execute: Unknown ScalarType");
+      vtkErrorMacro(<< "Execute: Unknown ScalarType for first input.");
       return;
     }
 
