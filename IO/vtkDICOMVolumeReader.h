@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.2 2003/01/15 18:52:32 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.3 2003/01/16 10:48:51 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /* TODO
@@ -20,9 +20,9 @@
 using namespace std;
 
 //BTX
-class DcmFileStream;
 class DcmObject;
 class DcmElement;
+class DcmFileFormat;
 class DcmStack;
 
 /**
@@ -34,8 +34,8 @@ class dicom_file
 {
 public:
    string filename;
-   DcmFileStream* filestream;
-   DcmObject* fileformat;
+   //DcmFileStream* filestream;
+   DcmFileFormat* fileformat;
    double SliceLocation;
    /**
     * With this operator defined, we can use stl to sort a vector of dicom_files

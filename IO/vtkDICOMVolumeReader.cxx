@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.2 2003/01/15 18:52:32 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.3 2003/01/16 10:48:51 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #include <algorithm>
@@ -56,11 +56,10 @@ void vtkDICOMVolumeReader::deinit_dcmtk(void)
    // go through all series instances
    for (si_iterator = series_instances.begin(); si_iterator != series_instances.end(); si_iterator++)
    {
-      // in each series instance, call dtor of filestreams and fileformats
+      // in each series instance, call dtor of fileformats
       vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
       for (unsigned i = 0; i < dicom_files_p->size(); i++)
       {
-         if ((*dicom_files_p)[i].filestream) delete (*dicom_files_p)[i].filestream;
          if ((*dicom_files_p)[i].fileformat) delete (*dicom_files_p)[i].fileformat;
       }
       // clear the vectors to play it safe
@@ -109,28 +108,19 @@ int vtkDICOMVolumeReader::OpenDCMFile(dicom_file& dfile)
 {
    vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile(" << dfile.filename.c_str() << ") - START.");
 
-   // so, first try and open a stream
-   dfile.filestream = new DcmFileStream(dfile.filename.c_str(), DCM_ReadMode);
-   if (dfile.filestream->GetError() != EC_Normal)
-   {
-      vtkErrorMacro(<<"Unable to open DICOM file " << dfile.filename.c_str());
-      return 0;
-   }
-
    // we have the stream, now we instantiate a DICOM fileformat abstraction to read and interpret the data
    // DcmFileFormat is a DcmSequence (or something) containing a list of DcmItems, each representing a separate
    // (group,element) data tag
    dfile.fileformat = new DcmFileFormat();
    E_TransferSyntax xfer = EXS_Unknown;
-   dfile.fileformat->transferInit();
-   dfile.fileformat->read(*(dfile.filestream), xfer, EGL_noChange);
-   dfile.fileformat->transferEnd();
-   if (dfile.fileformat->error() != EC_Normal)
+   OFCondition cond = dfile.fileformat->loadFile(dfile.filename.c_str(), xfer, EGL_noChange, DCM_MaxReadLength, false);
+   if (! cond.good())
    {
-      vtkErrorMacro(<<"Unable to read DICOM file " << dfile.filename.c_str());
+      vtkErrorMacro(<<"Unable to open/read DICOM file " << dfile.filename.c_str());
       return 0;
    }
-   vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile() - STOP.")
+
+   vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile() - STOP.");
    return 1;
 }
 
@@ -165,7 +155,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    {
       dicom_file temp_dicom_file;
       temp_dicom_file.fileformat = NULL;
-      temp_dicom_file.filestream = NULL;
       
       temp_dicom_file.filename = dicom_filenames[i];
       if (!this->OpenDCMFile(temp_dicom_file))
@@ -173,8 +162,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          // if we can't read one of the DICOM files, just continue to the next one
          if (temp_dicom_file.fileformat)
             delete temp_dicom_file.fileformat;
-         if (temp_dicom_file.filestream)
-            delete temp_dicom_file.filestream;
          continue;
       }
 
@@ -190,8 +177,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          // first make sure what's there now gets deallocation/de-initialised
          if (temp_dicom_file.fileformat)
             delete temp_dicom_file.fileformat;
-         if (temp_dicom_file.filestream)
-            delete temp_dicom_file.filestream;
          // is this frowned upon like goto?
          continue;
       }
@@ -210,7 +195,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       {
          // the for loop always gets in one increment at the end of the loop!
          si_iterator--;
-      }
+      } // if (si_found)
       else
       {
          vtkDebugMacro(<< "New SeriesInstance " << SeriesInstanceUID_str.c_str() << " found.");
@@ -232,8 +217,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
             if (temp_dicom_file.fileformat)
                delete temp_dicom_file.fileformat;
-            if (temp_dicom_file.filestream)
-               delete temp_dicom_file.filestream;
             continue;
          }
 
@@ -246,8 +229,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read PixelSpacing from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
             if (temp_dicom_file.fileformat)
                delete temp_dicom_file.fileformat;
-            if (temp_dicom_file.filestream)
-               delete temp_dicom_file.filestream;
             continue;
          }
 
@@ -259,8 +240,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read Rows/Colums from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
             if (temp_dicom_file.fileformat)
                delete temp_dicom_file.fileformat;
-            if (temp_dicom_file.filestream)
-               delete temp_dicom_file.filestream;
             continue;
          }
 
@@ -305,7 +284,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          // we set si_iterator to the just push_back()ed series_instance so the following code doesn't have to be conditional
          si_iterator = series_instances.end();
          si_iterator--;
-      }
+      } // if (si_found) ... else (new SI, iow)
 
       // we get the found object (DcmObject -> DcmElement -> ?, in this case probably DcmFloatingPointDouble) from the stack
       DcmStack SliceLocation_stack;
@@ -322,7 +301,10 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       // si_iterator is the series_instance where the current SeriesInstanceUID was found,
       // so we need to store the dicom_file object
       (*si_iterator).dicom_files.push_back(temp_dicom_file);
-   }
+
+      // FIXME TEST
+      //delete(temp_dicom_file.fileformat); temp_dicom_file.fileformat = NULL;
+   } // for (i = 0; i < dicom_filenames.size(); i++) ...
 
    for (si_iterator = series_instances.begin(); si_iterator != series_instances.end(); si_iterator++)
    {
@@ -332,7 +314,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    }
 
    // ------------------------------------------------------------------------
-   
+
    // the following depends on the currently selected SeriesInstanceIdx
    si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
    // if it's not found, si_iterator == series_instances.end()
@@ -684,7 +666,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.2 2003/01/15 18:52:32 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.3 2003/01/16 10:48:51 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
