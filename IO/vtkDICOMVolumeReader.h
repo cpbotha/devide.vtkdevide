@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.3 2003/01/16 10:48:51 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.4 2003/02/10 12:17:58 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /* TODO
@@ -155,6 +155,15 @@ public:
     * is the same is the internal version, nothing is done.
     */
    void clear_dicom_filenames(void);
+   /**
+    * Return number of filenames in dicom_filenames_buffer list.
+    */
+   int get_number_of_dicom_filenames(void);
+   /**
+    * Return idx'th filename in dicom_filenames_buffer list.  If idx is invalide,
+    * returns NULL.
+    */
+   const char *get_dicom_filename(int idx);
    vtkGetMacro(WindowCenter, double);
    vtkGetMacro(WindowWidth, double);
    /// This will also make sure that ->Modified is set.

@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.3 2003/01/16 10:48:51 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.4 2003/02/10 12:17:58 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #include <algorithm>
@@ -619,7 +619,25 @@ void vtkDICOMVolumeReader::clear_dicom_filenames(void)
 {
    // we only clear the buffer list, not the internal one.  
     this->dicom_filenames_buffer.clear();
- }
+}
+
+int vtkDICOMVolumeReader::get_number_of_dicom_filenames(void)
+{
+   return dicom_filenames_buffer.size();
+}
+
+const char *vtkDICOMVolumeReader::get_dicom_filename(int idx)
+{
+   if (idx < dicom_filenames_buffer.size())
+   {
+      return dicom_filenames_buffer[idx].c_str();
+   }
+   else
+   {
+      return NULL;
+   }
+}
+
 
 const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 {
@@ -666,7 +684,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.3 2003/01/16 10:48:51 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.4 2003/02/10 12:17:58 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
