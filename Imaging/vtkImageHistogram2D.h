@@ -18,7 +18,9 @@ public:
 
   vtkSetMacro(Input2Bins,int);
   vtkGetMacro(Input2Bins,int);
-  
+
+  vtkSetMacro(MaxSamplesPerBin,long);
+  vtkGetMacro(MaxSamplesPerBin,long);
   
 protected:
   vtkImageHistogram2D();
@@ -26,6 +28,8 @@ protected:
 
   int Input1Bins;
   int Input2Bins;
+
+  long MaxSamplesPerBin;
   
   void ExecuteInformation(vtkImageData **inDatas, vtkImageData *outData);
   virtual void ComputeInputUpdateExtent(int inExt[6], int outExt[6],
