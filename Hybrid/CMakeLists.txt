@@ -6,7 +6,6 @@
 
 SET (Hybrid_SRCS 
      vtkBoxWidgetConstrained.cxx
-     vtkImageBacktracker.cxx
      vtkPolyLineWidget.cxx)
 
 # --------------------------------------------------------------------------

@@ -15,12 +15,15 @@
 #include "vtkPVGlyphFilter.h"
 
 #include "vtkGarbageCollector.h"
+#include "vtkInformation.h"
+#include "vtkInformationVector.h"
 #include "vtkMaskPoints.h"
 #include "vtkObjectFactory.h"
-#include "vtkPolyData.h"
 #include "vtkPointData.h"
+#include "vtkPolyData.h"
+#include "vtkStreamingDemandDrivenPipeline.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.8 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.9 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 //-----------------------------------------------------------------------------
@@ -43,13 +46,6 @@ vtkPVGlyphFilter::~vtkPVGlyphFilter()
 }
 
 //-----------------------------------------------------------------------------
-void vtkPVGlyphFilter::SetInput(vtkDataSet *input)
-{
-  this->MaskPoints->SetInput(input);
-  this->Superclass::SetInput(this->MaskPoints->GetOutput());
-}
-
-//-----------------------------------------------------------------------------
 void vtkPVGlyphFilter::SetRandomMode(int mode)
 {
   this->MaskPoints->SetRandomMode(mode);
@@ -62,20 +58,26 @@ int vtkPVGlyphFilter::GetRandomMode()
 }
 
 //-----------------------------------------------------------------------------
-void vtkPVGlyphFilter::Execute()
+int vtkPVGlyphFilter::RequestData(
+  vtkInformation *request,
+  vtkInformationVector **inputVector,
+  vtkInformationVector *outputVector)
 {
+  vtkInformation *outInfo = outputVector->GetInformationObject(0);
+
   if (this->UseMaskPoints)
     {
-    if (!this->MaskPoints->GetInput())
-     {
-     vtkErrorMacro(<<"No input set.");
-     return;
-     }
+    vtkInformation *inInfo = inputVector[0]->GetInformationObject(0);
+    vtkDataSet* input = vtkDataSet::SafeDownCast(
+      inInfo->Get(vtkDataObject::DATA_OBJECT()));
+    vtkDataSet* inputCopy = input->NewInstance();
+    inputCopy->ShallowCopy(input);
+    this->MaskPoints->SetInput(inputCopy);
+    inputCopy->Delete();
 
-    vtkPolyData* output = this->GetOutput();
-    this->Superclass::SetInput(this->MaskPoints->GetOutput());
     vtkIdType maxNumPts = this->MaximumNumberOfPoints;
-    vtkIdType numPts = this->MaskPoints->GetInput()->GetNumberOfPoints();
+    vtkIdType numPts = inputCopy->GetNumberOfPoints();
+
     // Although this is not perfectly process invariant, it is better
     // than we had before (divide by number of processes).
     vtkIdType totalNumPts = numPts;
@@ -85,34 +87,54 @@ void vtkPVGlyphFilter::Execute()
     this->MaskPoints->SetOnRatio(numPts / maxNumPts);
     // I do not like connecting internal filters to the actual input, but
     // This is the smallest change possible to fix the problem.
-    // This update caused input to be executed with number of piecces of 1.
-    this->MaskPoints->GetOutput()->SetUpdateNumberOfPieces(output->GetUpdateNumberOfPieces());
-    this->MaskPoints->GetOutput()->SetUpdatePiece(output->GetUpdatePiece());
-    this->MaskPoints->GetOutput()->SetUpdateGhostLevel(output->GetUpdateGhostLevel());
+    // This update caused input to be executed with number of pieces of 1.
+    vtkInformation *maskPointsInfo =
+      this->MaskPoints->GetOutputPortInformation(0);
+    maskPointsInfo->Set(
+      vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_PIECES(),
+      outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_PIECES()));
+    maskPointsInfo->Set(
+      vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER(),
+      outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_PIECE_NUMBER()));
+    maskPointsInfo->Set(
+      vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_GHOST_LEVELS(),
+      outInfo->Get(vtkStreamingDemandDrivenPipeline::UPDATE_NUMBER_OF_GHOST_LEVELS()));
     this->MaskPoints->Update();
     }
-  else
-    {
-    this->Superclass::SetInput(this->MaskPoints->GetInput());
-    }
 
+  vtkInformationVector* inputVs[2];
+
+  vtkInformationVector* inputV = inputVector[0];
+  inputVs[0] = vtkInformationVector::New();
+  inputVs[0]->SetNumberOfInformationObjects(1);
+  vtkInformation* inInfo = vtkInformation::New();
+  inInfo->Copy(inputV->GetInformationObject(0));
+  inInfo->Set(vtkDataObject::DATA_OBJECT(), this->MaskPoints->GetOutput());
+  inputVs[0]->SetInformationObject(0, inInfo);
+  inInfo->Delete();
+  inputVs[1] = inputVector[1];
+  
   // added by cpbotha:
   // if the vector selection is at the default of NULL and there are no 
   // vectors in the input dataset, see if there are any scalars.  If
   // so, select these as the input vectors (they could have enough
   // elements to be handled as vectors)
-  vtkDataSet *input = this->GetInput();
+
+  // funky new-style way of finding input
+  vtkDataSet* input = vtkDataSet::SafeDownCast(
+    inInfo->Get(vtkDataObject::DATA_OBJECT()));
+
   if (input)
     {
     vtkPointData *pd = input->GetPointData();
-    if (!pd->GetVectors(this->InputVectorsSelection) && 
+    if (!pd->GetVectors(this->InputVectorsSelection) &&
         !this->InputVectorsSelection)
       {
       // NO vectors, so let's try selecting the scalars (if there
       // are any!)
       vtkDataArray *inScalars = pd->GetScalars(
         this->InputScalarsSelection);
-      
+
       if (inScalars)
         {
         this->SelectInputVectors(inScalars->GetName());
@@ -120,8 +142,13 @@ void vtkPVGlyphFilter::Execute()
       }
     }
   // end addition by cpbotha
+  
    
-  this->Superclass::Execute();
+  
+  int retVal = this->Superclass::RequestData(request, inputVs, outputVector);
+  inputVs[0]->Delete();
+
+  return retVal;
 }
 
 //-----------------------------------------------------------------------------
@@ -151,4 +178,5 @@ void vtkPVGlyphFilter::PrintSelf(ostream& os, vtkIndent indent)
      << endl;
 
   os << indent << "UseMaskPoints: " << (this->UseMaskPoints?"on":"off") << endl;
+
 }

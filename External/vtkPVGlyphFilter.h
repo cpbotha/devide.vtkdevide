@@ -39,10 +39,6 @@ public:
   vtkGetMacro(MaximumNumberOfPoints, int);
 
   // Description:
-  // Set the input to this filter.
-  virtual void SetInput(vtkDataSet *input);
-  
-  // Description:
   // Set/get whether to mask points
   vtkSetMacro(UseMaskPoints, int);
   vtkGetMacro(UseMaskPoints, int);
@@ -56,11 +52,10 @@ protected:
   vtkPVGlyphFilter();
   ~vtkPVGlyphFilter();
 
-  virtual void Execute();
+  virtual int RequestData(vtkInformation *, vtkInformationVector **, vtkInformationVector *);
   
   vtkMaskPoints *MaskPoints;
   int MaximumNumberOfPoints;
-  int NumberOfProcesses;
   int UseMaskPoints;
   
   virtual void ReportReferences(vtkGarbageCollector*);
