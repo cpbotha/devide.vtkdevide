@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.8 2004/01/28 15:51:27 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.9 2004/04/07 16:32:49 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -14,6 +14,8 @@ def bench(camera, rwi):
     end_time = time.clock()
 
     print "FPS == %f" % (36 / (end_time - initial_time))
+    
+textActor = vtk.vtkTextActor()
 
 def ce_cb(obj, evt_name):
     if obj.GetKeyCode() == 'm':
@@ -24,14 +26,28 @@ def ce_cb(obj, evt_name):
         splatmapper.SetRenderMode(crm)
         print "rendermode switched to %d" % (crm)
 
-    if obj.GetKeyCode() == 'i':
-        com = splatmapper.GetPerspectiveOrderingMode()
-	com = com + 1
-	if com > 2:
-	    com = 0
+    if obj.GetKeyCode() in ['0', '1', '2']:
+#         com = splatmapper.GetPerspectiveOrderingMode()
+# 	com = com + 1
+# 	if com > 2:
+# 	    com = 0
+
+        com = int(obj.GetKeyCode())
         splatmapper.SetPerspectiveOrderingMode(com)
         print "ordering mode switched to %d" % (com)
         
+        if com == 0:
+            textActor.SetInput("PBTF")
+        elif com == 1:
+            textActor.SetInput("IP-PBTF")
+        else:
+            textActor.SetInput("Traditional BTF")
+
+        #textActor.GetPosition2Coordinate().SetValue(1, 1)
+        textActor.SetDisplayPosition(0, 140)
+        rwi.Render()
+        time.sleep(1.2)
+        textActor.SetDisplayPosition(0, 10)
 
     elif obj.GetKeyCode() == '\'':
         cur = splatmapper.GetEllipsoidDiameter()
@@ -103,8 +119,8 @@ splatmapper.SetOmegaL(0.1)
 splatmapper.SetOmegaH(0.2)
 splatmapper.SetInput(reader.GetOutput())
 splatmapper.SetRenderMode(0)
-# test extra-special PBTF
-splatmapper.SetPerspectiveOrderingMode(2)
+# this should be PBTF
+splatmapper.SetPerspectiveOrderingMode(0)
 
 vprop = vtkVolumeProperty()
 vprop.SetScalarOpacity(otf)
@@ -112,8 +128,8 @@ vprop.SetColor(ctf);
 vprop.ShadeOn()
 vprop.SetAmbient(0.1)
 vprop.SetDiffuse(0.7)
-vprop.SetSpecular(0.2)
-vprop.SetSpecularPower(10)
+vprop.SetSpecular(0.4)
+vprop.SetSpecularPower(40)
 
 volume = vtkVolume()
 volume.SetProperty(vprop)
@@ -127,10 +143,35 @@ ren.AddVolume(volume)
 cubeAxesActor2d = vtk.vtkCubeAxesActor2D()
 cubeAxesActor2d.SetFlyModeToOuterEdges()
 ren.AddActor(cubeAxesActor2d)
-cubeAxesActor2d.VisibilityOn()
+cubeAxesActor2d.VisibilityOff() # FIXME: you can switch it on here
 reader.Update()
 cubeAxesActor2d.SetBounds(reader.GetOutput().GetBounds())
 cubeAxesActor2d.SetCamera(ren.GetActiveCamera())
+
+# Create a scaled text actor. 
+
+textActor.ScaledTextOn()
+textActor.SetDisplayPosition(0, 10)
+textActor.SetInput("PBTF")
+
+# Set coordinates to match the old vtkScaledTextActor default value
+textActor.GetPosition2Coordinate().SetCoordinateSystemToNormalizedViewport()
+textActor.GetPosition2Coordinate().SetValue(1, 0.1)
+
+tprop = textActor.GetTextProperty()
+tprop.SetFontSize(18)
+tprop.SetFontFamilyToArial()
+tprop.SetJustificationToCentered()
+tprop.BoldOn()
+#tprop.ItalicOn()
+tprop.ShadowOn()
+tprop.SetColor(1, 0, 0)
+
+ren.AddActor(textActor)
+#### end of text
+
+
+
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)
