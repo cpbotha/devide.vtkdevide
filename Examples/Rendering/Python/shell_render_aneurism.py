@@ -1,8 +1,8 @@
-# $Id: shell_render_aneurism.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+# $Id: shell_render_aneurism.py,v 1.2 2003/03/08 00:19:56 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
-from vtkcpbothapython import *
+from vtkdscas import *
 import time
 
 def bench(camera, rwi):
