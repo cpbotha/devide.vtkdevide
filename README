@@ -1,6 +1,13 @@
 Getting this to build in Visual C++ 6.0
 ---------------------------------------
 
-- Add ws2_32.lib to the standard libraries.  Both HDF and DCMTK require this.
-- You might have to remove the /MD (multi-threading) switches, else VC++
-  doesn't want to use the HDF static libs.
+- Add ws2_32.lib and netapi32.lib to the standard libraries
+  (CMAKE_STANDARD_LIBRARIES).  Both HDF and DCMTK require this.
+
+- Use the dlllib subdirectory of the HDF installation: VTK and also vtkdscas
+  are compiled with /MD (multi-threaded and DLL support)
+
+- Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
+  have to build ofstd and dcmdata
+
+
