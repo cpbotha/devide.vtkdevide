@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.11 2003/08/05 09:33:56 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.12 2003/08/05 10:28:09 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -46,6 +46,9 @@
  * So, one uses SetSeriesInstanceIdx to select a different series from
  * the DICOM dataset.  The GetOutput() will "change" into a different
  * VTK dataset for each SeriesInstanceIdx.
+ *
+ * Because some DICOM datasets can be large, it is recommended that you
+ * give progress feedback by making use of an Observer of the ProgressEvent.
  */    
 
 #ifndef vtkDICOMVolumeReader_h

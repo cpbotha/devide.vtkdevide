@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.10 2003/08/05 09:33:56 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.11 2003/08/05 10:28:09 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -635,7 +635,6 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                   *(spixels + numpixels_perslice * i + pidx) = 
                      (short)INTROUND(temp_RescaleSlope * (double)(*temp_bits_ptr) + temp_RescaleIntercept);
                } // for (int pidx = 0; ...
-               cout << "LAST pixel: " << numpixels_perslice * i + pidx - 1 << endl;
             } // else 16 BitsAllocated
          } // else two's complement
       } // else we have a dicom_pixeldata_pointer
@@ -761,7 +760,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.10 2003/08/05 09:33:56 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.11 2003/08/05 10:28:09 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
