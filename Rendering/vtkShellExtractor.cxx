@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.6 2003/11/18 10:10:11 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.7 2003/11/18 16:13:17 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -120,15 +120,18 @@ static void ExtractShell(T* data_ptr,
     voxelsToVolumeMatrix->DeepCopy(voxelsToVolumeTransform->GetMatrix());
     voxelsToVolumeTransform->Delete();
 
+    float tempValue;
+
     for (int z = 0; z < zlen; z++)
     {
         for (int y = 0; y < ylen; y++)
         {
             for (int x = 0; x < xlen; x++)
             {
-                temp_sv.Value = (float)(*dptr);
+                //temp_sv.Value = (float)(*dptr);
+                tempValue = (float)(*dptr);
                 // look the suxor up
-                temp_sv.Opacity = OpacityTF->GetValue(temp_sv.Value);
+                temp_sv.Opacity = OpacityTF->GetValue(tempValue);
                 // first check if it's opaque enough
                 if (temp_sv.Opacity > OmegaL)
                 {
@@ -288,8 +291,8 @@ static void ExtractShell(T* data_ptr,
                             // these things to be NORMALISED in world space (although
                             // we'll be rendering in voxel space)
                             temp_sv.Normal[0] = ((float)nbrs[0] - (float)nbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((float)nbrs[2] - (float)nbrs[3]) / dxm2;
-                            temp_sv.Normal[2] = ((float)nbrs[4] - (float)nbrs[5]) / dxm2;
+                            temp_sv.Normal[1] = ((float)nbrs[2] - (float)nbrs[3]) / dym2;
+                            temp_sv.Normal[2] = ((float)nbrs[4] - (float)nbrs[5]) / dzm2;
                         }
                         else if (!GradientImageIsGradient)
                         {
@@ -325,14 +328,14 @@ static void ExtractShell(T* data_ptr,
                                 gnbrs[5] = 0.0;
 
                             temp_sv.Normal[0] = ((float)gnbrs[0] - (float)gnbrs[1]) / dxm2;
-                            temp_sv.Normal[1] = ((float)gnbrs[2] - (float)gnbrs[3]) / dxm2;
-                            temp_sv.Normal[2] = ((float)gnbrs[4] - (float)gnbrs[5]) / dxm2;
+                            temp_sv.Normal[1] = ((float)gnbrs[2] - (float)gnbrs[3]) / dym2;
+                            temp_sv.Normal[2] = ((float)gnbrs[4] - (float)gnbrs[5]) / dzm2;
                         }
 			else
 			{
 			  temp_sv.Normal[0] = GradientImageData->GetScalarComponentAsFloat(x,y,z,0) / dxm2;
-			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsFloat(x,y,z,1) / dxm2;
-			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsFloat(x,y,z,2) / dxm2;
+			  temp_sv.Normal[1] = GradientImageData->GetScalarComponentAsFloat(x,y,z,1) / dym2;
+			  temp_sv.Normal[2] = GradientImageData->GetScalarComponentAsFloat(x,y,z,2) / dzm2;
 			}
 
                         t_gradmag = sqrt(temp_sv.Normal[0] * temp_sv.Normal[0] +
@@ -359,15 +362,15 @@ static void ExtractShell(T* data_ptr,
                         // nbrOCode is done
                         temp_sv.x = x; // set integer x
                         // and update the voxel coords in voxel space
-                        temp_sv.volCoords[0] = x_orig + (float)x * x_spacing;
-                        temp_sv.volCoords[1] = y_orig + (float)y * y_spacing;
-                        temp_sv.volCoords[2] = z_orig + (float)z * z_spacing;                       
+                        //temp_sv.volCoords[0] = x_orig + (float)x * x_spacing;
+                        //temp_sv.volCoords[1] = y_orig + (float)y * y_spacing;
+                        //temp_sv.volCoords[2] = z_orig + (float)z * z_spacing;                       
 
                         if (!ColourTF)
                             temp_sv.Red = temp_sv.Green = temp_sv.Blue = 1.0;
                         else
                         {
-                            ColourTF->GetColor(temp_sv.Value, temp_rgb);
+                            ColourTF->GetColor(tempValue, temp_rgb);
                             temp_sv.Red = temp_rgb[0];
                             temp_sv.Green = temp_rgb[1];
                             temp_sv.Blue = temp_rgb[2];

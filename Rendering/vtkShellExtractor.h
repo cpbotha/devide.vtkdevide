@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.h,v 1.4 2003/10/20 22:20:00 cpbotha Exp $
+// $Id: vtkShellExtractor.h,v 1.5 2003/11/18 16:13:17 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -39,7 +39,7 @@ struct ShellVoxel
      * x-coordinate of voxel.
      */
     int x;
-    float Value;
+    //float Value;
     float Opacity;
     float Red;
     float Green;
@@ -61,7 +61,7 @@ struct ShellVoxel
     /**
      * Coordinates of this voxel in volume space.
      */
-    float volCoords[3];
+    //float volCoords[3];
 };
 
 /**
