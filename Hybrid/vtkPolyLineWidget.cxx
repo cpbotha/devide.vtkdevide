@@ -18,7 +18,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkPolyLineWidget, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkPolyLineWidget, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkPolyLineWidget);
 
 vtkCxxSetObjectMacro(vtkPolyLineWidget, HandleProperty, vtkProperty);
@@ -1216,14 +1216,14 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
         }
       } // had to add more points
     
-    cout << "xyz" << x << "," << y << "," << z << endl;
+    //cout << "xyz: " << x << "," << y << "," << z << endl;
 
     this->HandleGeometry[i]->SetCenter(x,y,z);
     this->HandleGeometry[i]->SetRadius(radius);
     this->HandlePicker->AddPickList(this->Handle[i]);
     }
   
-  cout << this->NumberOfHandles << endl;
+  //cout << this->NumberOfHandles << endl;
 
   // take care of this mem on the heap
   delete[] StoredHandles;
