@@ -21,6 +21,10 @@ public:
 
   vtkSetMacro(MaxSamplesPerBin,long);
   vtkGetMacro(MaxSamplesPerBin,long);
+
+  vtkSetMacro(ClipSamples, int);
+  vtkGetMacro(ClipSamples, int);
+  vtkBooleanMacro(ClipSamples, int);
   
 protected:
   vtkImageHistogram2D();
@@ -30,6 +34,8 @@ protected:
   int Input2Bins;
 
   long MaxSamplesPerBin;
+
+  int ClipSamples;
   
   void ExecuteInformation(vtkImageData **inDatas, vtkImageData *outData);
   virtual void ComputeInputUpdateExtent(int inExt[6], int outExt[6],

@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.6 $");
+vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.7 $");
 vtkStandardNewMacro(vtkImageHistogram2D);
 
 //----------------------------------------------------------------------------
@@ -12,6 +12,7 @@ vtkImageHistogram2D::vtkImageHistogram2D()
     this->SetInput1Bins(256);
     this->SetInput2Bins(256);
     this->SetMaxSamplesPerBin(512);
+    this->ClipSamplesOff();
 }
 
 
@@ -90,6 +91,7 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
     T in1val, in2val;
     unsigned bin1, bin2;
     long MaxSamplesPerBin = self->GetMaxSamplesPerBin();
+    int ClipSamples = self->GetClipSamples();
     for (unsigned long i = 0; i < noe; i++)
     {
         if (i % noeProgressStep == 0)
@@ -107,8 +109,11 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
         bin2 = (unsigned)((in2val - in2range[0]) / in2binWidth);
 
         // increment the correct bin
-        if (*(outPtr + bin2 * input1bins + bin1) < MaxSamplesPerBin)
+        if (!ClipSamples ||
+            *(outPtr + bin2 * input1bins + bin1) < MaxSamplesPerBin)
+          {
             *(outPtr + bin2 * input1bins + bin1) += 1;
+          }
 
         in1Ptr++;
         in2Ptr++;
