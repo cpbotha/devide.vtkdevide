@@ -1,6 +1,6 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2002 by Charl P. Botha 
 // http://cpbotha.net/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.2 2003/04/29 17:10:43 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.3 2003/04/29 19:29:35 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 // TODO:
@@ -395,6 +395,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    // woef, let's render
    // first make sure we're working in the right context
    ren->GetRenderWindow()->MakeCurrent();
+
+   // store all gl attributes for this context
+   glPushAttrib(GL_ALL_ATTRIB_BITS);
 
    // first activate blending
    glEnable(GL_BLEND);
@@ -1046,6 +1049,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    float secs = (float)diff_clock / (float)CLOCKS_PER_SEC;
 
    cout << "Clock ticks == " << diff_clock << " Secs == " << secs << " FPS == " << 1.0 / secs << endl;
+
+   // restore all gl attributes
+   glPopAttrib();
 }
 
 
