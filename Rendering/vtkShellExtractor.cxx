@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.17 2004/07/02 08:00:20 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.18 2004/07/02 08:51:51 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -522,7 +522,7 @@ static void ExtractShell(T* data_ptr,
         Pz[PzIdx] = -1;
         Pz[PzIdx + 1] = -1;
         
-        for (int z = 0; z < ylen; z++)
+        for (int z = 0; z < zlen; z++)
           {
           PxIdx = (z * ylen + y) * 2;
           if (pWallZY[PxIdx] >= 0)
