@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.5 2003/10/20 22:20:00 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.6 2003/12/24 17:18:08 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -74,6 +74,13 @@ public vtkVolumeMapper
   void SetRenderMode(int newRenderMode);
   vtkGetMacro(RenderMode, int);
 
+  /**
+   * Sets current perspective ordering mode.  0 == PBTF.  1 == interleaved
+   * PBTF.
+   */
+  vtkSetClampMacro(PerspectiveOrderingMode, int, 0, 1);
+  vtkGetMacro(PerspectiveOrderingMode, int);
+
   vtkSetMacro(EllipsoidDiameter, double);
   vtkGetMacro(EllipsoidDiameter, double);
   void SetGaussianRadialExtent(double);
@@ -142,6 +149,12 @@ public vtkVolumeMapper
    * projection.
    */
   int RenderMode;
+  /**
+   * Different perspective ordering modes.  0 is for Ed Swan's PBTF,
+   * 1 is for interleaved PBTF (which will hopefully solve all of PBTF's
+   * problems when points are not infinitesimally small)
+   */
+  int PerspectiveOrderingMode;
 };
 
 #endif

@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.8 2003/11/26 21:53:33 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.9 2003/12/24 17:18:08 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -252,6 +252,9 @@ vtkOpenGLVolumeShellSplatMapper::vtkOpenGLVolumeShellSplatMapper()
 
    // this will set the Gaussian parameters and initialise the textures themselves
    this->SetRenderMode(0);
+
+   // this will setup the initial rendering mode (to normal PBTF)
+   this->SetPerspectiveOrderingMode(0);
 }
 
 vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
@@ -835,7 +838,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
       this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2], octantIdx, D, P, inputDims[1], ambient, diffuse, u, v);
    }
-   else // PERSPECTIVE rendering
+   else if (this->PerspectiveOrderingMode == 0) // PERSPECTIVE rendering, PBTF
    {
       // check whether it's volume-on, face-on, edge-on or corner-on
       int xin = 0, yin = 0, zin = 0, xyztot = 0;
@@ -1063,7 +1066,236 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
          this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2], octantIdx, D, P, inputDims[1], ambient, diffuse, u, v);
       } // CORNER-ON
 
-   } // else PERSPECTIVE rendering
+   } // else PERSPECTIVE rendering, PBTF
+   else // PERSPECTIVE rendering, iPBTF
+   {
+      // check whether it's volume-on, face-on, edge-on or corner-on
+      int xin = 0, yin = 0, zin = 0, xyztot = 0;
+      if (camVoxelPos[0] >= 0 && camVoxelPos[0] < inputDims[0])
+      {
+         xin = 1;
+         xyztot++;
+      }
+      if (camVoxelPos[1] >= 0 && camVoxelPos[1] < inputDims[1])
+      {
+         yin = 1;
+         xyztot++;
+      }
+      if (camVoxelPos[2] >= 0 && camVoxelPos[2] < inputDims[2])
+      {
+         zin = 1;
+         xyztot++;
+      }
+
+      int pq, pr, ps;
+
+      // **************************************************************************
+      // NB: convention: LDB is our origin, NOT LDF as in Swan's thesis!
+      // **************************************************************************
+
+      // volume-on: break up volume into 8 octants
+      if (xyztot == 3)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "VOLUME-ON" << endl;
+#endif         
+         pq = vtkMath::Round(camVoxelPos[0]);
+         pq = (pq >= xdim) ? xdim - 1 : pq;
+         pr = vtkMath::Round(camVoxelPos[1]);
+         pr = (pr >= ydim) ? ydim - 1 : pr;
+         ps = vtkMath::Round(camVoxelPos[2]);
+         ps = (ps >= zdim) ? zdim - 1 : ps;
+         // rendering octant LDF (code: 4)
+         this->DrawVoxels(0, pq + 1,      0, pr + 1,      ps + 1, zdim,   3, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RDF (code: 5)
+         this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      ps + 1, zdim,   2, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LUF (code: 6)      
+         this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   ps + 1, zdim,   1, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RUF (code: 7)
+         this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   ps + 1, zdim,   0, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LDB (code: 0)
+         this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, ps + 1,      7, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RDB (code: 1)
+         this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, ps + 1,      6, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant LUB (code: 2)
+         this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, ps + 1,      5, D, P, ydim, ambient, diffuse, u, v);
+         // rendering octant RUB (code: 3)
+         this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, ps + 1,      4, D, P, ydim, ambient, diffuse, u, v);
+      } // end VOLUME-ON
+
+      // face-on: break volume into 4 quadrants
+      else if (xyztot == 2)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "FACE-ON: ";
+#endif         
+         if (zin == 0)
+         {
+            pq = vtkMath::Round(camVoxelPos[0]);
+            pq = (pq >= xdim) ? xdim - 1 : pq;
+            pr = vtkMath::Round(camVoxelPos[1]);
+            pr = (pr >= ydim) ? ydim - 1 : pr;
+            if (camVoxelPos[2] >= zdim)
+            {
+#ifdef SSM_VERBOSE_OUTPUT                
+               cout << "z >= zdim" <<endl;
+#endif               
+               // quadrant LU
+               this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   5, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, zdim,   7, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, zdim,   4, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, zdim,   6, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+            else
+            {
+#ifdef SSM_VERBOSE_OUTPUT                
+               cout << "z < 0" <<endl;
+#endif               
+               // MIRROR of clause above, only shell rendering octantIdx changes
+               // quadrant LU
+               this->DrawVoxels(0, pq + 1,      pr + 1, ydim,   0, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, pq + 1,      0, pr + 1,      0, zdim,   3, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(pq + 1, xdim,   pr + 1, ydim,   0, zdim,   0, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(pq + 1, xdim,   0, pr + 1,      0, zdim,   2, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+         }
+         else if (yin == 0)
+         {
+            pq = vtkMath::Round(camVoxelPos[0]);
+            pq = (pq >= xdim) ? xdim - 1 : pq;
+            ps = vtkMath::Round(camVoxelPos[2]);
+            ps = (ps >= zdim) ? zdim - 1 : ps;
+            if (camVoxelPos[1] >= ydim)
+            {
+               // We're viewing from "ABOVE"
+               // quadrant LU
+               this->DrawVoxels(0, pq + 1,        0, ydim,   0, ps + 1,        7, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, pq + 1,        0, ydim,   ps + 1, zdim,   3, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(pq + 1, xdim,   0, ydim,   0, ps + 1,        6, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(pq + 1, xdim,   0, ydim,   ps + 1, zdim,   2, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+            else
+            {
+               // MIRROR
+               // quadrant LU
+               this->DrawVoxels(0, pq + 1,        0, ydim,   0, ps + 1,        5, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, pq + 1,        0, ydim,   ps + 1, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(pq + 1, xdim,   0, ydim,   0, ps + 1,        4, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(pq + 1, xdim,   0, ydim,   ps + 1, zdim,   0, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+         }
+         else // xin == 0
+         {
+            pr = vtkMath::Round(camVoxelPos[1]);
+            pr = (pr >= ydim) ? ydim - 1 : pr;
+            ps = vtkMath::Round(camVoxelPos[2]);
+            ps = (ps >= zdim) ? zdim - 1 : ps;
+            if (camVoxelPos[0] >= xdim)
+            {
+               // We're viewing from the "RIGHT"
+               // quadrant LU
+               this->DrawVoxels(0, xdim,   pr + 1, ydim,   ps + 1, zdim,   1, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, xdim,   0, pr + 1,      ps + 1, zdim,   3, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(0, xdim,   pr + 1, ydim,   0, ps + 1,      5, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(0, xdim,   0, pr + 1,      0, ps + 1,      7, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+            else
+            {
+               // MIRROR
+               // quadrant LU
+               this->DrawVoxels(0, xdim,   pr + 1, ydim,   ps + 1, zdim,   0, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant LD
+               this->DrawVoxels(0, xdim,   0, pr + 1,      ps + 1, zdim,   2, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RU
+               this->DrawVoxels(0, xdim,   pr + 1, ydim,   0, ps + 1,      4, D, P, inputDims[1], ambient, diffuse, u, v);
+               // quadrant RD
+               this->DrawVoxels(0, xdim,   0, pr + 1,      0, ps + 1,      6, D, P, inputDims[1], ambient, diffuse, u, v);
+            }
+         }
+      } // FACE-ON
+
+      // edge-on
+      else if (xyztot == 1)
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "EDGE-ON" << endl;
+#endif         
+         int edge_idx = 0;
+         if (zin)
+         {
+            ps = vtkMath::Round(camVoxelPos[2]);
+            ps = (ps >= zdim) ? zdim - 1 : ps;
+            if (camVoxelPos[0] >= xdim)
+               edge_idx |= 0x1;
+            if (camVoxelPos[1] >= ydim)
+               edge_idx |= 0x2;
+            // this is sorted, really
+            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+         else if (yin)
+         {
+            pr = vtkMath::Round(camVoxelPos[1]);
+            pr = (pr >= ydim) ? ydim - 1 : pr;
+            if (camVoxelPos[0] >= xdim)
+               edge_idx |= 0x1;
+            if (camVoxelPos[2] >= zdim)
+               edge_idx |= 0x4;
+            this->DrawVoxels(0, xdim, 0, pr + 1, 0, zdim, edge_idx + 2, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(0, xdim, pr + 1, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+         else // xin
+         {
+            pq = vtkMath::Round(camVoxelPos[0]);
+            pq = (pq >= xdim) ? xdim - 1 : pq;
+            if (camVoxelPos[1] >= ydim)
+               edge_idx |= 0x2;
+            if (camVoxelPos[2] >= zdim)
+               edge_idx |= 0x4;
+            this->DrawVoxels(0, pq + 1,      0, ydim, 0, zdim, edge_idx + 1, D, P, inputDims[1], ambient, diffuse, u, v);
+            this->DrawVoxels(pq + 1, xdim,   0, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+         }
+      } // EDGE-ON
+
+      // corner-on
+      else
+      {
+#ifdef SSM_VERBOSE_OUTPUT          
+         cout << "CORNER-ON" << endl;
+#endif         
+         // being here means Vp is by definition outside the volume:
+         octantIdx = 0;
+         if (camVoxelPos[0] >= inputDims[0])
+         {
+            octantIdx |= 0x1;
+         }
+         if (camVoxelPos[1] >= inputDims[1])
+         {
+            octantIdx |= 0x2;
+         }
+         if (camVoxelPos[2] >= inputDims[2])
+         {
+            octantIdx |= 0x4;
+         }
+         this->DrawVoxels(0, inputDims[0], 0, inputDims[1], 0, inputDims[2], octantIdx, D, P, inputDims[1], ambient, diffuse, u, v);
+      } // CORNER-ON
+
+   } // else PERSPECTIVE rendering with interleaved PBTF
 #ifdef SSM_VERBOSE_OUTPUT
    cout << "voxels_drawn == " << voxels_drawn << endl;
 #endif   
