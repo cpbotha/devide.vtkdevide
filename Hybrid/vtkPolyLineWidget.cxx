@@ -18,7 +18,7 @@
 #include "vtkSphereSource.h"
 #include "vtkTransform.h"
 
-vtkCxxRevisionMacro(vtkPolyLineWidget, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkPolyLineWidget, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkPolyLineWidget);
 
 vtkCxxSetObjectMacro(vtkPolyLineWidget, HandleProperty, vtkProperty);
@@ -83,7 +83,6 @@ vtkPolyLineWidget::vtkPolyLineWidget()
 
     points->InsertPoint(i, x, y, z);
     }
-
 
   vtkCellArray* lines = vtkCellArray::New();
   lines->Allocate(lines->EstimateSize(this->NumberOfHandles,2));
@@ -482,12 +481,38 @@ void vtkPolyLineWidget::BuildRepresentation()
 {
   double ctr[3];
   int i;
-  vtkPoints* points = this->LineData->GetPoints();  
+  vtkPoints* points = this->LineData->GetPoints();
+  points->SetNumberOfPoints(this->NumberOfHandles);
   for (i=0; i<this->NumberOfHandles; i++)
     {
     this->HandleGeometry[i]->GetCenter(ctr);
     points->SetPoint(i, ctr[0], ctr[1], ctr[2]);
     }
+
+  // let's do the lines now
+  vtkCellArray *lines = this->LineData->GetLines();
+  // deallocate and reset
+  lines->Reset();
+
+  int npts = this->NumberOfHandles;
+  if (this->Closed)
+    {
+    npts += 1;
+    }
+
+  lines->Allocate(lines->EstimateSize(npts,2));
+  lines->InsertNextCell(npts);
+
+  for (i = 0; i < this->NumberOfHandles; i++)
+    {
+    lines->InsertCellPoint(i);
+    }
+  if (this->Closed)
+    {
+    // has to point back to the beginning if closed
+    lines->InsertCellPoint(0);
+    }
+    
 }
 
 int vtkPolyLineWidget::HighlightHandle(vtkProp *prop)
@@ -1076,7 +1101,8 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
     }
   if (npts < 2)
     {
-    vtkGenericWarningMacro(<<"vtkPolyLineWidget: minimum of 2 points required.");
+    vtkGenericWarningMacro(
+      <<"vtkPolyLineWidget: minimum of 2 points required.");
     return;
     }
 
@@ -1084,7 +1110,7 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
   double radius = this->HandleGeometry[0]->GetRadius();
   double factor = (this->NumberOfHandles - 1.0)/(npts - 1.0);
   // we're going to store x, y and z
-  double NumberOfStoredHandles = this->NumberOfHandles;
+  int NumberOfStoredHandles = this->NumberOfHandles;
   double *StoredHandles = new double [this->NumberOfHandles * 3];
   int i;
   for (i = 0; i < this->NumberOfHandles; i++)
@@ -1103,19 +1129,21 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
   this->HandleGeometry = new vtkSphereSource* [this->NumberOfHandles];
 
   double x,y,z;
+  double px,py,pz;
+  double nx,ny,nz;
 
   int numIntervals = NumberOfStoredHandles;
-  if (!this->Closed)
-    {
-    numIntervals -= 1;
-    }
-  int numNewHandlesPerInterval =
-    (this->NumberOfHandles - NumberOfStoredHandles) / numIntervals;
+//  if (!this->Closed)
+//    {
+//    numIntervals -= 1;
+//    }
+  int numHandlesPerInterval =
+    (this->NumberOfHandles) / numIntervals;
+
+//  int numNewHandlesPerInterval =
+//    (this->NumberOfHandles - NumberOfStoredHandles) / numIntervals;
   
-  // FIXME: continue here... iterate in fast loop, do checks for
-  // points that need to be on their old positions
-  // REMEMBER TO ADD THIS TO CVS
-  
+  // insert and interpolate new points
   for (i=0; i<this->NumberOfHandles; i++)
     {
     this->HandleGeometry[i] = vtkSphereSource::New();
@@ -1127,11 +1155,79 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
     this->Handle[i]->SetMapper(this->HandleMapper[i]);
     this->Handle[i]->SetProperty(this->HandleProperty);
 
+    // let's find out what the coord should be
+    if (this->NumberOfHandles <= NumberOfStoredHandles)
+      {
+      // numIntervals is negative, that means there are now less
+      // points than their are stored, so we can just use the old ones
+      // up to the number of new ones required
+      x = StoredHandles[i*3];
+      y = StoredHandles[i*3 + 1];
+      z = StoredHandles[i*3 + 2];
+      }
+    else
+      {
+      int oldIndex = i / numHandlesPerInterval;      
+      if (i % numHandlesPerInterval == 0 && oldIndex < NumberOfStoredHandles)
+        {
+        // we are on one of the old points (i.e. don't interpolate)
+
+        x = StoredHandles[oldIndex*3];
+        y = StoredHandles[oldIndex*3 + 1];
+        z = StoredHandles[oldIndex*3 + 2];
+        }
+      else
+        {
+        // we are between old nodes, so we have to interpolate
+        // find indices in stored nodes
+        int pi = i / numHandlesPerInterval;
+        int ni = pi + 1;
+
+        if (ni >= NumberOfStoredHandles - 1)
+          {
+          // this means we've gone past the end, so:
+          if (this->Closed)
+            {
+            // we're closed, so the next point is the beginning
+            pi = NumberOfStoredHandles - 1;
+            ni = 0;
+            }
+          else
+            {
+            // we're open, so we move one interval back
+            
+            ni = NumberOfStoredHandles -1;
+            pi = ni -1;
+            }
+          }
+
+        // distance along
+        double d = i / (double)numHandlesPerInterval - (double)pi;
+        //
+        px = StoredHandles[pi*3];
+        py = StoredHandles[pi*3 + 1];
+        pz = StoredHandles[pi*3 + 2];
+        nx = StoredHandles[ni*3];
+        ny = StoredHandles[ni*3 + 1];
+        nz = StoredHandles[ni*3 + 2];
+        x = px + d * (nx - px);
+        y = py + d * (ny - py);
+        z = pz + d * (nz - pz);        
+        }
+      } // had to add more points
+    
+    cout << "xyz" << x << "," << y << "," << z << endl;
+
     this->HandleGeometry[i]->SetCenter(x,y,z);
     this->HandleGeometry[i]->SetRadius(radius);
     this->HandlePicker->AddPickList(this->Handle[i]);
     }
+  
+  cout << this->NumberOfHandles << endl;
 
+  // take care of this mem on the heap
+  delete[] StoredHandles;
+      
   this->BuildRepresentation();
 
   if ( this->Interactor )
