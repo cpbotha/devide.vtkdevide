@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.14 2003/08/07 21:55:13 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.15 2003/09/24 10:45:11 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -430,7 +430,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
 void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
 {
-   vtkWarningMacro(<<"vtkDICOMVolumeReader::ExecuteData() - START");
+   vtkDebugMacro(<<"vtkDICOMVolumeReader::ExecuteData() - START");
 
    // we have to make sure the DICOM dictionary is loaded (this requires a functioning DICOM installation)
    if (!dcmDataDict.isDictionaryLoaded())
@@ -779,7 +779,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.14 2003/08/07 21:55:13 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.15 2003/09/24 10:45:11 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
