@@ -40,3 +40,11 @@ The vtkdscas config
 - Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
   have to build ofstd and dcmdata
 
+- Since VTK has started mangling zlib names in their zlib library (better this
+  way), you must build dcmdata with the VTK zlib library: modify the "project|
+  settings| c/c++" in VC and add VTKSourceDir/Utilities/vtkzlib and
+  VTKBuildDir/Utilities to the includes.  Make sure there's no other zlib
+  include/library directories lying around on the same level as the dcmtk
+  root.  This way, DCMTK will make use of
+  vtk's zlib version.
+
