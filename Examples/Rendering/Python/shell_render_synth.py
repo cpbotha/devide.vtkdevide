@@ -1,4 +1,4 @@
-# $Id: shell_render_synth.py,v 1.2 2003/12/25 00:26:51 cpbotha Exp $
+# $Id: shell_render_synth.py,v 1.3 2004/01/14 18:51:38 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 import vtk
@@ -46,7 +46,8 @@ vr.SetFileDimensionality(3)
 vr.SetFileName("cube.raw")
 vr.SetDataScalarType(3) # VTK_UNSIGNED_CHAR
 vr.SetDataExtent((0,63,0,63,0,63))
-vr.SetDataSpacing((0.5, 3, 0.5))
+#vr.SetDataSpacing((0.5, 3, 0.5))
+vr.SetDataSpacing((0.5, 0.5, 0.5))
 
 otf = vtk.vtkPiecewiseFunction()
 otf.AddPoint(0.0, 0.0)

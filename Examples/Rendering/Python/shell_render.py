@@ -1,4 +1,4 @@
-# $Id: shell_render.py,v 1.3 2003/04/29 17:10:43 cpbotha Exp $
+# $Id: shell_render.py,v 1.4 2004/01/14 18:51:38 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtk import *
@@ -20,6 +20,15 @@ def ce_cb(obj, evt_name):
         crm = splatmapper.GetRenderMode()
         splatmapper.SetRenderMode(not crm)
         print "rendermode switched to %d" % (not crm)
+        
+    if obj.GetKeyCode() == 'i':
+        com = splatmapper.GetPerspectiveOrderingMode()
+	com = com + 1
+	if com > 2:
+	    com = 0
+        splatmapper.SetPerspectiveOrderingMode(com)
+        print "ordering mode switched to %d" % (com)
+        
 
     elif obj.GetKeyCode() == '\'':
         cur = splatmapper.GetEllipsoidDiameter()
@@ -54,9 +63,8 @@ def ce_cb(obj, evt_name):
     rwi.Render()
         
         
-        
-hdfr = vtkHDFVolumeReader()
-hdfr.SetFileName("r256.hdf")
+vr = vtkStructuredPointsReader()        
+vr.SetFileName("r256.vtk")
 
 otf = vtkPiecewiseFunction()
 otf.AddPoint(0.0, 0.0)
@@ -81,7 +89,7 @@ ctf.AddRGBPoint(2800, 1.0, 0.937, 0.859)
 splatmapper = vtkOpenGLVolumeShellSplatMapper()
 splatmapper.SetOmegaL(0.3)
 splatmapper.SetOmegaH(0.3)
-splatmapper.SetInput(hdfr.GetOutput())
+splatmapper.SetInput(vr.GetOutput())
 splatmapper.SetRenderMode(0)
 
 vprop = vtkVolumeProperty()

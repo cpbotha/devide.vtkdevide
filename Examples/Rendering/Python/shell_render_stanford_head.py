@@ -1,4 +1,4 @@
-# $Id: shell_render_stanford_head.py,v 1.2 2003/10/08 12:17:31 cpbotha Exp $
+# $Id: shell_render_stanford_head.py,v 1.3 2004/01/14 18:51:38 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtk import *
@@ -20,6 +20,15 @@ def ce_cb(obj, evt_name):
         crm = splatmapper.GetRenderMode()
         splatmapper.SetRenderMode(not crm)
         print "rendermode switched to %d" % (not crm)
+        
+    if obj.GetKeyCode() == 'i':
+        com = splatmapper.GetPerspectiveOrderingMode()
+	com = com + 1
+	if com > 2:
+	    com = 0
+        splatmapper.SetPerspectiveOrderingMode(com)
+        print "ordering mode switched to %d" % (com)
+
 
     elif obj.GetKeyCode() == '\'':
         cur = splatmapper.GetEllipsoidDiameter()
@@ -115,7 +124,7 @@ volume.SetMapper(splatmapper)
 ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
-ren.GetActiveCamera().ParallelProjectionOn()
+#ren.GetActiveCamera().ParallelProjectionOn()
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)
