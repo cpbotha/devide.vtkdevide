@@ -1,7 +1,8 @@
-# $Id: shell_render_stanford_head.py,v 1.4 2004/01/15 11:00:53 cpbotha Exp $
+# $Id: shell_render_stanford_head.py,v 1.5 2004/01/28 15:51:27 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtk import *
+import vtk
 from vtkdevide import *
 import time
 
@@ -77,19 +78,24 @@ v16.Update()
 
 otf = vtkPiecewiseFunction()
 otf.AddPoint(0.0, 0.0)
-otf.AddPoint(1000.9, 0.0)
-otf.AddPoint(1001, 0.2)
-otf.AddPoint(1249.9, 0.2)
-otf.AddPoint(1250.0, 1)
-otf.AddPoint(2800.0, 1)
+otf.AddPoint(899.9, 0.0)
+otf.AddPoint(900, 0)
+otf.AddPoint(1499.9, 1)
+otf.AddPoint(1500.0, 1)
+otf.AddPoint(65535.0, 1)
+
+#skinCol = (0.83, 0.64, 0.58)
+skinCol = (0.93, 0.87, 0.80)
+boneCol = skinCol
+#boneCol = (1.0, 0.937, 0.859)
 
 ctf = vtkColorTransferFunction()
 ctf.AddRGBPoint(0.0, 0.0, 0.0, 0.0)
-ctf.AddRGBPoint(1000.9, 0.0, 0.0, 0.0)
-ctf.AddRGBPoint(1001, 0.0, 1.0, 0.0)
-ctf.AddRGBPoint(1249.9, 0.0, 1.0, 0.0)
-ctf.AddRGBPoint(1250, 1.0, 0.937, 0.859)
-ctf.AddRGBPoint(2800, 1.0, 0.937, 0.859)
+ctf.AddRGBPoint(899.9, 0.0, 0.0, 0.0)
+ctf.AddRGBPoint(900, skinCol[0], skinCol[1], skinCol[2])
+ctf.AddRGBPoint(1499.9, skinCol[0], skinCol[1], skinCol[2])
+ctf.AddRGBPoint(1500, boneCol[0], boneCol[1], boneCol[2])
+ctf.AddRGBPoint(2800, boneCol[0], boneCol[1], boneCol[2])
 
 #se = vtkShellExtractor()
 #se.SetInput(hdfr.GetOutput())
@@ -114,8 +120,8 @@ vprop.SetColor(ctf);
 vprop.ShadeOn()
 vprop.SetAmbient(0.1)
 vprop.SetDiffuse(0.7)
-vprop.SetSpecular(0.2)
-vprop.SetSpecularPower(10)
+vprop.SetSpecular(0.4)
+vprop.SetSpecularPower(60) # 10
 
 volume = vtkVolume()
 volume.SetProperty(vprop)
@@ -125,6 +131,14 @@ ren = vtkRenderer()
 ren.SetBackground(0.5, 0.5, 0.5)
 ren.AddVolume(volume)
 #ren.GetActiveCamera().ParallelProjectionOn()
+
+cubeAxesActor2d = vtk.vtkCubeAxesActor2D()
+cubeAxesActor2d.SetFlyModeToOuterEdges()
+ren.AddActor(cubeAxesActor2d)
+cubeAxesActor2d.VisibilityOff() # turn on here!
+v16.Update()
+cubeAxesActor2d.SetBounds(v16.GetOutput().GetBounds())
+cubeAxesActor2d.SetCamera(ren.GetActiveCamera())
 
 renwin = vtkRenderWindow()
 renwin.AddRenderer(ren)
