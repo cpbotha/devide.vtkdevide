@@ -1,8 +1,8 @@
-# $Id: shell_render_synth.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+# $Id: shell_render_synth.py,v 1.2 2003/12/25 00:26:51 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 import vtk
-import vtkcpbothapython
+import vtkdscas
 
 def ce_cb(obj, evt_name):
     if obj.GetKeyCode() == 'm':
@@ -69,7 +69,7 @@ ctf.AddRGBPoint(255, 1.0, 0, 0)
 
 #se.Update()
 
-splatmapper = vtkcpbothapython.vtkOpenGLVolumeShellSplatMapper()
+splatmapper = vtkdscas.vtkOpenGLVolumeShellSplatMapper()
 splatmapper.SetOmegaL(0.9)
 splatmapper.SetOmegaH(0.9)
 splatmapper.SetInput(vr.GetOutput())
@@ -91,7 +91,7 @@ volume.SetMapper(splatmapper)
 
 ren = vtk.vtkRenderer()
 ren.AddVolume(volume)
-ren.GetActiveCamera().ParallelProjectionOn()
+#ren.GetActiveCamera().ParallelProjectionOn()
 
 renwin = vtk.vtkRenderWindow()
 renwin.AddRenderer(ren)

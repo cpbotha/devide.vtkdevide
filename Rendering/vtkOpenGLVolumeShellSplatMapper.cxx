@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.9 2003/12/24 17:18:08 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.10 2003/12/25 00:26:51 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1247,6 +1247,23 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             // this is sorted, really
             this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
             this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
+
+	    // start of experimental iPBTF code -----------------------------
+	    // hmmm... split outer loop
+	    int seg1len = ps, seg2len = zdim - ps;
+	    
+	    // first do the balance of the largest segment (ugh)
+	    int bigseglen = seg1len > seg2len ? sig1len : sig2len;
+	    
+	    // make 2 element arrays, always parameter of biggest seg
+	    // first... argh! this is difficult!
+
+	    // use DrawVoxels on balance part... it shouldn't make a diff
+	    //for (int zi = 0; zi < bigseg; zi++)
+
+	    // driving DrawVoxels: checks on limits the whole time and
+	    // draws the corresponding splats as well.
+
          }
          else if (yin)
          {
@@ -1343,9 +1360,15 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 //       2 == 010 == x0y1z0
 // etc.
 
-void vtkOpenGLVolumeShellSplatMapper::DrawVoxels(int x0, int x1, int y0, int y1, 
-                                                 int z0, int z1, unsigned char octantIdx, ShellVoxel *D, int *P, int ydim,
-                                                 const float& ambient, const float& diffuse, float* u, float* v)
+void vtkOpenGLVolumeShellSplatMapper::DrawVoxels(int x0, int x1, 
+						 int y0, int y1, 
+                                                 int z0, int z1, 
+						 unsigned char octantIdx, 
+						 ShellVoxel *D, int *P, 
+						 int ydim,
+                                                 const float& ambient, 
+						 const float& diffuse, 
+						 float* u, float* v)
 {
 
    int x, y, z;
