@@ -4,8 +4,17 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
+
+struct coordAndOffset
+{
+  int x;
+  int y;
+  int z;
+  unsigned long offset;
+};
+
 
 //----------------------------------------------------------------------------
 vtkImageGreyscaleReconstruct3D::vtkImageGreyscaleReconstruct3D()
@@ -35,6 +44,88 @@ void vtkImageGreyscaleReconstruct3D::ComputeInputUpdateExtent(int inExt[6],
 
 
 //----------------------------------------------------------------------------
+template <class T>
+void fillNpPtrs(T* pPtr, int *Npi,
+                int x, int y, int z,
+                int xdim, int ydim, int zdim,
+                T** NpPtrs)
+{
+  for (int i = 0; i < 13; i++)
+    {
+    // calculate modified pointer
+    NpPtrs[i] = pPtr + Npi[i];
+    }
+
+  // now zero things which are over the boundary
+  if (x == 0)
+    {
+    NpPtrs[0] = NpPtrs[3] = NpPtrs[6] = NpPtrs[9] = NpPtrs[12] = \
+      (T*)NULL;
+    }
+  else if (x == xdim - 1)
+    {
+    NpPtrs[2] = NpPtrs[5] = NpPtrs[8] = NpPtrs[11] = (T*)NULL;
+    }
+  if (y == 0)
+    {
+    NpPtrs[0] = NpPtrs[1] = NpPtrs[2] = NpPtrs[9] = NpPtrs[10] = \
+      NpPtrs[11] = (T*)NULL;
+    }
+  else if (y == ydim - 1)
+    {
+    NpPtrs[6] = NpPtrs[7] = NpPtrs[8] = (T*)NULL;
+    }
+  if (z == 0)
+    {
+    NpPtrs[0] = NpPtrs[1] = NpPtrs[2] = \
+      NpPtrs[3] = NpPtrs[4] = NpPtrs[5] =                \
+      NpPtrs[6] = NpPtrs[7] = NpPtrs[8] = (T*)NULL;
+    }
+  // there are no z+1 cases
+}
+
+
+template <class T>
+void fillNmPtrs(T* pPtr, int *Nmi,
+                int x, int y, int z,
+                int xdim, int ydim, int zdim,
+                T** NmPtrs)
+{
+  for (int i = 0; i < 13; i++)
+    {
+    // calculate modified pointer
+    NmPtrs[i] = pPtr + Nmi[i];
+    }
+
+  // now zero things which are over the boundary
+  if (x == 0)
+    {
+    NmPtrs[2] = NmPtrs[5] = NmPtrs[8] = NmPtrs[11] = (T*)NULL;
+    }
+  else if (x == xdim - 1)
+    {
+    NmPtrs[0] = NmPtrs[3] = NmPtrs[6] = NmPtrs[9] =
+      NmPtrs[12] = (T*)NULL;
+    }
+  if (y == 0)
+    {
+    NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
+    }
+  else if (y == ydim - 1)
+    {
+    NmPtrs[0] = NmPtrs[1] = NmPtrs[2] =
+      NmPtrs[9] = NmPtrs[10] = NmPtrs[11] = (T*)NULL;
+    }
+  if (z == zdim - 1)
+    {
+    NmPtrs[0] = NmPtrs[1] = NmPtrs[2] = \
+      NmPtrs[3] = NmPtrs[4] = NmPtrs[5] =                \
+      NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
+    }
+  // there are no z-1 cases
+}
+
+//----------------------------------------------------------------------------
 // This templated function executes the filter for any type of data.
 // Handles the two input operations
 template <class T>
@@ -56,6 +147,19 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
   T *NpPtrs[13];
   // these are the Npi offsets we need to extract the neighbourhood
   int Npi[13];
+  int NpiO[13][3] = {{-1, -1, -1},
+                     { 0, -1, -1},
+                     {+1, -1, -1},
+                     {-1,  0, -1},
+                     { 0,  0, -1},
+                     {+1,  0, -1},
+                     {-1, +1, -1},
+                     { 0, +1, -1},
+                     {+1, +1, -1},
+                     {-1, -1,  0},
+                     { 0, -1,  0},
+                     {+1, -1,  0},
+                     {-1,  0,  0}};
 
   Npi[0] = -ydim*xdim - xdim - 1; // x-1, y-1, z-1
   Npi[1] = -ydim*xdim - xdim;     // x,   y-1, z-1
@@ -79,6 +183,20 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
   T *NmPtrs[13];
   // these are the Nmi offsets we need to extract the neighbourhood
   int Nmi[13];
+  int NmiO[13][3] = {{+1, +1, +1},
+                     { 0, +1, +1},
+                     {-1, +1, +1},
+                     {+1,  0, +1},
+                     { 0,  0, +1},
+                     {-1,  0, +1},
+                     {+1, -1, +1},
+                     { 0, -1, +1},
+                     {-1, -1, +1},
+                     {+1, +1,  0},
+                     { 0, +1,  0},
+                     {-1, +1,  0},
+                     {+1,  0,  0}};
+  
 
   Nmi[0] = +ydim*xdim + xdim + 1; // x+1, y+1, z+1
   Nmi[1] = +ydim*xdim + xdim;     // x,   y+1, z+1
@@ -104,6 +222,12 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
   T minNp;
   T minNm;
   int x,y,z,i;
+  // fifo of long offsets to the pixel in question
+  vtkstd::queue<coordAndOffset> fifo;
+  coordAndOffset tempCoordAndOffset;
+
+  float progress = 0.0;
+  
   if (Dual)
     {
     // 1. scan D1 in raster order
@@ -120,42 +244,12 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           // replace J(p = x,y,z) with the max of that minimum and
           // I(p)
 
+          // fill out structure with pointers to neighbours... if the
+          // neighbour doesn't exist, the pointer will be NULL
+          fillNpPtrs((T*)pPtr, Npi, x, y, z, xdim, ydim, zdim, (T**)NpPtrs);
+
           // a. determine minimum of Np neighbourhood
-          for (i = 0; i < 13; i++)
-            {
-            // calculate modified pointer
-            NpPtrs[i] = pPtr + Npi[i];
-            }
-
-          // now zero things which are over the boundary
-          if (x == 0)
-            {
-            NpPtrs[0] = NpPtrs[3] = NpPtrs[6] = NpPtrs[9] = NpPtrs[12] = \
-              (T*)NULL;
-            }
-          else if (x == xdim - 1)
-            {
-            NpPtrs[2] = NpPtrs[5] = NpPtrs[8] = NpPtrs[11] = (T*)NULL;
-            }
-          if (y == 0)
-            {
-            NpPtrs[0] = NpPtrs[1] = NpPtrs[2] = NpPtrs[9] = NpPtrs[10] = \
-              NpPtrs[11] = (T*)NULL;
-            }
-          else if (y == ydim - 1)
-            {
-            NpPtrs[6] = NpPtrs[7] = NpPtrs[8] = (T*)NULL;
-            }
-          if (z == 0)
-            {
-            NpPtrs[0] = NpPtrs[1] = NpPtrs[2] = \
-              NpPtrs[3] = NpPtrs[4] = NpPtrs[5] =                \
-              NpPtrs[6] = NpPtrs[7] = NpPtrs[8] = (T*)NULL;
-            }
-          // there are no z+1 cases
-
-          // now determine the minimum
-          minNp = *pPtr;
+          minNp = *pPtr; // p itself is also a candidate
           for (i = 0; i < 13; i++)
             {
             if (NpPtrs[i] && *NpPtrs[i] < minNp)
@@ -170,10 +264,15 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           Iptr++;
           }
         }
+      // once every z increment, update the progress
+      self->UpdateProgress((float)z / (float)(zdim - 1) * 0.33);
       }
+    
     // 2. scan D1 in anti-raster order
-    pPtr = (T*)(outData->GetScalarPointer()) + xdim * ydim * zdim - 1;
-    Iptr = in1Ptr + xdim * ydim * zdim - 1;
+    unsigned long pOffset = xdim * ydim * zdim - 1;    
+    pPtr = (T*)(outData->GetScalarPointer()) + pOffset;
+    Iptr = in1Ptr + pOffset;
+
     for (z = zdim - 1; z >= 0; z--)
       {
       for (y = ydim - 1; y >= 0; y--)
@@ -185,42 +284,12 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           // replace J(p = x,y,z) with the max of that minimum and
           // I(p)
 
+          // fill out NmPtrs for this position
+          fillNmPtrs((T*)pPtr, Nmi, x, y, z, xdim, ydim, zdim, (T**)NmPtrs);
+
           // a. determine minimum of Np neighbourhood
-          for (i = 0; i < 13; i++)
-            {
-            // calculate modified pointer
-            NmPtrs[i] = pPtr + Nmi[i];
-            }
-
-          // now zero things which are over the boundary
-          if (x == 0)
-            {
-            NmPtrs[2] = NmPtrs[5] = NmPtrs[8] = NmPtrs[11] = (T*)NULL;
-            }
-          else if (x == xdim - 1)
-            {
-            NmPtrs[0] = NmPtrs[3] = NmPtrs[6] = NmPtrs[9] =
-              NmPtrs[12] = (T*)NULL;
-            }
-          if (y == 0)
-            {
-            NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
-            }
-          else if (y == ydim - 1)
-            {
-            NmPtrs[0] = NmPtrs[1] = NmPtrs[2] =
-              NmPtrs[9] = NmPtrs[10] = NmPtrs[11] = (T*)NULL;
-            }
-          if (z == zdim - 1)
-            {
-            NmPtrs[0] = NmPtrs[1] = NmPtrs[2] = \
-              NmPtrs[3] = NmPtrs[4] = NmPtrs[5] =                \
-              NmPtrs[6] = NmPtrs[7] = NmPtrs[8] = (T*)NULL;
-            }
-          // there are no z-1 cases
-
           // now determine the minimum
-          minNm = *pPtr;
+          minNm = *pPtr; // p itself also counts
           for (i = 0; i < 13; i++)
             {
             if (NmPtrs[i] && *NmPtrs[i] < minNm)
@@ -232,17 +301,88 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
 
           // extra step with anti-raster traversal: we have to start
           // filling the fifo...
+          // search for J(q) in N-(p) such that J(q) > J(p) and
+          // J(q) > I(q); if such a q exists, store *p* in the fifo
+          for (i = 0; i < 13; i++)
+            {
+            if (NmPtrs[i] &&
+                *NmPtrs[i] > *pPtr &&
+                *NmPtrs[i] > *(Iptr + Nmi[i]))
+              {
+              tempCoordAndOffset.x = x;
+              tempCoordAndOffset.y = y;
+              tempCoordAndOffset.z = z;
+              tempCoordAndOffset.offset = pOffset;
+              fifo.push(tempCoordAndOffset);
+              break;
+              }
+            }
           
           
           // decrement pointers
           pPtr--;
           Iptr--;
+          // decrement offset
+          pOffset--;
           }
         }
+      // eventually two-thirds complete
+      self->UpdateProgress(0.33 + (float)(zdim - 1 - z) / (float)(zdim - 1) * 0.33);
       }
     
 
     // 3. propagation step
+    while (! fifo.empty())
+      {
+      // read the value from the fifo
+      tempCoordAndOffset = fifo.front();
+      // and take it off the queue
+      fifo.pop();
+
+      // set up our pointers
+      pPtr = (T*)(outData->GetScalarPointer()) + tempCoordAndOffset.offset;
+      Iptr = in1Ptr + tempCoordAndOffset.offset;
+      x = tempCoordAndOffset.x;
+      y = tempCoordAndOffset.y;
+      z = tempCoordAndOffset.z;
+
+      // let's generate the complete neighbourhood, sanity checks and all
+      fillNpPtrs((T*)pPtr, Npi, x, y, z, xdim, ydim, zdim, (T**)NpPtrs);
+      fillNmPtrs((T*)pPtr, Nmi, x, y, z, xdim, ydim, zdim, (T**)NmPtrs);
+
+      for (i = 0; i < 13; i++)
+        {
+        // first for Np
+        if (NpPtrs[i] &&
+            *NpPtrs[i] > *pPtr &&
+            *(Iptr + Npi[i]) !=  *NpPtrs[i])
+          {
+          *NpPtrs[i] = *pPtr > *(Iptr + Npi[i]) ? *pPtr : *(Iptr + Npi[i]);
+          // current offset is that of "p", by adding Npi[i] we get
+          // the offset of q
+          tempCoordAndOffset.offset += Npi[i];
+          tempCoordAndOffset.x = x + NpiO[i][0];
+          tempCoordAndOffset.y = y + NpiO[i][1];
+          tempCoordAndOffset.z = z + NpiO[i][2];
+          fifo.push(tempCoordAndOffset);
+          }
+        // then for Nm
+        if (NmPtrs[i] &&
+            *NmPtrs[i] > *pPtr &&
+            *(Iptr + Nmi[i]) !=  *NmPtrs[i])
+          {
+          *NmPtrs[i] = *pPtr > *(Iptr + Nmi[i]) ? *pPtr : *(Iptr + Nmi[i]);
+          // current offset is that of "p", by adding Npi[i] we get
+          // the offset of q
+          tempCoordAndOffset.offset += Nmi[i];
+          tempCoordAndOffset.x = x + NmiO[i][0];
+          tempCoordAndOffset.y = y + NmiO[i][1];
+          tempCoordAndOffset.z = z + NmiO[i][2];          
+          fifo.push(tempCoordAndOffset);
+          }
+        }
+      
+      }
     
     } // if (Dual) ...
   else
