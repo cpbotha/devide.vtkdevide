@@ -5,11 +5,11 @@
 #
 
 IF (HAS_HDF)
-   SET (IO_SRCS vtkHDFVolumeReader)
+   SET (IO_SRCS vtkHDFVolumeReader.cxx)
 ENDIF (HAS_HDF)
 
 IF (HAS_DCMTK)
-   SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader)
+   SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
 ENDIF (HAS_DCMTK)
 
 # --------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 #
 
 SET (Hybrid_SRCS 
-     vtkBoxWidgetConstrained)
+     vtkBoxWidgetConstrained.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line

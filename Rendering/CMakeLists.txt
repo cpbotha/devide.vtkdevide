@@ -5,9 +5,9 @@
 #
 
 SET (Rendering_SRCS 
-     vtkShellExtractor 
-     vtkOpenGLVolumeShellSplatMapper
-     vtkInteractorStyleTrackballActorConstrained)
+     vtkShellExtractor.cxx
+     vtkOpenGLVolumeShellSplatMapper.cxx
+     vtkInteractorStyleTrackballActorConstrained.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line

@@ -5,7 +5,7 @@
 #
 
 SET (Common_SRCS 
-     vtkEventOutputWindow)
+     vtkEventOutputWindow.cxx)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
