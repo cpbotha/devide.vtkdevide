@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.18 2004/01/15 11:00:55 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.19 2004/01/28 15:52:01 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -389,6 +389,19 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       // sort dicom_files according to SliceLocation, hmmmmkay?
       std::sort((*si_iterator).dicom_files.begin(), (*si_iterator).dicom_files.end());
       vtkDebugMacro(<<"Sorted SeriesInstanceUID " << (*si_iterator).SeriesInstanceUID.c_str() << ", " << (*si_iterator).BitsAllocated << ", " << (*si_iterator).dicom_files.size() << " files.");
+
+      // also calculate the average (ouch) axial spacing according to
+      // SliceLocation
+      std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
+      double tempDiff, diffSum = 0.0;
+      for (int i = 1; i < dicom_files_p->size(); i++)
+      {
+          tempDiff =
+              (*dicom_files_p)[i].SliceLocation -
+              (*dicom_files_p)[i-1].SliceLocation;
+          diffSum += tempDiff;
+      }
+      (*si_iterator).EstimatedThickness = diffSum / dicom_files_p->size();
    }
 
    // ------------------------------------------------------------------------
@@ -409,14 +422,30 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
    DataDimensions[2] = (*si_iterator).dicom_files.size();
    DataSpacing[0] = (*si_iterator).PixelSpacingx;
    DataSpacing[1] = (*si_iterator).PixelSpacingy;
-   // SpacingBetweenSlices is preferred for the axial spacing.
+   
+   // SpacingBetweenSlices is preferred for the axial spacing.  It's mostly
+   // only present in MRI datasets.  CT datasets have SliceThickness, but
+   // it seems that SliceThickness often does not concur with
+   // SliceLocations.  So, if this is the case, we use the SliceLocations
+   // derived thickness (i.e. EstimatedThickness)
    if ((*si_iterator).SpacingBetweenSlices > 0)
    {
        DataSpacing[2] = (*si_iterator).SpacingBetweenSlices;
    }
    else
    {
-       DataSpacing[2] = (*si_iterator).SliceThickness;
+       if (fabs((*si_iterator).EstimatedThickness -
+                (*si_iterator).SliceThickness) > 0.01)
+       {
+           // if the difference between the estimated thickness and the
+           // SliceThickness is larger than a certain Epsilon (to cancel
+           // out floating point inaccuracy), we use estimated thickness.
+           DataSpacing[2] = (*si_iterator).EstimatedThickness;
+       }
+       else
+       {
+           DataSpacing[2] = (*si_iterator).SliceThickness;
+       }
    }
 
    // get pointer to our output vtkStructuredPoints
@@ -803,7 +832,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.18 2004/01/15 11:00:55 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.19 2004/01/28 15:52:01 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

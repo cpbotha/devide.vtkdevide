@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.16 2004/01/15 11:00:55 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.17 2004/01/28 15:52:01 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -105,6 +105,7 @@ public:
    std::string SeriesInstanceUID;
    double SliceThickness;
    double SpacingBetweenSlices;
+   double EstimatedThickness;
    double PixelSpacingx;
    double PixelSpacingy;
    unsigned short Rows;
