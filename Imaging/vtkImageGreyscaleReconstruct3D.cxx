@@ -4,7 +4,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.4 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.5 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
 
 struct coordAndOffset
@@ -383,9 +383,8 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           fifo.push(tempCoordAndOffset);
           }
         }
-      
-      }
-    
+      } // while (!fifo.empty() ...
+
     } // if (Dual) ...
   else
     {
