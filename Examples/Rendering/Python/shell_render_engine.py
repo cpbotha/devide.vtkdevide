@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.9 2004/04/07 16:32:49 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.10 2004/06/22 14:26:48 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -14,6 +14,26 @@ def bench(camera, rwi):
     end_time = time.clock()
 
     print "FPS == %f" % (36 / (end_time - initial_time))
+    
+def bench2(camera, rwi):
+    initial_time = time.clock()
+
+    numberOfRenders = 10 * (36 + 1)
+    
+    for i in range(10):
+        for j in range(36):
+            camera.Azimuth(10)
+            rwi.Render()
+        
+        camera.Elevation(36 * i)
+        rwi.Render()
+            
+            
+    
+    end_time = time.clock()
+
+    print "FPS == %f" % (numberOfRenders / (end_time - initial_time))
+    
     
 textActor = vtk.vtkTextActor()
 
@@ -77,7 +97,7 @@ def ce_cb(obj, evt_name):
         print "GaussianSigma == %s" % str(cur + 0.1)
         
     elif obj.GetKeyCode() == 'b':
-        bench(ren.GetActiveCamera(), rwi)
+        bench2(ren.GetActiveCamera(), rwi)
         
     rwi.Render()
         
@@ -167,13 +187,15 @@ tprop.BoldOn()
 tprop.ShadowOn()
 tprop.SetColor(1, 0, 0)
 
-ren.AddActor(textActor)
+# FIXME: switch text actor on here
+#ren.AddActor(textActor)
 #### end of text
 
 
 
 
 renwin = vtkRenderWindow()
+renwin.SetSize(512,512)
 renwin.AddRenderer(ren)
 
 rwi = vtkRenderWindowInteractor()
