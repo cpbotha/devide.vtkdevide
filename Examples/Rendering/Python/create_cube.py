@@ -1,18 +1,49 @@
-interval = 8
+dimensions = (192,192,192)
+interval = 16
 
-f = open('cube.raw', 'w')
+import vtk
 
-for i in xrange(0,64):
-    for j in xrange(0,64):
-        for k in xrange(0,64):
-            if i > 16 and i < 48 and \
-               j > 16 and j < 48 and \
-               k > 16 and j < 48:
-                   if (not ((k / interval) % 2)) == (j / interval) % 2:
-                       f.write("%c" % 255)
-                   else:
-                       f.write("%c" % 254)
+output = vtk.vtkImageData()
+output.SetOrigin(0,0,0)
+output.SetSpacing(0.5,0.5,1.0)
+output.SetDimensions(dimensions)
+output.SetNumberOfScalarComponents(1)
+output.SetScalarTypeToUnsignedChar()
+output.AllocateScalars()
+
+scalars = output.GetPointData().GetScalars()
+scalars.FillComponent(0, 0) # second element is fill value
+
+c = 0
+iborders = [0,0]
+jborders = [0,0]
+kborders = [0,0]
+
+for idx,borders in ((0, iborders), (1, jborders), (2, kborders)):
+    b = dimensions[idx] / 4
+    borders[0] = b
+    borders[1] = dimensions[idx] - b
+
+for k in xrange(kborders[0],kborders[1]):
+    kOdd = (k / interval) % 2
+    
+    for j in xrange(jborders[0], jborders[1]):
+        jOdd = (j / interval) % 2
+        
+        for i in xrange(iborders[0], iborders[1]):
+            iOdd = (i / interval) % 2
+            
+            if iOdd ^ jOdd ^ kOdd:
+                c = 255
             else:
-                f.write("%c" % 253)
+                c = 254
 
-    print("%d\n" % i)
+            output.SetScalarComponentFromDouble(i,j,k,0,c)
+
+    print("%d\n" % k)
+    
+writer = vtk.vtkXMLImageDataWriter()
+writer.SetFileName('cube.vti')
+writer.SetInput(output)
+writer.Write()
+
