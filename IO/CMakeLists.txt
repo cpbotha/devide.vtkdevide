@@ -4,10 +4,6 @@
 # Here is where you can add the name of your local IO classes.
 #
 
-IF (HAS_HDF)
-   SET (IO_SRCS vtkHDFVolumeReader.cxx)
-ENDIF (HAS_HDF)
-
 IF (HAS_DCMTK)
    SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
 ENDIF (HAS_DCMTK)
@@ -99,12 +95,6 @@ LINK_LIBRARIES (
   vtkdscasIO
   vtkIO
 )
-
-IF (HAS_HDF)
-   INCLUDE_DIRECTORIES(${HDF_INCLUDE_PATH})
-   LINK_DIRECTORIES(${HDF_LIB_PATH})
-   LINK_LIBRARIES (mfhdf df)
-ENDIF (HAS_HDF)
 
 IF (HAS_DCMTK)
    INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH})

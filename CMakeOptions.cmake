@@ -131,22 +131,3 @@ IF(DCMTK_INCLUDE_PATH)
      SET (HAS_DCMTK 1 CACHE INTERNAL "DCMTK available.")
   ENDIF(DCMTK_LIB_PATH)
 ENDIF(DCMTK_INCLUDE_PATH)
-
-# and then libhdf
-
-FIND_PATH(HDF_INCLUDE_PATH mfhdf.h
-/usr/include
-/usr/include/hdf
-/usr/local/include
-)
-
-FIND_PATH(HDF_LIB_PATH libmfhdf.a
-/usr/lib
-/usr/local/lib
-)
-
-IF(HDF_INCLUDE_PATH)
-  IF(HDF_LIB_PATH)
-     SET (HAS_HDF 1 CACHE INTERNAL "HDF available.")
-  ENDIF(HDF_LIB_PATH)
-ENDIF(HDF_INCLUDE_PATH)
