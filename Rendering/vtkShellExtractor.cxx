@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.11 2004/06/28 21:23:58 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.12 2004/06/29 15:44:56 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -73,7 +73,9 @@ static void ExtractShell(T* data_ptr,
                          vtkPiecewiseFunction* OpacityTF,
                          vtkColorTransferFunction* ColourTF,
                          float OmegaL, float OmegaH, float min_gradmag,
-                         vector<ShellVoxel>* vectorD, int P[])
+                         vector<ShellVoxel>* vectorDx, int Px[],
+                         vector<ShellVoxel>* vectorDy, int Py[],
+                         vector<ShellVoxel>* vectorDz, int Pz[])
 {
     T* dptr = data_ptr;
     T nbrs[6]; // the six neighbours
@@ -97,11 +99,17 @@ static void ExtractShell(T* data_ptr,
 
     //vector<ShellVoxel> vectorD;
     // initialise the D vector
-    vectorD->clear();
+    vectorDx->clear();
+    vectorDy->clear();
+    vectorDz->clear();
+      
     ShellVoxel temp_sv;
 
     // initialise P to all "no shell voxels in these rows (X)"
-    memset(P, -1, ylen * zlen * sizeof(int) * 2);
+    memset(Px, -1, ylen * zlen * sizeof(int) * 2);
+    memset(Py, -1, ylen * zlen * sizeof(int) * 2);
+    memset(Pz, -1, ylen * zlen * sizeof(int) * 2);
+    
     int Pidx, prevPidx;
 
     int xstep = 1;
@@ -368,13 +376,13 @@ static void ExtractShell(T* data_ptr,
                             temp_sv.Blue = temp_rgb[2];
                         }
 
-                        vectorD->push_back(temp_sv);
+                        vectorDx->push_back(temp_sv);
                         Pidx = (z*ylen + y) * 2;
-                        if (P[Pidx] == -1)
+                        if (Px[Pidx] == -1)
                         {
                             // this is the first voxel in this x-row, set its
                             // index in the P structure
-                            P[Pidx] = vectorD->size() - 1;
+                            Px[Pidx] = vectorDx->size() - 1;
                             // this means (by definition) that the previous row
                             // is done (or had no shell voxels at all, in which
                             // case it has no length, and in which case we
@@ -403,11 +411,11 @@ static void ExtractShell(T* data_ptr,
 
             // now make sure that we COMPLETE the current row
             Pidx = (z*ylen + y) * 2;
-            if (P[Pidx] != -1 && P[Pidx+1] == -1)
+            if (Px[Pidx] != -1 && Px[Pidx+1] == -1)
               {
               // this means that the beginning of the row is indicated
               // but not the run length
-              P[Pidx + 1] = vectorD->size() - P[Pidx];
+              Px[Pidx + 1] = vectorDx->size() - Px[Pidx];
               }
             
         } // for (int y = 0 ...
@@ -428,8 +436,8 @@ vtkShellExtractor::vtkShellExtractor()
     this->ColourTF = NULL;
     this->GradientImageData = NULL;
     this->GradientImageIsGradient = 0;
-    this->D = NULL;
-    this->P = NULL;
+    this->Dx = this->Dy = this->Dz = NULL;
+    this->Px = this->Py = this->Pz = NULL;
 }
 
 vtkShellExtractor::~vtkShellExtractor()
@@ -438,10 +446,24 @@ vtkShellExtractor::~vtkShellExtractor()
     this->SetOpacityTF(NULL);
     this->SetColourTF(NULL);
     this->SetGradientImageData(NULL);
-    if (this->D)
-        delete this->D;
-    if (this->P)
-        delete this->P;
+    
+    if (this->Dx)
+      delete this->Dx;
+    
+    if (this->Dy)
+      delete this->Dy;
+
+    if (this->Dz)
+      delete this->Dz;
+    
+    if (this->Px)
+      delete this->Px;
+
+    if (this->Py)
+      delete this->Py;
+
+    if (this->Pz)
+      delete this->Pz;
 }
 
 void vtkShellExtractor::Update(void)
@@ -464,7 +486,7 @@ void vtkShellExtractor::Update(void)
         this->Input->GetMTime() > this->ExtractTime ||
         this->GradientImageData && 
         this->GradientImageData->GetMTime() > this->ExtractTime ||
-        !this->D)
+        !this->Dx)
     {
         // make sure our input is up to date
         this->Input->UpdateInformation();
@@ -526,12 +548,23 @@ void vtkShellExtractor::Update(void)
             return;
         }
 
-        if (this->P)
-            delete this->P;
-        // need array of Y * Z ints
-        this->P = new int[idims[1] * idims[2] * 2];
+        if (this->Px)
+          delete this->Px;
 
-        vector<ShellVoxel> vectorD;
+        if (this->Py)
+          delete this->Py;
+
+        if (this->Pz)
+          delete this->Pz;
+        
+        // need array of Z * Y ints
+        this->Px = new int[idims[2] * idims[1] * 2];
+        // Z * X ints
+        this->Py = new int[idims[2] * idims[0] * 2];
+        // Y * X ints
+        this->Pz = new int[idims[1] * idims[0] * 2];
+
+        vector<ShellVoxel> vectorDx, vectorDy, vectorDz;
         double min_gradmag = 0.0;
 
         switch (scalars->GetDataType())
@@ -543,7 +576,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_UNSIGNED_CHAR:
@@ -553,7 +588,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_SHORT:
@@ -563,7 +600,10 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
+
         }
         break;
         case VTK_UNSIGNED_SHORT:
@@ -573,7 +613,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_INT:
@@ -583,7 +625,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_UNSIGNED_INT:
@@ -593,7 +637,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_LONG:
@@ -603,7 +649,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_UNSIGNED_LONG:
@@ -613,7 +661,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_FLOAT:
@@ -623,7 +673,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         case VTK_DOUBLE:
@@ -633,7 +685,9 @@ void vtkShellExtractor::Update(void)
 			 this->GradientImageIsGradient,
                          this->OpacityTF, this->ColourTF,
                          this->OmegaL, this->OmegaH, min_gradmag,
-                         &vectorD, this->P);
+                         &vectorDx, this->Px,
+                         &vectorDy, this->Py,
+                         &vectorDz, this->Pz);
         }
         break;
         default:
@@ -641,14 +695,30 @@ void vtkShellExtractor::Update(void)
         }
 
         // now we should copy vectorD over to D
-        if (this->D)
-            delete this->D;
+        if (this->Dx)
+            delete this->Dx;
 
-        this->D = new ShellVoxel[vectorD.size()];
-        for (unsigned i = 0; i < vectorD.size(); i++)
-            memcpy(this->D + i, &(vectorD[i]), sizeof(ShellVoxel));
+        this->Dx = new ShellVoxel[vectorDx.size()];
+        for (unsigned i = 0; i < vectorDx.size(); i++)
+            memcpy(this->Dx + i, &(vectorDx[i]), sizeof(ShellVoxel));
 
-        cout << vectorD.size() << " shell voxels found." << endl;
+        // now we should copy vectorD over to D
+        if (this->Dy)
+            delete this->Dy;
+
+        this->Dy = new ShellVoxel[vectorDy.size()];
+        for (unsigned i = 0; i < vectorDy.size(); i++)
+            memcpy(this->Dy + i, &(vectorDy[i]), sizeof(ShellVoxel));
+
+        // now we should copy vectorD over to D
+        if (this->Dz)
+            delete this->Dz;
+
+        this->Dz = new ShellVoxel[vectorDz.size()];
+        for (unsigned i = 0; i < vectorDz.size(); i++)
+            memcpy(this->Dz + i, &(vectorDz[i]), sizeof(ShellVoxel));
+        
+        cout << vectorDx.size() << " shell voxels found." << endl;
 
         // stop doing stuff
         this->ExtractTime.Modified();
