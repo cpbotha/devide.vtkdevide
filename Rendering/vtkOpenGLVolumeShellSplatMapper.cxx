@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.21 2004/01/08 18:18:09 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.22 2004/01/08 19:00:04 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -2168,6 +2168,8 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                         for (int x = x0; x != x1; x += xinc)
                         {
                             // FIMXE: cache the X!!!
+                            // (it seems my processing is prefetching a line
+                            // of Xes)
                             if (DptrBY && DptrBY->x == x)
                             {
                                 DrawVoxel(DptrBY, octantIdxBY, bigy, z,
@@ -2213,13 +2215,132 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
          {
             pq = vtkMath::Round(camVoxelPos[0]);
             pq = (pq >= xdim) ? xdim - 1 : pq;
-            if (camVoxelPos[1] >= ydim)
-               edge_idx |= 0x2;
+
+
+            cout << "HONK: edge-on, xin, pq == " << pq << endl;
+            
+            unsigned char octantIdxBX, octantIdxSX;
+            int z0, z1, zinc;
             if (camVoxelPos[2] >= zdim)
-               edge_idx |= 0x4;
-            this->DrawVoxels(0, pq + 1,      0, ydim, 0, zdim, edge_idx + 1, D, P, inputDims[1], ambient, diffuse, u, v);
-            this->DrawVoxels(pq + 1, xdim,   0, ydim, 0, zdim, edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
-         }
+            {
+                z0 = 0;
+                z1 = zdim;
+                zinc = 1;
+                octantIdxBX = octantIdxSX = 0x04;
+            }
+            else
+            {
+                z0 = zdim - 1;
+                z1 = -1;
+                zinc = -1;
+                octantIdxBX = octantIdxSX = 0x0;
+            }
+
+            int y0, y1, yinc;
+            if (camVoxelPos[1] >= ydim)
+            {
+                y0 = 0;
+                y1 = ydim;
+                yinc = 1;
+                octantIdxBX |= 0x2; octantIdxSX = octantIdxBX;
+            }
+            else
+            {
+                y0 = ydim - 1;
+                y1 = -1;
+                yinc = -1;
+            }
+            
+
+            // setup split x
+            int bigxStart, bigxEnd, bigxInc, bigxThresh, smallx, initsmallx;
+            if (pq >= (xdim - pq))
+            {
+                bigxStart = 0;
+                bigxEnd = pq;
+                bigxInc = 1;
+                bigxThresh = pq - (xdim - pq); // biglen - small_len
+                initsmallx = xdim - 1;
+                octantIdxBX |= 0x1;
+            }
+            else
+            {
+                bigxStart = xdim - 1;
+                bigxEnd = pq - 1;
+                bigxInc = -1;
+                bigxThresh = pq * 2 - 1;
+                initsmallx = 0;
+                octantIdxSX |= 0x1;
+            }
+
+
+            bool xInterleaved;
+            int Pidx;;
+            ShellVoxel *DptrBX, *DptrSX;
+            for (int z = z0; z != z1; z += zinc)
+            {
+
+                for (int y = y0; y != y1; y += yinc)
+                {
+                    Pidx = (z * ydim + y) * 2;
+                    if (P[Pidx] != -1)
+                    {
+                        DptrBX = DptrSX = D + P[Pidx];
+                        if (bigxInc == 1)
+                            DptrSX += (P[Pidx + 1] - 1);
+                        else
+                            DptrBX += (P[Pidx + 1] - 1);
+                                
+                    }
+                    else
+                    {
+                        DptrBX = DptrSX = (ShellVoxel*)NULL;
+                    }
+
+                    // let's begin with x
+                    if (bigxStart == bigxThresh)
+                        xInterleaved = true;
+                    else
+                        xInterleaved = false;
+                    
+                    smallx = initsmallx;
+
+                    for (int bigx = bigxStart; bigx != bigxEnd;
+                         bigx += bigxInc)
+                    {
+                        if (DptrBX)
+                        {
+                            if (DptrBX->x == bigx)
+                            {
+                                DrawVoxel(DptrBX, octantIdxBX, y, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrBX += bigxInc;
+                            }
+
+                            // DptrSX exists if and only if DptrBX does
+                            if (xInterleaved && DptrSX->x == smallx)
+                            {
+                                DrawVoxel(DptrSX, octantIdxSX, y, z,
+                                          prev_colour, ambient, diffuse, u, v);
+                                DptrSX -= bigxInc;
+                            }
+                        }
+
+                        if (xInterleaved)
+                        {
+                            smallx -= bigxInc;
+                        }
+                        else
+                        {
+                            if (bigx + bigxInc == bigxThresh)
+                                xInterleaved = true;
+                        }
+                    } // for (int bigx = bigxStart; ...
+                    
+                } // for (int y = y0 ...)
+            } // for (int z = z0 ...
+            
+         } // edge-on, xin clause
       } // EDGE-ON
 
       // corner-on
