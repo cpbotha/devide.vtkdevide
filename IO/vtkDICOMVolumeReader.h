@@ -1,5 +1,5 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.2 2003/01/15 18:52:32 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /* TODO
@@ -23,6 +23,7 @@ using namespace std;
 class DcmFileStream;
 class DcmObject;
 class DcmElement;
+class DcmStack;
 
 /**
  * Class used by vtkDICOMVolumeReader for keeping track of a bunch of dicom
@@ -116,7 +117,7 @@ protected:
 
    void deinit_dcmtk(void);
    //BTX
-   DcmElement* search_object(int group, int elem, DcmObject& haystack);
+   DcmElement* search_object(int group, int elem, DcmObject& haystack, DcmStack &stack);
    //ETX
    /**
      * Opens single DICOM file with filename in dfile.filename.

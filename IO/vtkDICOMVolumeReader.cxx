@@ -1,10 +1,11 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.2 2003/01/15 18:52:32 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #include <algorithm>
 #include <math.h>
 #include <vtkObjectFactory.h>
+#include <vtkPointData.h>
 #include <vtkShortArray.h>
 #include <vtkStructuredPoints.h>
 
@@ -74,10 +75,9 @@ void vtkDICOMVolumeReader::deinit_dcmtk(void)
    vtkDebugMacro(<<"vtkDICOMVolumeReader::deinit_dcmtk() - DONE.");
 }
 
-DcmElement* vtkDICOMVolumeReader::search_object(int group, int elem, DcmObject& haystack)
+DcmElement* vtkDICOMVolumeReader::search_object(int group, int elem, DcmObject& haystack, DcmStack &stack)
 {
    DcmTagKey search_key;
-   DcmStack stack;
    search_key.set(group,elem);
    if (haystack.search(search_key, stack, ESM_fromHere, OFTrue) != EC_Normal)
       return NULL;
@@ -110,28 +110,26 @@ int vtkDICOMVolumeReader::OpenDCMFile(dicom_file& dfile)
    vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile(" << dfile.filename.c_str() << ") - START.");
 
    // so, first try and open a stream
-   DcmFileStream* dcm_stream = new DcmFileStream(dfile.filename.c_str(), DCM_ReadMode);
-   if (dcm_stream->GetError() != EC_Normal)
+   dfile.filestream = new DcmFileStream(dfile.filename.c_str(), DCM_ReadMode);
+   if (dfile.filestream->GetError() != EC_Normal)
    {
       vtkErrorMacro(<<"Unable to open DICOM file " << dfile.filename.c_str());
       return 0;
    }
-   dfile.filestream = dcm_stream;
 
    // we have the stream, now we instantiate a DICOM fileformat abstraction to read and interpret the data
    // DcmFileFormat is a DcmSequence (or something) containing a list of DcmItems, each representing a separate
    // (group,element) data tag
-   DcmObject* dcm_object = new DcmFileFormat();
+   dfile.fileformat = new DcmFileFormat();
    E_TransferSyntax xfer = EXS_Unknown;
-   dcm_object->transferInit();
-   dcm_object->read(*dcm_stream, xfer, EGL_noChange);
-   dcm_object->transferEnd();
-   if (dcm_object->error() != EC_Normal)
+   dfile.fileformat->transferInit();
+   dfile.fileformat->read(*(dfile.filestream), xfer, EGL_noChange);
+   dfile.fileformat->transferEnd();
+   if (dfile.fileformat->error() != EC_Normal)
    {
       vtkErrorMacro(<<"Unable to read DICOM file " << dfile.filename.c_str());
       return 0;
    }
-   dfile.fileformat = dcm_object;
    vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile() - STOP.")
    return 1;
 }
@@ -183,7 +181,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       // get SeriesInstanceUID
       // ---------------------------------------------------------------------
       SeriesInstanceUID_cp = NULL;
-      DcmElement* SeriesInstanceUID_obj = search_object(0x0020,0x000e, *(temp_dicom_file.fileformat)); // SeriesInstanceUID
+      DcmStack SeriesInstanceStack;
+      DcmElement* SeriesInstanceUID_obj = search_object(0x0020,0x000e, *(temp_dicom_file.fileformat), SeriesInstanceStack); // SeriesInstanceUID
       if (!SeriesInstanceUID_obj || (SeriesInstanceUID_obj->getString(SeriesInstanceUID_cp) != EC_Normal) || !SeriesInstanceUID_cp)
       {
          vtkWarningMacro(<< "vtkDICOMVolumeReader::ExecuteInformation() - Unable to read SeriesInstanceUID from " << temp_dicom_file.filename.c_str() << ".");
@@ -226,7 +225,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          unsigned short temp_Rows, temp_Columns;
          unsigned short temp_BitsAllocated;
 
-         DcmElement* SliceThickness_obj = search_object(0x0018, 0x0050, *(temp_dicom_file.fileformat)); // SliceThickness
+         DcmStack SliceThickness_stack;
+         DcmElement* SliceThickness_obj = search_object(0x0018, 0x0050, *(temp_dicom_file.fileformat), SliceThickness_stack); // SliceThickness
          if (!SliceThickness_obj || SliceThickness_obj->getFloat64(temp_SliceThickness) != EC_Normal)
          {
             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
@@ -237,7 +237,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             continue;
          }
 
-         DcmElement* PixelSpacing_obj = search_object(0x0028, 0x0030, *(temp_dicom_file.fileformat)); // PixelSpacing
+         DcmStack PixelSpacing_stack;
+         DcmElement* PixelSpacing_obj = search_object(0x0028, 0x0030, *(temp_dicom_file.fileformat), PixelSpacing_stack); // PixelSpacing
          if (!PixelSpacing_obj || 
              PixelSpacing_obj->getFloat64(temp_PixelSpacingx,0) != EC_Normal ||
              PixelSpacing_obj->getFloat64(temp_PixelSpacingy,1) != EC_Normal)
@@ -250,8 +251,9 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             continue;
          }
 
-         DcmElement* Rows_obj = search_object(0x0028, 0x0010, *(temp_dicom_file.fileformat)); // Rows
-         DcmElement* Columns_obj = search_object(0x0028, 0x0011, *(temp_dicom_file.fileformat)); // Columns
+         DcmStack Rows_stack, Columns_stack;
+         DcmElement* Rows_obj = search_object(0x0028, 0x0010, *(temp_dicom_file.fileformat), Rows_stack); // Rows
+         DcmElement* Columns_obj = search_object(0x0028, 0x0011, *(temp_dicom_file.fileformat), Columns_stack); // Columns
          if (!Rows_obj || !Columns_obj || Rows_obj->getUint16(temp_Rows) != EC_Normal || Columns_obj->getUint16(temp_Columns) != EC_Normal)
          {
             vtkErrorMacro(<<"vtkDICOMReader::ExecuteInfo() - could not read Rows/Colums from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
@@ -262,7 +264,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
             continue;
          }
 
-         DcmElement* BitsAllocated_obj = search_object(0x0028, 0x0100, *(temp_dicom_file.fileformat)); // BitsAllocated
+         DcmStack BitsAllocated_stack;
+         DcmElement* BitsAllocated_obj = search_object(0x0028, 0x0100, *(temp_dicom_file.fileformat), BitsAllocated_stack); // BitsAllocated
          if (!BitsAllocated_obj || BitsAllocated_obj->getUint16(temp_BitsAllocated) != EC_Normal)
          {
             vtkWarningMacro(<<"Could not read BitsAllocated from " << temp_dicom_file.filename.c_str() << ", assuming 16.");
@@ -271,14 +274,16 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
          // then some arb shit...
          char *StudyDescription_cp;
-         DcmElement *StudyDescription_obj = search_object(0x0008,0x1030, *(temp_dicom_file.fileformat)); // StudyDescription
+         DcmStack StudyDescription_stack;
+         DcmElement *StudyDescription_obj = search_object(0x0008,0x1030, *(temp_dicom_file.fileformat), StudyDescription_stack); // StudyDescription
          if (!StudyDescription_obj || StudyDescription_obj->getString(StudyDescription_cp) != EC_Normal || StudyDescription_cp == NULL)
             temp_series_instance.misc_metadata.StudyDescription = string("N/A");
          else
             temp_series_instance.misc_metadata.StudyDescription = string(StudyDescription_cp);
 
          char *ReferringPhysician_cp;
-         DcmElement *ReferringPhysician_obj = search_object(0x0008,0x0090, *(temp_dicom_file.fileformat)); // ReferringPhysician
+         DcmStack ReferringPhysician_stack;
+         DcmElement *ReferringPhysician_obj = search_object(0x0008,0x0090, *(temp_dicom_file.fileformat), ReferringPhysician_stack); // ReferringPhysician
          if (!ReferringPhysician_obj || ReferringPhysician_obj->getString(ReferringPhysician_cp) != EC_Normal || ReferringPhysician_cp == NULL)
             temp_series_instance.misc_metadata.ReferringPhysician = string("N/A");
          else
@@ -303,7 +308,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       }
 
       // we get the found object (DcmObject -> DcmElement -> ?, in this case probably DcmFloatingPointDouble) from the stack
-      DcmElement* SliceLocation_obj = search_object(0x0020, 0x1041, *(temp_dicom_file.fileformat)); // SliceLocation
+      DcmStack SliceLocation_stack;
+      DcmElement* SliceLocation_obj = search_object(0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack); // SliceLocation
       if (!SliceLocation_obj || (SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
       {
          vtkErrorMacro(<<"vtkDICOMVolumeReader::ExecuteInfo() - Unable to extract SliceLocation from " << temp_dicom_file.filename.c_str() << ", assuming 0.");
@@ -395,9 +401,13 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
    // be more clever with our actual reading routines, i.e. only read the data necessary
    // to create the UpdateExtent in the output
    output->SetExtent(output->GetWholeExtent());
+   int *e = output->GetWholeExtent();
+   cout << e[0] << ":" << e[1] << ":" << e[2] << ":" << e[3] << ":" << e[4] << ":" << e[5] << endl;
    // AllocateScalars will make use of the information set on the output by 
    // ExecuteInformation() to perform the necessary allocation
    output->AllocateScalars();
+   cout << "MAXID: " << output->GetPointData()->GetScalars()->GetMaxId() << endl;
+
 
    // find a pointer that we can use
    short* pixels = (short*)output->GetScalarPointer();
@@ -416,6 +426,8 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
    int last_progress_i = -1;
    for (unsigned i = 0; i < dicom_files_p->size(); i++)
    {
+      cout << "starting slice " << i << " of " << dicom_files_p->size() - 1 << endl;
+
       double progress = (double)i / (double)dicom_files_p->size();
       // stupid way of only updating every 10 percent
       if ((progress / 0.1 - floor(progress / 0.1)) < 0.1 && (int)i != last_progress_i)
@@ -424,7 +436,8 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
          last_progress_i = i;
       }
 
-      DcmElement* PixelData_obj = search_object(0x7fe0, 0x0010, *((*dicom_files_p)[i].fileformat));
+      DcmStack PixelData_stack;
+      DcmElement* PixelData_obj = search_object(0x7fe0, 0x0010, *((*dicom_files_p)[i].fileformat), PixelData_stack);
       if (!PixelData_obj)
       {
          vtkErrorMacro(<<"vtkDICOMVolumeReader::ExecuteData() - could not extract PixelData (7fe0,0010)!");
@@ -442,9 +455,10 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       // Now we have to figure out the pixel representation and packing so we know how to get out
       // the SV (stored values)
       // ---------------------------------------------------------------------------------------------
-      DcmElement* BitsStored_obj = search_object(0x0028, 0x0101, *((*dicom_files_p)[i].fileformat));
-      DcmElement* HighBit_obj = search_object(0x0028, 0x0102, *((*dicom_files_p)[i].fileformat));
-      DcmElement* PixelRepresentation_obj = search_object(0x0028, 0x0103, *((*dicom_files_p)[i].fileformat)); // PixelRepresentation
+      DcmStack BitsStored_stack, HighBit_stack, PixelRepresentation_stack;
+      DcmElement* BitsStored_obj = search_object(0x0028, 0x0101, *((*dicom_files_p)[i].fileformat), BitsStored_stack);
+      DcmElement* HighBit_obj = search_object(0x0028, 0x0102, *((*dicom_files_p)[i].fileformat), HighBit_stack);
+      DcmElement* PixelRepresentation_obj = search_object(0x0028, 0x0103, *((*dicom_files_p)[i].fileformat), PixelRepresentation_stack); // PixelRepresentation
       unsigned short temp_BitsStored, temp_HighBit, temp_PixelRepresentation;
       if (!BitsStored_obj || !HighBit_obj || !PixelRepresentation_obj || 
           BitsStored_obj->getUint16(temp_BitsStored) != EC_Normal ||
@@ -471,8 +485,9 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       // And then we extract the Rescale intercept and slope, because we need these to get the
       // Hounsfield Units from extracted SVs (stored values): HU = slope * SV + intercept
       // ---------------------------------------------------------------------------------------------
-      DcmElement* RescaleIntercept_obj = search_object(0x0028, 0x1052, *((*dicom_files_p)[i].fileformat)); // RescaleIntercept
-      DcmElement* RescaleSlope_obj = search_object(0x0028, 0x1053, *((*dicom_files_p)[i].fileformat)); // RescaleIntercept
+      DcmStack RescaleIntercept_stack, RescaleSlope_stack;
+      DcmElement* RescaleIntercept_obj = search_object(0x0028, 0x1052, *((*dicom_files_p)[i].fileformat), RescaleIntercept_stack); // RescaleIntercept
+      DcmElement* RescaleSlope_obj = search_object(0x0028, 0x1053, *((*dicom_files_p)[i].fileformat), RescaleSlope_stack); // RescaleIntercept
       double temp_RescaleIntercept, temp_RescaleSlope;
       if (!RescaleIntercept_obj || !RescaleSlope_obj || 
           RescaleIntercept_obj->getFloat64(temp_RescaleIntercept) != EC_Normal ||
@@ -488,8 +503,9 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       // We extract WindowWidth and WindowCenter as well.  We don't need these for getting the HU values,
       // but our vtkDSCASVolumeReader heritage requires that we have these available.
       // ---------------------------------------------------------------------------------------------
-      DcmElement* WindowCenter_obj = search_object(0x0028, 0x1050, *((*dicom_files_p)[i].fileformat));
-      DcmElement* WindowWidth_obj = search_object(0x0028, 0x1051, *((*dicom_files_p)[i].fileformat));
+      DcmStack WindowCenter_stack, WindowWidth_stack;
+      DcmElement* WindowCenter_obj = search_object(0x0028, 0x1050, *((*dicom_files_p)[i].fileformat), WindowCenter_stack);
+      DcmElement* WindowWidth_obj = search_object(0x0028, 0x1051, *((*dicom_files_p)[i].fileformat), WindowWidth_stack);
       if (!WindowCenter_obj || !WindowWidth_obj || 
           WindowCenter_obj->getFloat64(WindowCenter) != EC_Normal ||
           WindowWidth_obj->getFloat64(WindowWidth) != EC_Normal)
@@ -526,13 +542,15 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
             }
             else // 16 BitsAllocated
             {
-               for (int pidx = 0; pidx < numpixels_perslice; pidx++)
+               int pidx;
+               for (pidx = 0; pidx < numpixels_perslice; pidx++)
                {
                   // HU = slope * SV + intercept
                   // where: SV = actual unsigned int >> (highbit + 1 - bitsstored) && all valid stored bits on;
                   *(pixels + numpixels_perslice * i + pidx) =
                      (short)INTROUND(temp_RescaleSlope * (double)((*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask) + temp_RescaleIntercept);
                }
+
             }
          }
          else // two's complement
@@ -552,9 +570,11 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
             }
             else // 16 BitsAllocated
             {
+
                unsigned short temp_bits; 
                short* temp_bits_ptr;
-               for (int pidx = 0; pidx < numpixels_perslice; pidx++)
+               int pidx;
+               for (pidx = 0; pidx < numpixels_perslice; pidx++)
                {
                   temp_bits = (*(dicom_pixeldata_pointer_us + pidx) >> rshift_factor) & validbits_mask;
                   temp_bits_ptr = (short*)(&temp_bits); // here we get two's complement for free
@@ -562,6 +582,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
                   *(pixels + numpixels_perslice * i + pidx) = 
                      (short)INTROUND(temp_RescaleSlope * (double)(*temp_bits_ptr) + temp_RescaleIntercept);
                } // for (int pidx = 0; ...
+               cout << "LAST pixel: " << numpixels_perslice * i + pidx - 1 << endl;
             } // else 16 BitsAllocated
          } // else two's complement
       } // else we have a dicom_pixeldata_pointer
@@ -663,7 +684,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.2 2003/01/15 18:52:32 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
