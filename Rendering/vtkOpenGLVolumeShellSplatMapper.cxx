@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.7 2003/11/18 10:10:11 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.8 2003/11/26 21:53:33 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -269,7 +269,7 @@ vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
    PerspectiveMatrix->Delete();
 
    this->SetGradientImageData(NULL);
-   this->SetInput(NULL);
+   this->SetInput((vtkImageData*)NULL);
    if (ShellExtractor)
       ShellExtractor->Delete();
 }

@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.8 2003/11/18 17:22:47 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.9 2003/11/26 21:53:33 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -82,7 +82,7 @@ static void ExtractShell(T* data_ptr,
     float t_gradmag; // temp gradient magnitude
 
     int nbrv_lt_oh; // flag variable: neighbourhood voxel < OmegaH ?
-    float temp_rgb[3];
+    double temp_rgb[3];
 
     // important variables
     int xlen = Input->GetDimensions()[0];
