@@ -35,6 +35,7 @@ IF (VTKDEVIDE_CAN_BUILD)
   SUBDIRS (
     Common
     Hybrid
+    Imaging
     IO
     Rendering
   )
