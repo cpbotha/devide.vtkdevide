@@ -28,6 +28,9 @@ General
 Your VTK build
 --------------
 
+- You have to activate VTK_USE_HYBRID in your VTK build, else vtkdevide can 
+  not build.
+
 - You're going to build with Python wrapping, so you need Tcl installed.  
   Makes sense, doesn't it?  Because Python 2.2.3 itself makes use of tcl/tk
   8.3, I installed ActiveTcl 8.3.5.0-2 (from activestate.com); most of the tk 
