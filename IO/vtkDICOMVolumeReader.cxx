@@ -1,5 +1,5 @@
-// vtkDICOMVolumeReader.cxx copyright (c) 2001 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.cxx,v 1.8 2003/06/19 10:12:10 cpbotha Exp $
+// vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
+// $Id: vtkDICOMVolumeReader.cxx,v 1.9 2003/08/05 09:10:55 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 #if !defined(WIN32)
@@ -740,7 +740,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.8 2003/06/19 10:12:10 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.9 2003/08/05 09:10:55 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

@@ -1,10 +1,25 @@
-// vtkDICOMVolumeReader.cxx copyright (c) 2001,2002 Charl P. Botha <cpbotha@ieee.org>
-// $Id: vtkDICOMVolumeReader.h,v 1.7 2003/06/19 10:12:10 cpbotha Exp $
+// vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
+// $Id: vtkDICOMVolumeReader.h,v 1.8 2003/08/05 09:10:55 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
-/* TODO
-    - SliceThickness + SpacingBetweenSlices
-  */
+/*
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * TODO
+ *   - SliceThickness + SpacingBetweenSlices for MRI
+ */
 
 #ifndef vtkDICOMVolumeReader_h
 #define vtkDICOMVolumeReader_h
@@ -38,8 +53,8 @@ public:
    DcmFileFormat* fileformat;
    double SliceLocation;
    /**
-    * With this operator defined, we can use stl to sort a vector of dicom_files
-    * according to SliceLocation.  This is very handy.
+    * With this operator defined, we can use stl to sort a vector of
+    * dicom_files according to SliceLocation.  This is very handy.
     */
    bool operator < (const dicom_file& other_file) const
    {
@@ -55,8 +70,8 @@ public:
 };
 
 /**
- * This class contains info about a specific series instance.  There will be one of
- * these for each instance scanned from the DICOM files.
+ * This class contains info about a specific series instance.  There will be
+ * one of these for each instance scanned from the DICOM files.
  * @author Charl P. Botha <cpbotha@ieee.org>
  */
 class series_instance
@@ -81,7 +96,8 @@ public:
  * volume data.
  * @author Charl P. Botha <cpbotha@ieee.org>
  */
-class VTK_DSCAS_IO_EXPORT vtkDICOMVolumeReader : public vtkStructuredPointsSource
+class VTK_DSCAS_IO_EXPORT vtkDICOMVolumeReader :
+public vtkStructuredPointsSource
 {
 protected:
    /// origin of the data, in true dimensions
@@ -95,19 +111,20 @@ protected:
    /// stores list of dicom filenames that are going to be read
    vector<string> dicom_filenames;
    /**
-    * Filenames live here right after they've been add_dicom_filename()ed.  When
-    * this->GetModified() is called, this buffer is compared with the internal dicom_filenames
-    * vector.  If these are different, then MTime() is timestamped and the list is copied to
-    * the internal vector.
+    * Filenames live here right after they've been add_dicom_filename()ed.
+    * When this->GetModified() is called, this buffer is compared with the
+    * internal dicom_filenames vector.  If these are different, then MTime()
+    * is timestamped and the list is copied to the internal vector.
     */
    vector<string> dicom_filenames_buffer;
    //ETX
-   /// Index into internal vectors of filenames, each vector with unique SeriesInstanceUID
+   /// Index into internal vectors of filenames, each vector with unique
+   /// SeriesInstanceUID
    int SeriesInstanceIdx;
    //BTX
    /** 
-    * This list  contains series_instance classes, each with all the info pertaining to a
-    * specific series instance.
+    * This list  contains series_instance classes, each with all the info
+    * pertaining to a specific series instance.
     */
    list<series_instance> series_instances;
    //ETX
@@ -123,8 +140,9 @@ protected:
    //ETX
    /**
      * Opens single DICOM file with filename in dfile.filename.
-     * @param dfile dicom_file struct with valid filename field.  If successful, fileformat will
-     * contain a valid DcmObject and filestream a valid DcmFileStream.
+     * @param dfile dicom_file struct with valid filename field.  If
+     * successful, fileformat will contain a valid DcmObject and filestream
+     * a valid DcmFileStream.
      * @return true if successful, false otherwise.
      */
    int OpenDCMFile(dicom_file& dfile);
@@ -140,21 +158,22 @@ public:
    unsigned long GetMTime();
    /**
     * Add a single filename to the dicom_filenames_buffer list (i.e. not the
-    * internal list).  The modified time is NOT set.  Whet GetMTime() is called,
-    * the external and internal list will be checked for differences.  If they differ,
-    * mtime will be timestamped.
+    * internal list).  The modified time is NOT set.  Whet GetMTime() is
+    * called, the external and internal list will be checked for differences.
+    * If they differ, mtime will be timestamped.
     * @param dicom_filename Filename that you want to add to the buffer list
     * of dicom filenames.
     */
    void add_dicom_filename(const char* dicom_filename);
    /**
     * Remove all DICOM filenames from dicom_files_buffer and NOT the internal
-    * list.  We also do not set the Modified time; this is so that if the user clears 
-    * the list and re-adds the same filenames, the reader will still be up to date.  
-    * This is (amongst other things) so that DSCAS3 doesn't let this reader re-read 
-    * EVERY time that the user applies and the list of filenames is re-initialised...  
-    * it also mimics the behaviour of a normal Set*() call in that if the parameter 
-    * is the same is the internal version, nothing is done.
+    * list.  We also do not set the Modified time; this is so that if the user
+    * clears the list and re-adds the same filenames, the reader will still be
+    * up to date.  This is (amongst other things) so that DSCAS3 doesn't let
+    * this reader re-read EVERY time that the user applies and the list of
+    * filenames is re-initialised...  it also mimics the behaviour of a normal
+    * Set*() call in that if the parameter is the same is the internal version,
+    * nothing is done.
     */
    void clear_dicom_filenames(void);
    /**
@@ -162,8 +181,8 @@ public:
     */
    int get_number_of_dicom_filenames(void);
    /**
-    * Return idx'th filename in dicom_filenames_buffer list.  If idx is invalide,
-    * returns NULL.
+    * Return idx'th filename in dicom_filenames_buffer list.  If idx is
+    * invalid, returns NULL.
     */
    const char *get_dicom_filename(int idx);
    vtkGetMacro(WindowCenter, double);
