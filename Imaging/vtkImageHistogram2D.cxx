@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.3 $");
+vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.4 $");
 vtkStandardNewMacro(vtkImageHistogram2D);
 
 //----------------------------------------------------------------------------
@@ -87,6 +87,14 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
     unsigned bin1, bin2;
     for (unsigned long i = 0; i < noe; i++)
     {
+        if (i % noeProgressStep == 0)
+        {
+            self->UpdateProgress(progress);
+            progress += progressStep;
+            // progress will end up one step higher than 1.0, but that's
+            // okay, because we won't be using it then.
+        }
+        
         in1val = *in1Ptr;
         in2val = *in2Ptr;
         
@@ -100,11 +108,6 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
         in1Ptr++;
         in2Ptr++;
 
-        if (i % noeProgressStep == 0)
-        {
-            progress += progressStep;
-            self->UpdateProgress(progress);
-        }
     }
 
     self->UpdateProgress(1.0);
