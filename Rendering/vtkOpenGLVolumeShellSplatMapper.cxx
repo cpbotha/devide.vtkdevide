@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.42 2004/07/02 08:28:11 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.43 2004/07/02 10:22:30 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -229,8 +229,8 @@ vtkOpenGLVolumeShellSplatMapper::vtkOpenGLVolumeShellSplatMapper()
    // this will set the Gaussian parameters and initialise the textures 
    this->SetRenderMode(0);
 
-   // this will setup the initial rendering mode (to normal PBTF)
-   this->SetPerspectiveOrderingMode(0);
+   // this will setup the initial rendering mode (to super IP-PBTF)
+   this->SetPerspectiveOrderingMode(3);
 }
 
 vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
