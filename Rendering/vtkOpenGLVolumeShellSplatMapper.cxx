@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.23 2004/01/08 19:19:25 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.24 2004/01/08 19:27:01 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1754,6 +1754,8 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                          bigy += bigyInc)
                     {
 
+                        // FIXME: curBZBYidx, curDpp and curxPtr can WALK!!!
+                        
                         curBZBYidx = bigz * ydim + bigy;
                         curDpp = DptrMatrix + curBZBYidx;
                         curxPtr = xMatrix + curBZBYidx;
