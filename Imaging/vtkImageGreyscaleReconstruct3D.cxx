@@ -4,7 +4,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.3 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.4 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
 
 struct coordAndOffset
@@ -345,8 +345,10 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
       x = tempCoordAndOffset.x;
       y = tempCoordAndOffset.y;
       z = tempCoordAndOffset.z;
+      long currentOffset = tempCoordAndOffset.offset;
 
-      // let's generate the complete neighbourhood, sanity checks and all
+      // let's generate the complete neighbourhood, sanity checks and
+      // all
       fillNpPtrs((T*)pPtr, Npi, x, y, z, xdim, ydim, zdim, (T**)NpPtrs);
       fillNmPtrs((T*)pPtr, Nmi, x, y, z, xdim, ydim, zdim, (T**)NmPtrs);
 
@@ -360,7 +362,7 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           *NpPtrs[i] = *pPtr > *(Iptr + Npi[i]) ? *pPtr : *(Iptr + Npi[i]);
           // current offset is that of "p", by adding Npi[i] we get
           // the offset of q
-          tempCoordAndOffset.offset += Npi[i];
+          tempCoordAndOffset.offset = currentOffset + Npi[i];
           tempCoordAndOffset.x = x + NpiO[i][0];
           tempCoordAndOffset.y = y + NpiO[i][1];
           tempCoordAndOffset.z = z + NpiO[i][2];
@@ -374,7 +376,7 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
           *NmPtrs[i] = *pPtr > *(Iptr + Nmi[i]) ? *pPtr : *(Iptr + Nmi[i]);
           // current offset is that of "p", by adding Npi[i] we get
           // the offset of q
-          tempCoordAndOffset.offset += Nmi[i];
+          tempCoordAndOffset.offset = currentOffset + Nmi[i];
           tempCoordAndOffset.x = x + NmiO[i][0];
           tempCoordAndOffset.y = y + NmiO[i][1];
           tempCoordAndOffset.z = z + NmiO[i][2];          
