@@ -4,7 +4,10 @@
 # Here is where you can add the name of your local Rendering classes.
 #
 
-SET (Rendering_SRCS vtkShellExtractor vtkOpenGLVolumeShellSplatMapper)
+SET (Rendering_SRCS 
+     vtkShellExtractor 
+     vtkOpenGLVolumeShellSplatMapper
+     vtkInteractorStyleTrackballActorConstrained)
 
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
