@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.33 2004/06/25 16:53:03 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.34 2004/06/28 09:57:20 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -2512,7 +2512,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
    } // else PERSPECTIVE rendering with interleaved PBTF
 
    // ------------------------------------------------------------------------
-   // PERSPECTIVE rendering, iPBTF TRICKY
+   // PERSPECTIVE rendering, iPBTF TRICKY2
    // ------------------------------------------------------------------------
    else if (this->PerspectiveOrderingMode == 3)
 
