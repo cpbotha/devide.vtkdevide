@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.12 2004/07/01 14:25:31 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.h,v 1.13 2004/07/01 16:45:52 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -126,6 +126,18 @@ public vtkVolumeMapper
     double *camVoxelPos, int xdim, int ydim, int zdim,
     const float& ambient, const float& diffuse,
     float* u, float* v);
+
+
+  void ippbtfEdgeOnZin(
+    double *camVoxelPos, int xdim, int ydim, int zdim,
+    const float& ambient, const float& diffuse,
+    float* u, float* v);
+
+  void ippbtfEdgeOnYin(
+    double *camVoxelPos, int xdim, int ydim, int zdim,
+    const float& ambient, const float& diffuse,
+    float* u, float* v);  
+  
   
   
 

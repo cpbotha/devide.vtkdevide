@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.40 2004/07/01 14:25:31 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.41 2004/07/01 16:45:52 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1749,7 +1749,483 @@ ippbtfFaceOnY(
 } // ipptfFaceOnY()
 
 
+// -----------------------------------------------------------------------
+// Method to render interleaving-resistant space-leaping IPPBTF for
+// the zin edge-on case, i.e. z is partitioned into 2 sub-volumes.
+// -----------------------------------------------------------------------
+void vtkOpenGLVolumeShellSplatMapper::
+ippbtfEdgeOnZin(
+  double *camVoxelPos, int xdim, int ydim, int zdim,
+  const GLfloat& ambient, const GLfloat& diffuse,
+  GLfloat* u, GLfloat* v)  
+{
 
+  int ps;
+
+  ps = vtkMath::Round(camVoxelPos[2]);
+  ps = (ps >= zdim) ? zdim - 1 : ps;
+
+  cout << "MOP MOP MOP HONK: edge-on, zin, ps == " << ps << endl;
+
+  int *Pz = this->ShellExtractor->GetPz();
+  ShellVoxel *Dz = this->ShellExtractor->GetDz();
+
+  int y0, y1, yinc;
+  unsigned char octantIdxBZ, octantIdxSZ;
+  if (camVoxelPos[1] >= ydim)
+    {
+    y0 = 0;
+    y1 = ydim;
+    yinc = 1;
+    octantIdxBZ = octantIdxSZ = 0x2;
+    }
+  else
+    {
+    y0 = ydim - 1;
+    y1 = -1;
+    yinc = -1;
+    octantIdxBZ = octantIdxSZ = 0x0;
+    }
+            
+
+  int x0, x1, xinc;
+  if (camVoxelPos[0] >= xdim)
+    {
+    x0 = 0;
+    x1 = xdim;
+    xinc = 1;
+    octantIdxBZ |= 0x1; octantIdxSZ = octantIdxBZ;
+    }
+  else
+    {
+    x0 = xdim - 1;
+    x1 = -1; // we're going to use != x1 as end condition
+    xinc = -1;
+    }
+
+  // setup split z
+
+  int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz, initsmallz;
+  if (ps >= (zdim - ps))
+    {
+    bigzStart = 0;
+    bigzEnd = ps;
+    bigzInc = 1;
+    // if bigz >= bigThresh, it means we have to interleave
+    bigzThresh = ps - (zdim - ps);
+    initsmallz = zdim - 1;                
+    octantIdxBZ |= 0x4;
+    }
+  else
+    {
+    
+    bigzStart = zdim - 1;
+    bigzEnd = ps - 1; // our loop is going to use !=
+    bigzInc = -1;
+    bigzThresh = ps * 2 - 1;
+    initsmallz = 0;
+    octantIdxSZ |= 0x4;
+    }
+
+  int Pidx;
+  ShellVoxel *DptrBZ, *DptrBZ1, *DptrSZ, *DptrSZ1;
+
+  // let's find the starting x (the Dptr furthest
+  // away from the X volume sub-division)
+  int maxDistance = -1;
+  int tempDistance = -1;
+  int tempZ = -1;
+
+  bool renderBZ, renderSZ;
+  bool killBZ, killSZ;
+
+  // materials caching
+  GLfloat prev_colour[4];
+  prev_colour[0] = prev_colour[1] = prev_colour[2] = prev_colour[3] = -1;
+  
+  for (int y = y0; y != y1; y += yinc)
+    {
+    for (int x = x0; x != x1; x+= xinc)
+      {
+
+      Pidx = (y * xdim + x) * 2;
+      if (Pz[Pidx] >= 0)
+        {
+        if (bigzInc == 1)
+          {
+          DptrBZ = Dz + Pz[Pidx];
+          DptrSZ = DptrBZ + Pz[Pidx + 1] - 1;
+          // this will stop it from going into the next line
+          DptrBZ1 = DptrSZ + 1;
+          DptrSZ1 = DptrBZ - 1;
+          }
+        else
+          {
+          DptrSZ = Dz + Pz[Pidx];
+          DptrBZ = DptrSZ + Pz[Pidx + 1] - 1;
+
+
+          // this will stop it from going into the next line
+          DptrBZ1 = DptrSZ - 1;
+          DptrSZ1 = DptrBZ1 + 1;
+          }
+
+
+        killBZ = killSZ = false;
+
+        // just to get the while started
+        renderBZ = true;        
+        while (renderBZ || renderSZ)
+          {
+          renderBZ = renderSZ = false;
+
+          maxDistance = -1;
+
+          if (DptrBZ)
+            {
+            tempZ = DptrBZ->x;
+            tempDistance = ps - tempZ;
+
+            // left interval excludes ps
+            // right interval includes ps
+            if (bigzInc > 0)
+              tempDistance -= 1;
+
+            if (bigzInc * tempDistance < 0)
+              {
+              // we've jumped over, terminate
+              DptrBZ = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              maxDistance = abs(tempDistance);
+              if (maxDistance == 0)
+                {
+                killBZ = true;
+                }
+              renderBZ = true;
+              }
+            } // if (DptrBZ) ...
+
+
+          if (DptrSZ)
+            {
+            tempZ = DptrSZ->x;
+            tempDistance = tempZ - ps;
+            
+            if (bigzInc > 0)
+              tempDistance += 1;
+
+            if (bigzInc * tempDistance < 0)
+              {
+              DptrSZ = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              tempDistance = abs(tempDistance);
+              
+              if (tempDistance == 0)
+                {
+                killSZ = true;
+                }
+              
+              if (tempDistance > maxDistance)
+                {
+                maxDistance = tempDistance;
+                renderBZ = false;
+                renderSZ = true;
+                }
+              else if (tempDistance == maxDistance)
+                {
+                renderSZ = true;
+                }
+              } // else: if (bigzInc * tempDistance < 0) ...
+            } // if (DptrSZ) ...
+
+          if (renderBZ)
+            {
+            DrawVoxel(DptrBZ, octantIdxBZ,
+                      x, y, DptrBZ->x,
+                      prev_colour, ambient, diffuse, u, v);
+            if (killBZ)
+              {
+              DptrBZ = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              DptrBZ += bigzInc;
+
+              if (DptrBZ == DptrBZ1)
+                DptrBZ = (ShellVoxel*)NULL;
+              }
+
+            } // if (renderBZ) ...
+
+
+          if (renderSZ)
+            {
+            DrawVoxel(DptrSZ, octantIdxSZ,
+                      x, y, DptrSZ->x,
+                      prev_colour, ambient, diffuse, u, v);
+            if (killSZ)
+              {
+              DptrSZ = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              DptrSZ -= bigzInc;
+
+              if (DptrSZ == DptrSZ1)
+                DptrSZ = (ShellVoxel*)NULL;
+              }
+            } // if (renderSZ) ...
+
+          } // while (renderBZ || renderSZ) ...
+        
+        } // if (Pz[Pidx] >= 0 ...
+      } // for int x ...
+    } // for (int y ...
+
+} // ippbtfEdgeOnZin() ...
+
+
+// -----------------------------------------------------------------------
+// Method to render interleaving-resistant space-leaping IPPBTF for
+// the yin edge-on case, i.e. y is partitioned into 2 sub-volumes.
+// -----------------------------------------------------------------------
+void vtkOpenGLVolumeShellSplatMapper::
+ippbtfEdgeOnYin(
+  double *camVoxelPos, int xdim, int ydim, int zdim,
+  const GLfloat& ambient, const GLfloat& diffuse,
+  GLfloat* u, GLfloat* v)  
+{
+
+  int pr;
+
+  pr = vtkMath::Round(camVoxelPos[1]);
+  pr = (pr >= ydim) ? ydim - 1 : pr;
+
+  cout << "MEP MEP MEP HONK: edge-on, yin, pr == " << pr << endl;
+
+  int *Py = this->ShellExtractor->GetPy();
+  ShellVoxel *Dy = this->ShellExtractor->GetDy();
+
+
+  int x0, x1, xinc;
+  unsigned char octantIdxBY, octantIdxSY;
+  if (camVoxelPos[0] >= xdim)
+    {
+    x0 = 0;
+    x1 = xdim;
+    xinc = 1;
+    octantIdxBY = octantIdxSY = 0x1;
+    }
+  else
+    {
+    x0 = xdim - 1;
+    x1 = -1; // we're going to use != x1 as end condition
+    xinc = -1;
+    octantIdxBY = octantIdxSY = 0x0;
+    }
+
+  int z0, z1, zinc;
+  if (camVoxelPos[2] >= zdim)
+    {
+    z0 = 0;
+    z1 = zdim;
+    zinc = 1;
+    octantIdxBY |= 0x4; octantIdxSY = octantIdxBY;
+    }
+  else
+    {
+    z0 = zdim - 1;
+    z1 = -1;
+    zinc = -1;
+    }
+
+  // setup split y
+  int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
+  if (pr >= (ydim - pr))
+    {
+    bigyStart = 0;
+    bigyEnd = pr;
+    bigyInc = 1;
+    bigyThresh = pr - (ydim - pr); // biglen - small_len
+    initsmally = ydim - 1;
+    octantIdxBY |= 0x2;
+    }
+  else
+    {
+    bigyStart = ydim - 1;
+    bigyEnd = pr - 1;
+    bigyInc = -1;
+    bigyThresh = pr * 2 - 1;
+    initsmally = 0;
+    octantIdxSY |= 0x2;
+    }
+
+  int Pidx;
+  ShellVoxel *DptrBY, *DptrBY1, *DptrSY, *DptrSY1;
+
+  // let's find the starting x (the Dptr furthest
+  // away from the X volume sub-division)
+  int maxDistance = -1;
+  int tempDistance = -1;
+  int tempY = -1;
+
+  bool renderBY, renderSY;
+  bool killBY, killSY;
+
+  // materials caching
+  GLfloat prev_colour[4];
+  prev_colour[0] = prev_colour[1] = prev_colour[2] = prev_colour[3] = -1;
+  
+  for (int z = z0; z != z1; z += zinc)
+    {
+    for (int x = x0; x != x1; x+= xinc)
+      {
+
+      Pidx = (z * xdim + x) * 2;
+      if (Py[Pidx] >= 0)
+        {
+        if (bigyInc == 1)
+          {
+          DptrBY = Dy + Py[Pidx];
+          DptrSY = DptrBY + Py[Pidx + 1] - 1;
+          // this will stop it from going into the next line
+          DptrBY1 = DptrSY + 1;
+          DptrSY1 = DptrBY - 1;
+          }
+        else
+          {
+          DptrSY = Dy + Py[Pidx];
+          DptrBY = DptrSY + Py[Pidx + 1] - 1;
+
+
+          // this will stop it from going into the next line
+          DptrBY1 = DptrSY - 1;
+          DptrSY1 = DptrBY1 + 1;
+          }
+
+
+        killBY = killSY = false;
+
+        // just to get the while started
+        renderBY = true;        
+        while (renderBY || renderSY)
+          {
+          renderBY = renderSY = false;
+
+          maxDistance = -1;
+
+          if (DptrBY)
+            {
+            tempY = DptrBY->x;
+            tempDistance = pr - tempY;
+
+            // left interval excludes ps
+            // right interval includes ps
+            if (bigyInc > 0)
+              tempDistance -= 1;
+
+            if (bigyInc * tempDistance < 0)
+              {
+              // we've jumped over, terminate
+              DptrBY = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              maxDistance = abs(tempDistance);
+              if (maxDistance == 0)
+                {
+                killBY = true;
+                }
+              renderBY = true;
+              }
+            } // if (DptrBY) ...
+
+
+          if (DptrSY)
+            {
+            tempY = DptrSY->x;
+            tempDistance = tempY - pr;
+            
+            if (bigyInc > 0)
+              tempDistance += 1;
+
+            if (bigyInc * tempDistance < 0)
+              {
+              DptrSY = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              tempDistance = abs(tempDistance);
+              
+              if (tempDistance == 0)
+                {
+                killSY = true;
+                }
+              
+              if (tempDistance > maxDistance)
+                {
+                maxDistance = tempDistance;
+                renderBY = false;
+                renderSY = true;
+                }
+              else if (tempDistance == maxDistance)
+                {
+                renderSY = true;
+                }
+              } // else: if (bigyInc * tempDistance < 0) ...
+            } // if (DptrSY) ...
+
+          if (renderBY)
+            {
+            DrawVoxel(DptrBY, octantIdxBY,
+                      x, DptrBY->x, z,
+                      prev_colour, ambient, diffuse, u, v);
+            if (killBY)
+              {
+              DptrBY = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              DptrBY += bigyInc;
+
+              if (DptrBY == DptrBY1)
+                DptrBY = (ShellVoxel*)NULL;
+              }
+
+            } // if (renderBY) ...
+
+
+          if (renderSY)
+            {
+            DrawVoxel(DptrSY, octantIdxSY,
+                      x, DptrSY->x, z,
+                      prev_colour, ambient, diffuse, u, v);
+            if (killSY)
+              {
+              DptrSY = (ShellVoxel*)NULL;
+              }
+            else
+              {
+              DptrSY -= bigyInc;
+
+              if (DptrSY == DptrSY1)
+                DptrSY = (ShellVoxel*)NULL;
+              }
+            } // if (renderSY) ...
+
+          } // while (renderBY || renderSY) ...
+        
+        } // if (Py[Pidx] >= 0 ...
+      } // for (int x ...
+    } // for (int z ...
+
+} // ippbtfEdgeOnYin() ...
+
+  
 void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 {
    if (this->GetInput() == NULL)
@@ -4032,366 +4508,16 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
           cout << "EDGE-ON" << endl;
 #endif         
           if (zin)
-          {
-
-            ps = vtkMath::Round(camVoxelPos[2]);
-            ps = (ps >= zdim) ? zdim - 1 : ps;
-
-            cout << "HONK: edge-on, zin, ps == " << ps << endl;
-
-            int y0, y1, yinc;
-            unsigned char octantIdxBZ, octantIdxSZ;            
-            if (camVoxelPos[1] >= ydim)
             {
-                y0 = 0;
-                y1 = ydim;
-                yinc = 1;
-                octantIdxBZ = octantIdxSZ = 0x2;
-            }
-            else
-            {
-                y0 = ydim - 1;
-                y1 = -1;
-                yinc = -1;
-                octantIdxBZ = octantIdxSZ = 0x0;
-            }
-            
-
-            int x0, x1, xinc;
-            if (camVoxelPos[0] >= xdim)
-            {
-                x0 = 0;
-                x1 = xdim;
-                xinc = 1;
-                octantIdxBZ |= 0x1; octantIdxSZ = octantIdxBZ;
-            }
-            else
-            {
-                x0 = xdim - 1;
-                x1 = -1; // we're going to use != x1 as end condition
-                xinc = -1;
-            }
-
-            // setup split z
-
-            int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz, initsmallz;
-            if (ps >= (zdim - ps))
-            {
-                bigzStart = 0;
-                bigzEnd = ps;
-                bigzInc = 1;
-                // if bigz >= bigThresh, it means we have to interleave
-                bigzThresh = ps - (zdim - ps);
-                initsmallz = zdim - 1;                
-                octantIdxBZ |= 0x4;
-            }
-            else
-            {
-
-                bigzStart = zdim - 1;
-                bigzEnd = ps - 1; // our loop is going to use !=
-                bigzInc = -1;
-                bigzThresh = ps * 2 - 1;
-                initsmallz = 0;
-                octantIdxSZ |= 0x4;
-            }
-
-            
-            bool zInterleaved;
-            int PidxBZ, PidxSZ;
-            ShellVoxel *DptrBZ, *DptrBZ1, *DptrSZ, *DptrSZ1;
-
-            for (int y = y0; y != y1; y += yinc)
-            {
-                if (bigzStart == bigzThresh)
-                    zInterleaved = true;
-                else
-                    zInterleaved = false;
-
-                smallz = initsmallz;
-                
-                for (int bigz = bigzStart; bigz != bigzEnd;
-                     bigz += bigzInc)
-                {
-                    PidxBZ = (bigz * ydim + y) * 2;
-                    if (P[PidxBZ] != -1)
-                    {
-                        DptrBZ = D + P[PidxBZ];
-                        if (xinc == -1)
-                          {
-                            DptrBZ1 = DptrBZ - 1;
-                            DptrBZ += (P[PidxBZ + 1] - 1);
-
-                          }
-                        else
-                          {
-                            // PAST the end (we'll be using !=)
-                            DptrBZ1 = DptrBZ + P[PidxBZ + 1];
-                          }
-                    }
-                    else
-                    {
-                        DptrBZ = (ShellVoxel*)NULL;
-                    }
-
-                    if (zInterleaved)
-                    {
-                        PidxSZ = (smallz * ydim + y) * 2;
-                        if (P[PidxSZ] != -1)
-                        {
-                            DptrSZ = D + P[PidxSZ];
-                            if (xinc == -1)
-                              {
-                                DptrSZ1 = DptrSZ - 1;
-                                DptrSZ += (P[PidxSZ + 1] - 1);
-                              }
-                            else
-                              {
-                                DptrSZ1 = DptrSZ + P[PidxSZ + 1];
-                              }
-                        }
-                        else
-                        {
-                            DptrSZ = (ShellVoxel*)NULL;
-                        }
-                    }
-                    else
-                    {
-                        DptrSZ = (ShellVoxel*)NULL;
-                    }
-
-                    if (DptrSZ)
-                    {
-                        // do with interleave
-                        for (int x = x0; x != x1; x += xinc)
-                        {
-                            // FIMXE: cache the X!!!
-                            // (it seems my processing is prefetching a line
-                            // of Xes)
-                            if (DptrBZ && DptrBZ->x == x)
-                            {
-                                DrawVoxel(DptrBZ, octantIdxBZ,
-                                          DptrBZ->x, y, bigz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrBZ += xinc;
-                                if (DptrBZ == DptrBZ1)
-                                  DptrBZ = NULL;
-                            }
-
-                            if (DptrSZ && DptrSZ->x == x)
-                            {
-                                DrawVoxel(DptrSZ, octantIdxSZ,
-                                          DptrSZ->x, y, smallz,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrSZ += xinc;
-                                if (DptrSZ == DptrSZ1)
-                                  DptrSZ = NULL;
-                            }
-                        }
-                    }
-                    else if (DptrBZ)
-                    {
-                        // traditional and fast! (i.e. no interleave)
-                        for (int i = 0; i < P[PidxBZ + 1]; i++)
-                        {
-                            DrawVoxel(DptrBZ, octantIdxBZ,
-                                      DptrBZ->x, y, bigz,
-                                      prev_colour, ambient, diffuse, u, v);
-                            DptrBZ += xinc;
-                        }
-                    }
-
-                    if (zInterleaved)
-                    {
-                        smallz -= bigzInc;
-                    }
-                    else
-                    {
-                        if (bigz + bigzInc == bigzThresh)
-                            zInterleaved = true;
-                    }
-                    
-                } // for (int bigz ...
-            } // for (int y = ...
-            
-         } // if (zin ...
+            this->ippbtfEdgeOnZin(
+              camVoxelPos, xdim, ydim, zdim, ambient, diffuse, u, v);
+            } // if (zin ...
+          
          else if (yin)
-         {
-            pr = vtkMath::Round(camVoxelPos[1]);
-            pr = (pr >= ydim) ? ydim - 1 : pr;
-
-            cout << "HONK: edge-on, yin, pr == " << pr << endl;
-            
-            int x0, x1, xinc;
-            unsigned char octantIdxBY, octantIdxSY;
-            if (camVoxelPos[0] >= xdim)
-            {
-                x0 = 0;
-                x1 = xdim;
-                xinc = 1;
-                octantIdxBY = octantIdxSY = 0x1;
-            }
-            else
-            {
-                x0 = xdim - 1;
-                x1 = -1; // we're going to use != x1 as end condition
-                xinc = -1;
-                octantIdxBY = octantIdxSY = 0x0;
-            }
-
-            int z0, z1, zinc;
-            if (camVoxelPos[2] >= zdim)
-            {
-                z0 = 0;
-                z1 = zdim;
-                zinc = 1;
-                octantIdxBY |= 0x4; octantIdxSY = octantIdxBY;
-            }
-            else
-            {
-                z0 = zdim - 1;
-                z1 = -1;
-                zinc = -1;
-            }
-
-            // setup split y
-            int bigyStart, bigyEnd, bigyInc, bigyThresh, smally, initsmally;
-            if (pr >= (ydim - pr))
-            {
-                bigyStart = 0;
-                bigyEnd = pr;
-                bigyInc = 1;
-                bigyThresh = pr - (ydim - pr); // biglen - small_len
-                initsmally = ydim - 1;
-                octantIdxBY |= 0x2;
-            }
-            else
-            {
-                bigyStart = ydim - 1;
-                bigyEnd = pr - 1;
-                bigyInc = -1;
-                bigyThresh = pr * 2 - 1;
-                initsmally = 0;
-                octantIdxSY |= 0x2;
-            }
-
-
-            bool yInterleaved;
-            int PidxBY, PidxSY;
-            ShellVoxel *DptrBY, *DptrBY1, *DptrSY, *DptrSY1;
-
-            for (int z = z0; z != z1; z += zinc)
-            {
-                if (bigyStart == bigyThresh)
-                    yInterleaved = true;
-                else
-                    yInterleaved = false;
-
-                smally = initsmally;
-
-                for (int bigy = bigyStart; bigy != bigyEnd; bigy += bigyInc)
-                {
-                    PidxBY = (z * ydim + bigy) * 2;
-                    if (P[PidxBY] != -1)
-                    {
-                        DptrBY = D + P[PidxBY];
-                        if (xinc == -1)
-                          {
-                            // setup safety stop (past the end)
-                            DptrBY1 = DptrBY - 1;
-                            DptrBY += (P[PidxBY + 1] - 1);
-                          }
-                        else
-                          {
-                            DptrBY1 = DptrBY + P[PidxBY + 1];
-                          }
-                    }
-                    else
-                    {
-                        DptrBY = (ShellVoxel*)NULL;
-                    }
-
-                    if (yInterleaved)
-                    {
-                        PidxSY = (z * ydim + smally) * 2;
-                        if (P[PidxSY] != -1)
-                        {
-                            DptrSY = D + P[PidxSY];
-                            if (xinc == -1)
-                              {
-                                DptrSY1 = DptrSY - 1;
-                                DptrSY += (P[PidxSY + 1] - 1);
-                              }
-                            else
-                              {
-                                DptrSY1 = DptrSY + P[PidxSY + 1];
-                              }
-                        }
-                        else
-                        {
-                            DptrSY = (ShellVoxel*)NULL;
-                        }
-                    }
-                    else
-                    {
-                        DptrSY = (ShellVoxel*)NULL;
-                    }
-
-                    if (DptrSY)
-                    {
-                        // do with interleave
-                        for (int x = x0; x != x1; x += xinc)
-                        {
-                            // (it seems my processing is prefetching a line
-                            // of Xes)
-                            if (DptrBY && DptrBY->x == x)
-                            {
-                                DrawVoxel(DptrBY, octantIdxBY,
-                                          DptrBY->x, bigy, z,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrBY += xinc;
-                                if (DptrBY ==  DptrBY1)
-                                  DptrBY = (ShellVoxel*)NULL;
-                            }
-
-                            if (DptrSY && DptrSY->x == x)
-                            {
-                                DrawVoxel(DptrSY, octantIdxSY,
-                                          DptrSY->x, smally, z,
-                                          prev_colour, ambient, diffuse, u, v);
-                                DptrSY += xinc;
-                                if (DptrSY == DptrSY1)
-                                  DptrSY = (ShellVoxel*)NULL;
-                            }
-                        }
-                    }
-                    else if (DptrBY) // we have to check!
-                    {
-                        // traditional and fast! (i.e. no interleave)
-                        for (int i = 0; i < P[PidxBY + 1]; i++)
-                        {
-                            DrawVoxel(DptrBY, octantIdxBY,
-                                      DptrBY->x, bigy, z,
-                                      prev_colour, ambient, diffuse, u, v);
-                            DptrBY += xinc;
-                        }
-                    }
-
-                    if (yInterleaved)
-                    {
-                        smally -= bigyInc;
-                    }
-                    else
-                    {
-                        if (bigy + bigyInc == bigyThresh)
-                            yInterleaved = true;
-                    }
-                } // for (int bigy ...)
-            } // for (int z = z0 ...
-
-
-            
-         } // else (if yin) ...
+           {
+            this->ippbtfEdgeOnYin(
+              camVoxelPos, xdim, ydim, zdim, ambient, diffuse, u, v);
+           } // else (if yin) ...
          else // xin
          {
             pq = vtkMath::Round(camVoxelPos[0]);
