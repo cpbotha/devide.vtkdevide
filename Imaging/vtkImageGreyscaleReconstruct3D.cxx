@@ -4,7 +4,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.5 $");
+vtkCxxRevisionMacro(vtkImageGreyscaleReconstruct3D, "$Revision: 1.6 $");
 vtkStandardNewMacro(vtkImageGreyscaleReconstruct3D);
 
 struct coordAndOffset
@@ -220,7 +220,9 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
   T *pPtr;
   T *Iptr;
   T minNp;
+  T maxNp;
   T minNm;
+  T maxNm;
   int x,y,z,i;
   // fifo of long offsets to the pixel in question
   vtkstd::queue<coordAndOffset> fifo;
@@ -388,7 +390,166 @@ void vtkImageGreyscaleReconstruct3DExecute(vtkImageGreyscaleReconstruct3D *self,
     } // if (Dual) ...
   else
     {
-    // not implemented yet...
+
+    // ----------------------------------------------------------------------
+    // Fast Hybrid Greyscale Reconstruction ---------------------------------
+    // ----------------------------------------------------------------------
+
+    // 1. scan D1 in raster order
+    pPtr = (T*)(outData->GetScalarPointer());
+    Iptr = in1Ptr;
+    for (z = 0; z < zdim; z++)
+      {
+      for (y = 0; y < ydim; y++)
+        {
+        for (x = 0; x < xdim; x++)
+          {
+          // J(p) min(max(J(q), q E N+(p) U p), I(p))
+          // i.e. find the maximum in the N+ neighbourhood of P and P
+          // replace J(p = x,y,z) with the min of that maximum and
+          // I(p)
+
+          // fill out structure with pointers to neighbours... if the
+          // neighbour doesn't exist, the pointer will be NULL
+          fillNpPtrs((T*)pPtr, Npi, x, y, z, xdim, ydim, zdim, (T**)NpPtrs);
+
+          // a. determine maximum of Np neighbourhood
+          maxNp = *pPtr; // p itself is also a candidate
+          for (i = 0; i < 13; i++)
+            {
+            if (NpPtrs[i] && *NpPtrs[i] > maxNp)
+              {
+              maxNp = *NpPtrs[i];
+              }
+            }
+          *pPtr = maxNp < *Iptr ? maxNp : *Iptr;
+          
+          // increment pointer
+          pPtr++;
+          Iptr++;
+          }
+        }
+      // once every z increment, update the progress
+      self->UpdateProgress((float)z / (float)(zdim - 1) * 0.33);
+      }
+    
+    // 2. scan D1 in anti-raster order
+    unsigned long pOffset = xdim * ydim * zdim - 1;    
+    pPtr = (T*)(outData->GetScalarPointer()) + pOffset;
+    Iptr = in1Ptr + pOffset;
+
+    for (z = zdim - 1; z >= 0; z--)
+      {
+      for (y = ydim - 1; y >= 0; y--)
+        {
+        for (x = xdim - 1; x >= 0; x--)
+          {
+          // J(p) <- min(max(J(q), q E N-(p) U p) ,I(p))
+          // i.e. find the maximum in the N- neighbourhood of P and P
+          // replace J(p = x,y,z) with the min of that maximum and
+          // I(p)
+
+          // fill out NmPtrs for this position
+          fillNmPtrs((T*)pPtr, Nmi, x, y, z, xdim, ydim, zdim, (T**)NmPtrs);
+
+          // a. determine minimum of Np neighbourhood
+          // now determine the minimum
+          maxNm = *pPtr; // p itself also counts
+          for (i = 0; i < 13; i++)
+            {
+            if (NmPtrs[i] && *NmPtrs[i] > maxNm)
+              {
+              maxNm = *NmPtrs[i];
+              }
+            }
+          *pPtr = maxNm < *Iptr ? maxNm : *Iptr;
+
+          // extra step with anti-raster traversal: we have to start
+          // filling the fifo...
+          // search for J(q) in N-(p) such that J(q) > J(p) and
+          // J(q) > I(q); if such a q exists, store *p* in the fifo
+          for (i = 0; i < 13; i++)
+            {
+            if (NmPtrs[i] &&
+                *NmPtrs[i] < *pPtr &&
+                *NmPtrs[i] < *(Iptr + Nmi[i]))
+              {
+              tempCoordAndOffset.x = x;
+              tempCoordAndOffset.y = y;
+              tempCoordAndOffset.z = z;
+              tempCoordAndOffset.offset = pOffset;
+              fifo.push(tempCoordAndOffset);
+              break;
+              }
+            }
+          
+          
+          // decrement pointers
+          pPtr--;
+          Iptr--;
+          // decrement offset
+          pOffset--;
+          }
+        }
+      // eventually two-thirds complete
+      self->UpdateProgress(0.33 + (float)(zdim - 1 - z) / (float)(zdim - 1) * 0.33);
+      }
+    
+
+    // 3. propagation step
+    while (! fifo.empty())
+      {
+      // read the value from the fifo
+      tempCoordAndOffset = fifo.front();
+      // and take it off the queue
+      fifo.pop();
+
+      // set up our pointers
+      pPtr = (T*)(outData->GetScalarPointer()) + tempCoordAndOffset.offset;
+      Iptr = in1Ptr + tempCoordAndOffset.offset;
+      x = tempCoordAndOffset.x;
+      y = tempCoordAndOffset.y;
+      z = tempCoordAndOffset.z;
+      long currentOffset = tempCoordAndOffset.offset;
+
+      // let's generate the complete neighbourhood, sanity checks and
+      // all
+      fillNpPtrs((T*)pPtr, Npi, x, y, z, xdim, ydim, zdim, (T**)NpPtrs);
+      fillNmPtrs((T*)pPtr, Nmi, x, y, z, xdim, ydim, zdim, (T**)NmPtrs);
+
+      for (i = 0; i < 13; i++)
+        {
+        // first for Np
+        if (NpPtrs[i] &&
+            *NpPtrs[i] < *pPtr &&
+            *(Iptr + Npi[i]) !=  *NpPtrs[i])
+          {
+          *NpPtrs[i] = *pPtr < *(Iptr + Npi[i]) ? *pPtr : *(Iptr + Npi[i]);
+          // current offset is that of "p", by adding Npi[i] we get
+          // the offset of q
+          tempCoordAndOffset.offset = currentOffset + Npi[i];
+          tempCoordAndOffset.x = x + NpiO[i][0];
+          tempCoordAndOffset.y = y + NpiO[i][1];
+          tempCoordAndOffset.z = z + NpiO[i][2];
+          fifo.push(tempCoordAndOffset);
+          }
+        // then for Nm
+        if (NmPtrs[i] &&
+            *NmPtrs[i] < *pPtr &&
+            *(Iptr + Nmi[i]) !=  *NmPtrs[i])
+          {
+          *NmPtrs[i] = *pPtr < *(Iptr + Nmi[i]) ? *pPtr : *(Iptr + Nmi[i]);
+          // current offset is that of "p", by adding Npi[i] we get
+          // the offset of q
+          tempCoordAndOffset.offset = currentOffset + Nmi[i];
+          tempCoordAndOffset.x = x + NmiO[i][0];
+          tempCoordAndOffset.y = y + NmiO[i][1];
+          tempCoordAndOffset.z = z + NmiO[i][2];          
+          fifo.push(tempCoordAndOffset);
+          }
+        }
+      } // while (!fifo.empty() ...
+    
     }
 
     self->UpdateProgress(1.0);
