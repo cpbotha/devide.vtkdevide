@@ -33,25 +33,16 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 # Create the vtkdevideExternal Python library
 #
 
+# and this is more like the new vtkMy (200410)
+
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideExternalPython ExternalPython_SRCS External_SRCS)
-
-  IF (APPLE)
-    ADD_LIBRARY (vtkdevideExternalPython MODULE ExternalPython_SRCS)
-  ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideExternalPython SHARED ExternalPython_SRCS)
-    TARGET_LINK_LIBRARIES (vtkdevideExternalPython)
-  ENDIF (APPLE)
-
-  IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideExternalPython 
-                           debug ${PYTHON_DEBUG_LIBRARY} 
-                           optimized ${PYTHON_LIBRARY})
-  ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideExternalPython 
-                           ${PYTHON_LIBRARY})
-  ENDIF(WIN32)
+  VTK_WRAP_PYTHON (vtkdevideExternalPython ExternalPython_SRCS ${External_SRCS})
+  ADD_LIBRARY (vtkdevideExternalPython MODULE ${ExternalPython_SRCS})
+  TARGET_LINK_LIBRARIES (vtkdevideExternalPython 
+                         vtkdevideCommonPython 
+			 vtkFilteringPython 
+			 vtkdevideExternal)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
