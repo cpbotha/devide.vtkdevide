@@ -1,7 +1,7 @@
 // vtkShellExtractor.h copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkShellExtractor.cxx,v 1.19 2004/11/28 00:50:45 cpbotha Exp $
+// $Id: vtkShellExtractor.cxx,v 1.20 2004/11/28 02:07:50 cpbotha Exp $
 // vtk class for extracting Udupa Shells
 
 /*
@@ -69,7 +69,7 @@ template <class T>
 static void ExtractShell(T* data_ptr,
                          vtkImageData* Input,
                          vtkImageData* GradientImageData,
-			 int GradientImageIsGradient,
+                         int GradientImageIsGradient,
                          vtkPiecewiseFunction* OpacityTF,
                          vtkColorTransferFunction* ColourTF,
                          float OmegaL, float OmegaH, float min_gradmag,
@@ -140,9 +140,14 @@ static void ExtractShell(T* data_ptr,
         //temp_sv.Value = (float)(*dptr);
         tempValue = (double)(*dptr);
         // look the suxor up
-        temp_sv.Opacity = OpacityTF->GetValue(tempValue);
+        //temp_sv.Opacity = OpacityTF->GetValue(tempValue);
+        // this call is IMMENSELY SLOW - actually, calling just about anything from
+        // the OpacityTF is mind-numbingly slow; my guess is that the Update() call
+        // in GetValue() (and who knows where else) is slowing everything down.
+        temp_sv.Opacity = (float)(OpacityTF->GetValue(tempValue));
+        
         // first check if it's opaque enough
-        if (temp_sv.Opacity > OmegaL)
+        
           {
           // initially, we assume none of the neighbouring voxels
           // is < OmegaH
@@ -290,6 +295,7 @@ static void ExtractShell(T* data_ptr,
           
           // only if one of the neighbouring voxels was <= OmegaH
           // is this a valid shell voxel
+
           if (nbrv_lt_oh)
             {
             if (!GradientImageData)
