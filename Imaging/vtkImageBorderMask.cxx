@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageBorderMask, "$Revision: 1.3 $");
+vtkCxxRevisionMacro(vtkImageBorderMask, "$Revision: 1.4 $");
 vtkStandardNewMacro(vtkImageBorderMask);
 
 
@@ -73,7 +73,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
     }
 
   // now do sanity checking on Borders
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 6; i++)
     {
     if (Borders[i] < 0)
       {
@@ -81,14 +81,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
                              << "Assuming default 1.");
       Borders[i] = 1;
       }
-
-    if (Borders[i] * 2 > dims[i])
-      {
-      Borders[i] = dims[i] / 2;
-      vtkGenericWarningMacro(<< "Execute: " << i << "'th border too large. "
-                             << "Shrinking to " << Borders[i] << ".");
-      }
-    } // for (int i = 0 ...
+    }
 
   double scalarRange[2];
   input->GetScalarRange(scalarRange);
@@ -102,7 +95,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
     {
     zOffset = z * dims[1] * dims[0];
 
-    if (z < Borders[2] || z >= dims[2] - Borders[2])
+    if (z < Borders[4] || z >= dims[2] - Borders[5])
       {
       InZBorder = true;
       }
@@ -116,7 +109,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
       {
       yOffset = zOffset + y * dims[0];
 
-      if (y < Borders[1] || y >= dims[1] - Borders[1])
+      if (y < Borders[2] || y >= dims[1] - Borders[3])
         {
         InYBorder = true;
         }
@@ -129,7 +122,7 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
         {
         xOffset = yOffset + x;
 
-        if (x < Borders[0] || x >= dims[0] - Borders[0])
+        if (x < Borders[0] || x >= dims[0] - Borders[1])
           {
           InXBorder = true;
           }
@@ -162,7 +155,7 @@ vtkImageBorderMask::vtkImageBorderMask() : vtkSimpleImageToImageFilter()
   // use BorderValue for border
   this->SetBorderMode(0);
   this->SetBorderValue(1);
-  this->SetBorders(1,1,1);
+  this->SetBorders(1,1,1,1,1,1);
 
   // user InteriorValue for interior
   this->SetInteriorMode(0);

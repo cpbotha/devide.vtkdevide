@@ -39,8 +39,8 @@ public:
   vtkSetMacro(InteriorMode, int);
   vtkGetMacro(InteriorMode, int);
 
-  vtkSetVector3Macro(Borders, int);
-  vtkGetVector3Macro(Borders, int)
+  vtkSetVector6Macro(Borders, int);
+  vtkGetVector6Macro(Borders, int)
 
 protected:
   vtkImageBorderMask();
@@ -48,7 +48,7 @@ protected:
 
   int BorderValue;
   int BorderMode;
-  int Borders[3];
+  int Borders[6];
   
   int InteriorValue;
   int InteriorMode;
