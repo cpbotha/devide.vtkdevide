@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.16 2003/10/07 16:40:48 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.17 2003/10/13 13:24:35 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -258,6 +258,12 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
          {
              // this is normal: only some MRI datasets make use of this
              temp_SpacingBetweenSlices = -1;
+         }
+         else
+         {
+             // sometimes we find a negative SpacingBetweenSlices (see Rommens)
+             // in this case, we do like Atamai does and fabs it.
+             temp_SpacingBetweenSlices = fabs(temp_SpacingBetweenSlices);
          }
          
 
@@ -797,7 +803,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.16 2003/10/07 16:40:48 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.17 2003/10/13 13:24:35 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
