@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.2 $");
+vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkImageHistogram2D);
 
 //----------------------------------------------------------------------------
@@ -17,15 +17,28 @@ vtkImageHistogram2D::vtkImageHistogram2D()
 //----------------------------------------------------------------------------
 // Grow the output image 
 void vtkImageHistogram2D::ExecuteInformation(
-                    vtkImageData **vtkNotUsed(inDatas), vtkImageData *outData)
+                    vtkImageData **inDatas, vtkImageData *outData)
 {
     outData->SetNumberOfScalarComponents(1);
     outData->SetScalarType(VTK_DOUBLE);
-    outData->SetOrigin(0,0,0);
-    outData->SetSpacing(1,1,1);
-    outData->SetExtent(0, this->Input1Bins - 1, 0, this->Input2Bins - 1, 0, 1);
+
+    // store these ranges in our own ivars as well!
+    double in1range[2], in2range[2];
+    inDatas[0]->GetScalarRange(in1range);
+    inDatas[1]->GetScalarRange(in2range);
+
+    int input1bins = this->GetInput1Bins();
+    int input2bins = this->GetInput2Bins();
+
+    double in1binWidth = (in1range[1] - in1range[0]) / input1bins;
+    double in2binWidth = (in2range[1] - in2range[0]) / input2bins;
+
+    outData->SetOrigin(in1range[0], in2range[0], 0);
+    outData->SetSpacing(in1binWidth, in2binWidth, 1);
+    
+    outData->SetExtent(0, this->Input1Bins - 1, 0, this->Input2Bins - 1, 0, 0);
     outData->SetWholeExtent(0, this->Input1Bins - 1,
-                            0, this->Input2Bins - 1, 0, 1);
+                            0, this->Input2Bins - 1, 0, 0);
 }
 
 //----------------------------------------------------------------------------
@@ -56,7 +69,7 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
     int input2bins = self->GetInput2Bins();
 
     // clear output data
-    memset(outData, 0, input1bins * input2bins);
+    memset(outPtr, 0, input1bins * input2bins * sizeof(double));
         
     double in1binWidth = (in1range[1] - in1range[0]) / input1bins;
     double in2binWidth = (in2range[1] - in2range[0]) / input2bins;
@@ -64,6 +77,11 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
     // calculate number of elements
     unsigned long noe = in1Data->GetDimensions()[0] *
         in1Data->GetDimensions()[1] * in1Data->GetDimensions()[2];
+
+    double progress = 0.0;
+    double numProgressSteps = 20;
+    double progressStep = 1.0 / numProgressSteps;
+    int noeProgressStep = (int)(noe / numProgressSteps);
 
     T in1val, in2val;
     unsigned bin1, bin2;
@@ -76,8 +94,20 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
         bin2 = (unsigned)((in2val - in2range[0]) / in2binWidth);
 
         // increment the correct bin
-        *(outPtr + bin2 * input1bins + bin1) += 1;
+        if (*(outPtr + bin2 * input1bins + bin1) < 1024)
+            *(outPtr + bin2 * input1bins + bin1) += 1;
+
+        in1Ptr++;
+        in2Ptr++;
+
+        if (i % noeProgressStep == 0)
+        {
+            progress += progressStep;
+            self->UpdateProgress(progress);
+        }
     }
+
+    self->UpdateProgress(1.0);
 }
 
 
@@ -134,12 +164,14 @@ void vtkImageHistogram2D::ExecuteData(vtkDataObject *out)
   // make sure output has been allocated
   vtkImageData *output = vtkImageData::SafeDownCast(out);
   output->AllocateScalars();
-
   
   // now let's start with the actual work
   void *in1Ptr = this->GetInput1()->GetScalarPointer();
   void *in2Ptr = this->GetInput2()->GetScalarPointer();
   double *outPtr = (double*)output->GetScalarPointer();
+
+  this->GetInput1()->Update();
+  this->GetInput2()->Update();
 
   switch (this->GetInput1()->GetScalarType())
   {
