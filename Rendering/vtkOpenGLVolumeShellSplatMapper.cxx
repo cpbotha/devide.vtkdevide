@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.13 2003/12/30 15:11:36 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.14 2003/12/30 17:02:25 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -1243,6 +1243,13 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       // edge-on
       else if (xyztot == 1)
       {
+
+          // for edge-on, we know that the slowest changing dimension should
+          // be any of the non-edge (i.e. NOT the IN) dimensions, e.g. in
+          // the case of zin, x or y should preferably be the slowest changing.
+          // because the two fastest changing ones are always angled away
+          // from us, their order with respect to each other is not critical
+          
 #ifdef SSM_VERBOSE_OUTPUT          
          cout << "EDGE-ON" << endl;
 #endif         
@@ -1282,21 +1289,16 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                 yinc = -1;
             }
 
-
-            // this is sorted, really
-//            this->DrawVoxels(0, xdim,   0, ydim,   0, ps + 1,      edge_idx + 4, D, P, inputDims[1], ambient, diffuse, u, v);
-//            this->DrawVoxels(0, xdim,   0, ydim,   ps + 1, zdim,   edge_idx, D, P, inputDims[1], ambient, diffuse, u, v);
-
 	    // start of experimental iPBTF code -----------------------------
 	    // hmmm... split outer loop
 	    int seg1len = ps;
             int seg2len = zdim - ps;
 
-            int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz;
+            int bigzStart, bigzEnd, bigzInc, bigzThresh, smallz, initsmallz;
             unsigned char bigOctantIdx, smallOctantIdx;
             if (seg1len >= seg2len)
             {
-                smallz = zdim - 1;
+                initsmallz = zdim - 1;
                 bigzStart = 0;
                 bigzEnd = ps;
                 bigzInc = 1;
@@ -1307,7 +1309,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
             }
             else
             {
-                smallz = 0;
+                initsmallz = 0;
                 bigzStart = zdim - 1;
                 bigzEnd = ps - 1; // our loop is going to use !=
                 bigzInc = -1;
@@ -1318,21 +1320,29 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
             
             bool interleaving;
-            if (bigzStart == bigzThresh)
-                interleaving = true;
-            else
-                interleaving = false;
+
             
-            for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
+
+            for (int y = y0; y != y1; y += yinc)
             {
-                if (bigz == smallz)
-                {
-                    cerr << "AAAARRRGGGHHH THIS SHOULD NEVER HAPPEN!" << endl;
-                }
-                if (interleaving)
-                {
-                    // double loop
-                    for (int y = y0; y != y1; y += yinc)
+                //for (int bigz = bigzStart; bigz != bigzEnd; bigz += bigzInc)
+                //{
+//                 if (bigz == smallz)
+//                 {
+//                     cerr << "AAAARRRGGGHHH THIS SHOULD NEVER HAPPEN!" << endl;
+//                 }
+
+                smallz = initsmallz;
+                if (bigzStart == bigzThresh)
+                    interleaving = true;
+                else
+                    interleaving = false;
+                
+                for (int bigz = bigzStart; bigz != bigzEnd;
+                     bigz += bigzInc)
+                {                
+
+                    if (interleaving)
                     {
                         Pidx0 = (bigz * ydim + y) * 2;
                         Pidx1 = (smallz * ydim + y) * 2;
@@ -1388,17 +1398,14 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                                 }
                             }
                         }
-                        
-                    } // for (int y ...
 
-                    // we're interleaving, so increment smallz (opposite dir)
-                    smallz -= bigzInc;
-                
-                } // if (interleaving) ...
-                else
-                {
-                    // single loop
-                    for (int y = y0; y != y1; y += yinc)
+                        // we're interleaving, so increment smallz (opposite dir)
+                        smallz -= bigzInc;
+                        
+                        
+                    } // if (interleaving) ...
+
+                    else
                     {
                         Pidx = (bigz * ydim + y) * 2;
                         if (P[Pidx] != -1)
@@ -1421,11 +1428,11 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
                         {
                             interleaving = true;
                         }
-                    } // for (int y ...
-                } // else interleaving ...
-            } // for (int bigz ... 
+                    } // else interleaving ...
+                } // for (int bigz ...
+            } // for (int y = ...
 	    
-         }
+         } // if (zin ...
          else if (yin)
          {
             pr = vtkMath::Round(camVoxelPos[1]);
