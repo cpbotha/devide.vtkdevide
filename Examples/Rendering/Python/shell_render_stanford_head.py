@@ -1,8 +1,8 @@
-# $Id: shell_render_stanford_head.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+# $Id: shell_render_stanford_head.py,v 1.2 2003/10/08 12:17:31 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
-from vtkpython import *
-from vtkcpbothapython import *
+from vtk import *
+from vtkdscas import *
 import time
 
 def bench(camera, rwi):
