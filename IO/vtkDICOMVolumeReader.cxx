@@ -1,6 +1,27 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkDICOMVolumeReader.cxx,v 1.9 2003/08/05 09:10:55 cpbotha Exp $
+// and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
+// $Id: vtkDICOMVolumeReader.cxx,v 1.10 2003/08/05 09:33:56 cpbotha Exp $
 // class for reading off-line DICOM datasets
+
+/*
+ * This software is licensed exclusively for research use by Bart Kaptein
+ * in the ModelBasedRSA package.  Any modifications made to this software
+ * shall be sent to the author for possible inclusion in future versions.
+ * Ownership and copyright of said modifications shall be ceded to the
+ * author.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHORS OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #if !defined(WIN32)
 #define HAVE_CONFIG_H
@@ -740,7 +761,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.9 2003/08/05 09:10:55 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.10 2003/08/05 09:33:56 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

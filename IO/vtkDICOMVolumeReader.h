@@ -1,6 +1,6 @@
-// vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
+// vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.10 2003/08/05 09:30:40 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.h,v 1.11 2003/08/05 09:33:56 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
