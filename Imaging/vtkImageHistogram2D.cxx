@@ -3,7 +3,7 @@
 #include "vtkImageData.h"
 #include "vtkObjectFactory.h"
 
-vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.1 $");
+vtkCxxRevisionMacro(vtkImageHistogram2D, "$Revision: 1.2 $");
 vtkStandardNewMacro(vtkImageHistogram2D);
 
 //----------------------------------------------------------------------------
@@ -47,6 +47,37 @@ void vtkImageHistogram2DExecute(vtkImageHistogram2D *self,
                                 vtkImageData *in2Data, T *in2Ptr,
                                 vtkImageData *outData, double *outPtr)
 {
+    // store these ranges in our own ivars as well!
+    double in1range[2], in2range[2];
+    in1Data->GetScalarRange(in1range);
+    in2Data->GetScalarRange(in2range);
+
+    int input1bins = self->GetInput1Bins();
+    int input2bins = self->GetInput2Bins();
+
+    // clear output data
+    memset(outData, 0, input1bins * input2bins);
+        
+    double in1binWidth = (in1range[1] - in1range[0]) / input1bins;
+    double in2binWidth = (in2range[1] - in2range[0]) / input2bins;
+
+    // calculate number of elements
+    unsigned long noe = in1Data->GetDimensions()[0] *
+        in1Data->GetDimensions()[1] * in1Data->GetDimensions()[2];
+
+    T in1val, in2val;
+    unsigned bin1, bin2;
+    for (unsigned long i = 0; i < noe; i++)
+    {
+        in1val = *in1Ptr;
+        in2val = *in2Ptr;
+        
+        bin1 = (unsigned)((in1val - in1range[0]) / in1binWidth);
+        bin2 = (unsigned)((in2val - in2range[0]) / in2binWidth);
+
+        // increment the correct bin
+        *(outPtr + bin2 * input1bins + bin1) += 1;
+    }
 }
 
 
@@ -73,6 +104,30 @@ void vtkImageHistogram2D::ExecuteData(vtkDataObject *out)
     this->GetInput2()->GetScalarType() << ", should match");
     return;
     }
+
+  // check origin, dimensions, spacing equal
+  bool originEqual = true, spacingEqual = true, dimensionsEqual = true;
+  for (int i = 0; i < 3 && originEqual && spacingEqual && dimensionsEqual; i++)
+  {
+      originEqual =
+          this->GetInput1()->GetOrigin()[i] ==
+          this->GetInput2()->GetOrigin()[i];
+
+      spacingEqual =
+          this->GetInput1()->GetSpacing()[i] ==
+          this->GetInput2()->GetSpacing()[i];
+
+      dimensionsEqual = 
+          this->GetInput1()->GetDimensions()[i] ==
+          this->GetInput2()->GetDimensions()[i];
+      
+  }
+
+  if (! (originEqual && spacingEqual && dimensionsEqual))
+  {
+      vtkErrorMacro(<< "Execute: The two inputs have to match w.r.t. origin, "
+                    "spacing and dimensions.");
+  }
 
   // get metadata across
   this->ExecuteInformation();
