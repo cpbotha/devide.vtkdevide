@@ -1,11 +1,10 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2002 by Charl P. Botha 
 // http://cpbotha.net/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.2 2003/04/29 17:10:43 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
-// FIXME:
-// octant checking for orthogonal: 1. go back to normal BTF 2. the octant that
-// we choose is the one that's closest to the viewing plane!
+// TODO:
+// Use glPushAttrib, glPopAttrib to make this class less dangerous
 
 #include <math.h>
 
@@ -666,14 +665,28 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
    if (RenderMode == 0)
    {
-      tex_idx = glGenLists(1);
-      glDeleteLists ((GLuint) tex_idx, (GLsizei) 0);
-      glNewList ((GLuint) tex_idx, GL_COMPILE);
-      ((vtkOpenGLRenderWindow *)(ren->GetRenderWindow()))->RegisterTextureResource( tex_idx );
 
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+#ifdef GL_VERSION_1_1
+     // we have to do this to unbind whatever a vtkTexture has bound to
+     // this target (GL_TEXTURE_2D), although we're never going to rebind it;
+     // we delete it at the end of this method
+     // if we didn't bind a new texture to this target, our uploads would
+     // overwrite whichever texture was bound to that target when we started
+     // mucking around... remember that these newfangled texture objects are
+     // mutable
+     GLuint tempIndex = 0;
+     glGenTextures(1, &tempIndex);
+     tex_idx = (long) tempIndex;
+     glBindTexture(GL_TEXTURE_2D, tempIndex);
+#else
+     tex_idx = glGenLists(1);
+     glDeleteLists ((GLuint) tex_idx, (GLsizei) 0);
+     glNewList ((GLuint) tex_idx, GL_COMPILE);
+#endif
+
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                        GL_NEAREST);
-      glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                        GL_NEAREST );
 
       // if internal format is  GL_INTENSITY: C = Cf * I, A = Af * I
@@ -688,7 +701,7 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
       glEndList();
 
       glCallList ((GLuint) tex_idx);
-      // FIXME: enable texture here
+
       glEnable(GL_TEXTURE_2D);
 
       glBegin(GL_QUADS);
@@ -1010,8 +1023,13 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
    if (RenderMode == 0)
    {
-      glDisable(GL_TEXTURE_2D);
-      glDeleteLists(tex_idx,1);
+     glDisable(GL_TEXTURE_2D);
+#ifdef GL_VERSION_1_1
+     GLuint tempIndex = tex_idx;
+     glDeleteTextures(1, &tempIndex);
+#else
+     glDeleteLists(tex_idx, 1);
+#endif
    }
 
    glMatrixMode(GL_MODELVIEW);
@@ -1019,6 +1037,9 @@ void vtkOpenGLVolumeShellSplatMapper::Render(vtkRenderer* ren, vtkVolume* vol)
 
    // we have to reactivate this, or the VTK z-clear doesn't work!
    glDepthMask(GL_TRUE);
+
+   // let's deactivate blending again
+   glDisable(GL_BLEND);
 
    clock_t end_clock = clock();
    clock_t diff_clock = end_clock - start_clock;
