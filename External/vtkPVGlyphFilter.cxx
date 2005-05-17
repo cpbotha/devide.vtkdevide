@@ -23,7 +23,7 @@
 #include "vtkPolyData.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
 
-vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.10 $");
+vtkCxxRevisionMacro(vtkPVGlyphFilter, "$Revision: 1.11 $");
 vtkStandardNewMacro(vtkPVGlyphFilter);
 
 //-----------------------------------------------------------------------------
@@ -121,26 +121,26 @@ int vtkPVGlyphFilter::RequestData(
   // elements to be handled as vectors)
 
   // funky new-style way of finding input
-//  vtkDataSet* input = vtkDataSet::SafeDownCast(
-//    inInfo->Get(vtkDataObject::DATA_OBJECT()));
-//
-//  if (input)
-//    {
-//    vtkPointData *pd = input->GetPointData();
-//    if (!pd->GetVectors(this->InputVectorsSelection) &&
-//        !this->InputVectorsSelection)
-//      {
+  vtkDataSet* input = vtkDataSet::SafeDownCast(
+    inInfo->Get(vtkDataObject::DATA_OBJECT()));
+
+  if (input)
+    {
+    vtkPointData *pd = input->GetPointData();
+    if (!pd->GetVectors(this->InputVectorsSelection) &&
+        !this->InputVectorsSelection)
+      {
       // NO vectors, so let's try selecting the scalars (if there
       // are any!)
-//      vtkDataArray *inScalars = pd->GetScalars(
-//        this->InputScalarsSelection);
-//
-//      if (inScalars)
-//        {
-//        this->SelectInputVectors(inScalars->GetName());
-//        }
-//      }
-//    }
+      vtkDataArray *inScalars = pd->GetScalars(
+        this->InputScalarsSelection);
+
+      if (inScalars)
+        {
+        this->SelectInputVectors(inScalars->GetName());
+        }
+      }
+    }
   // end addition by cpbotha
   
    
