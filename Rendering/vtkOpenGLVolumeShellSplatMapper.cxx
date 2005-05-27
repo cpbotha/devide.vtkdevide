@@ -1,7 +1,7 @@
 // vtkOpenGLVolumeShellSplatMapper copyright (c) 2003 
 // by Charl P. Botha cpbotha@ieee.org 
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.45 2004/11/30 22:27:13 cpbotha Exp $
+// $Id: vtkOpenGLVolumeShellSplatMapper.cxx,v 1.46 2005/05/27 10:01:05 cpbotha Exp $
 // vtk class for volume rendering by shell splatting
 
 /*
@@ -235,6 +235,14 @@ vtkOpenGLVolumeShellSplatMapper::vtkOpenGLVolumeShellSplatMapper()
 
 vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
 {
+   // first disconnect
+
+   // FIXME: at the moment, this causes a seg fault on linux.  No idea why.
+   // this->SetInput((vtkImageData*)NULL);
+
+   // this new-style call causes the same behaviour.
+   // this->SetInputConnection(NULL);
+   
    delete this->integrated_rfunc;
    delete this->normalised_integrated_rfunc;
 
@@ -248,7 +256,6 @@ vtkOpenGLVolumeShellSplatMapper::~vtkOpenGLVolumeShellSplatMapper()
    PerspectiveMatrix->Delete();
 
    this->SetGradientImageData(NULL);
-   this->SetInput((vtkImageData*)NULL);
    if (ShellExtractor)
       ShellExtractor->Delete();
 }
