@@ -1,4 +1,4 @@
-# $Id: shell_render_engine.py,v 1.11 2004/07/02 10:22:20 cpbotha Exp $
+# $Id: shell_render_engine.py,v 1.12 2005/05/27 10:00:49 cpbotha Exp $
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *
@@ -193,7 +193,7 @@ tprop.ShadowOn()
 tprop.SetColor(1, 0, 0)
 
 # FIXME: switch text actor on here
-#ren.AddActor(textActor)
+ren.AddActor(textActor)
 #### end of text
 
 
