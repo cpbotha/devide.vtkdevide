@@ -10,6 +10,15 @@ http://www.itk.org/pipermail/insight-users/2003-December/005716.html
 Temporary fix: comment out DICOM thingies in RegisterBuiltInFactories() in
 Code/IO/itkImageIOFactory.cxx
 
+Getting this to build on RHEL3 64bit
+------------------------------------
+
+* Due to an internal compiler error, vtkImageLogic and
+  vtkImageEuclideanDistance can't be built.  Build these two by hand, but use
+  -O0 instead of -O2.
+* When you build DCMTK, add -fPIC to CFLAGS and CXXFLAGS in
+  config/Makefile.def
+
 Getting this to build in Visual C++ 6.0 (and VS.NET2003)
 --------------------------------------------------------
 
