@@ -13,6 +13,8 @@ Code/IO/itkImageIOFactory.cxx
 Getting this to build on RHEL3 64bit
 ------------------------------------
 
+* Make sure your CFLAGS and CXXFLAGS environment variables contain "-m64"
+* Change all occurrences of lib in the VTK CMake config to lib64
 * Due to an internal compiler error, vtkImageLogic and
   vtkImageEuclideanDistance can't be built.  Build these two by hand, but use
   -O0 instead of -O2.
