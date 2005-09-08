@@ -68,6 +68,10 @@ The vtkdevide config
   there's no other zlib include/library directories lying around on
   the same level as the dcmtk root.  This way, DCMTK will make use of
   vtk's zlib version.
+  
+- Under Linux, it's better to use the system ZLIB.  It's very difficult to get
+  DCMTK to use the VTK zlib when there's a system ZLIB around, and this will
+  screw around with vtkdevide's dynamic linking.
 
 - In MSVS.NET2003, select dcmdata in the solution explorer, then
   select properties, c/c++, general, additional includes.
