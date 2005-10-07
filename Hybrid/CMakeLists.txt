@@ -28,6 +28,7 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
   TARGET_LINK_LIBRARIES (vtkdevideHybridTCL 
                          vtkHybridTCL
 			 vtkCommonTCL
+			 vtkWidgetsTCL
                          ${TCL_LIBRARY})
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
@@ -46,7 +47,8 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
     ADD_LIBRARY (vtkdevideHybridPython SHARED HybridPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideHybridPython
 	                   vtkHybridPython
-			   vtkCommonPython)
+			   vtkCommonPython
+                           vtkWidgetsPython)
   ENDIF (APPLE)
 
   IF(WIN32)
@@ -86,4 +88,6 @@ LINK_LIBRARIES (
   vtkdevideHybrid
   vtkHybrid
   vtkCommon
+  vtkRendering
+  vtkWidgets
 )

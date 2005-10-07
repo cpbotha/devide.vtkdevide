@@ -28,7 +28,7 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
   ADD_LIBRARY (vtkdevideRenderingTCL SHARED RenderingTCL_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingTCL 
                          vtkRenderingTCL
-			 #vtkVolumeRenderingTCL
+			 vtkVolumeRenderingTCL
 			 vtkFilteringTCL
 			 vtkCommonTCL
                          ${TCL_LIBRARY})
@@ -49,7 +49,7 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
     ADD_LIBRARY (vtkdevideRenderingPython SHARED RenderingPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
 	                   vtkRenderingPython
-			   #vtkVolumeRenderingPython
+			   vtkVolumeRenderingPython
 			   vtkFilteringPython
 			   vtkCommonPython)
   ENDIF (APPLE)
@@ -96,7 +96,7 @@ ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 LINK_LIBRARIES (
   vtkdevideRendering
   vtkRendering
-  #vtkVolumeRendering
+  vtkVolumeRendering
   vtkFiltering
   vtkCommon
 )
