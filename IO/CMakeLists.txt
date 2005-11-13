@@ -58,17 +58,17 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ELSE (APPLE)
     ADD_LIBRARY (vtkdevideIOPython SHARED IOPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideIOPython 
-	                   vtkIOPython)
+	                   vtkIOPythonD)
   ENDIF (APPLE)
 
   IF(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideIOPython 
-	                   vtkIOPython
+	                   vtkIOPythonD
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideIOPython 
-	                   vtkIOPython
+	                   vtkIOPythonD
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 

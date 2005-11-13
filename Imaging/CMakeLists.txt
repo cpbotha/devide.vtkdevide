@@ -48,17 +48,17 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ELSE (APPLE)
     ADD_LIBRARY (vtkdevideImagingPython SHARED ImagingPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideImagingPython
-			   vtkImagingPython)
+			   vtkImagingPythonD)
   ENDIF (APPLE)
 
   IF(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideImagingPython 
-	                   vtkImagingPython
+	                   vtkImagingPythonD
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideImagingPython 
-	                   vtkImagingPython
+	                   vtkImagingPythonD
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 

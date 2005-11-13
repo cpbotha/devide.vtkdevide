@@ -42,8 +42,8 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideExternalPython MODULE ${ExternalPython_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideExternalPython 
                          vtkdevideCommonPython 
-			 vtkFilteringPython
-                         vtkGraphicsPython
+			 vtkFilteringPythonD
+                         vtkGraphicsPythonD
 			 vtkdevideExternal)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)

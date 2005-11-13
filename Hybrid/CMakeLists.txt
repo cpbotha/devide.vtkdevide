@@ -46,21 +46,21 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ELSE (APPLE)
     ADD_LIBRARY (vtkdevideHybridPython SHARED HybridPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideHybridPython
-	                   vtkHybridPython
-			   vtkCommonPython
-                           vtkWidgetsPython)
+	                   vtkHybridPythonD
+			   vtkCommonPythonD
+                           vtkWidgetsPythonD)
   ENDIF (APPLE)
 
   IF(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
-	                   vtkHybridPython
-			   vtkCommonPython
+	                   vtkHybridPythonD
+			   vtkCommonPythonD
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
-	                   vtkHybridPython
-			   vtkCommonPython
+	                   vtkHybridPythonD
+			   vtkCommonPythonD
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 

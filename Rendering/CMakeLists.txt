@@ -48,26 +48,26 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ELSE (APPLE)
     ADD_LIBRARY (vtkdevideRenderingPython SHARED RenderingPython_SRCS)
     TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
-	                   vtkRenderingPython
-			   vtkVolumeRenderingPython
-			   vtkFilteringPython
-			   vtkCommonPython)
+	                   vtkRenderingPythonD
+			   vtkVolumeRenderingPythonD
+			   vtkFilteringPythonD
+			   vtkCommonPythonD)
   ENDIF (APPLE)
 
   IF(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideRenderingPython 
-	                   vtkRenderingPython
-			   #vtkVolumeRenderingPython
-			   vtkFilteringPython
-			   vtkCommonPython
+	                   vtkRenderingPythonD
+			   vtkVolumeRenderingPythonD
+			   vtkFilteringPythonD
+			   vtkCommonPythonD
                            debug ${PYTHON_DEBUG_LIBRARY} 
                            optimized ${PYTHON_LIBRARY})
   ELSE(WIN32)
     TARGET_LINK_LIBRARIES (vtkdevideRenderingPython 
-	                   vtkRenderingPython
-			   #vtkVolumeRenderingPython
-			   vtkFilteringPython
-			   vtkCommonPython
+	                   vtkRenderingPythonD
+			   vtkVolumeRenderingPythonD
+			   vtkFilteringPythonD
+			   vtkCommonPythonD
                            ${PYTHON_LIBRARY})
   ENDIF(WIN32)
 
