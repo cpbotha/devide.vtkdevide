@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.21 2005/11/21 09:09:59 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.22 2005/11/21 13:54:00 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -23,11 +23,24 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Keep logic as it is now, but use DicomImage to read PixelData
+   via the DicomImage(DcmObject...) form.
+
+   See: http://www.archivaty.com/forums/about68765.html
+        http://support.dcmtk.org/docs/file_faq.html (compression)
+
+   Maybe not, only in DCMTK 3.5.4 does DicomImage give access to
+   the underlying pixeldata.  Let's wait this out.
+*/
+
 #if !defined(WIN32)
 #define HAVE_CONFIG_H
 #endif
 #include <osconfig.h>
 #include <dcmdata/dctk.h>
+
+//#include <dcmjpeg/djdecode.h>
+//#include <dcmdata/dcrledrg.h>
 
 #include <algorithm>
 #include <math.h>
@@ -42,6 +55,9 @@
 
 vtkDICOMVolumeReader::vtkDICOMVolumeReader()
 {
+  // try this again for jpeg stuff
+  //DJDecoderRegistration::registerCodecs();
+  
   // this should be a sane default
   this->SeriesInstanceIdx = 0;
   this->series_instances.clear();
@@ -92,6 +108,9 @@ void vtkDICOMVolumeReader::deinit_dcmtk(void)
    
   // then empty the list itself
   series_instances.clear();
+
+  // deinit codecs
+  //DJDecoderRegistration::cleanup();
 
   // we are very seriously modified
   this->Modified();
@@ -881,7 +900,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.21 2005/11/21 09:09:59 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.22 2005/11/21 13:54:00 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
