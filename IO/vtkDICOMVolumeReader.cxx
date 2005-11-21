@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.20 2004/03/05 10:12:02 cpbotha Exp $
+// $Id: vtkDICOMVolumeReader.cxx,v 1.21 2005/11/21 09:09:59 cpbotha Exp $
 // class for reading off-line DICOM datasets
 
 /*
@@ -674,13 +674,13 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       return;
       }
 
-
     //unsigned short* dicom_pixeldata_pointer;      
     unsigned short *dicom_pixeldata_pointer_us;
     unsigned char *dicom_pixeldata_pointer_uc;
     PixelData_obj->getUint16Array(dicom_pixeldata_pointer_us);
     PixelData_obj->getUint8Array(dicom_pixeldata_pointer_uc);
 
+    // I need to document this bit of logic, because I don't get it anymore
     if ((*si_iterator).BitsAllocated == 8 && !dicom_pixeldata_pointer_us ||
         (*si_iterator).BitsAllocated != 8 &&  !dicom_pixeldata_pointer_uc)
       {
@@ -881,7 +881,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.20 2004/03/05 10:12:02 cpbotha Exp $";
+"$Id: vtkDICOMVolumeReader.cxx,v 1.21 2005/11/21 09:09:59 cpbotha Exp $";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {
