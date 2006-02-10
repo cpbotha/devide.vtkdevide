@@ -16,7 +16,7 @@ SET (Rendering_SRCS
 # Create the vtkdevideRendering C++ library
 #
 
-ADD_LIBRARY (vtkdevideRendering Rendering_SRCS)
+ADD_LIBRARY (vtkdevideRendering ${Rendering_SRCS})
 
 #
 # Create the vtkdevideRendering Tcl library
@@ -24,7 +24,7 @@ ADD_LIBRARY (vtkdevideRendering Rendering_SRCS)
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideRenderingTCL RenderingTCL_SRCS Rendering_SRCS)
+  VTK_WRAP_TCL (vtkdevideRenderingTCL RenderingTCL_SRCS ${Rendering_SRCS})
   ADD_LIBRARY (vtkdevideRenderingTCL SHARED RenderingTCL_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingTCL 
                          vtkRenderingTCL
@@ -41,12 +41,12 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideRenderingPython RenderingPython_SRCS Rendering_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideRenderingPython RenderingPython_SRCS ${Rendering_SRCS})
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdevideRenderingPython MODULE RenderingPython_SRCS)
+    ADD_LIBRARY (vtkdevideRenderingPython MODULE ${RenderingPython_SRCS})
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideRenderingPython SHARED RenderingPython_SRCS)
+    ADD_LIBRARY (vtkdevideRenderingPython SHARED ${RenderingPython_SRCS})
     TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
 	                   vtkRenderingPythonD
 			   vtkVolumeRenderingPythonD
@@ -79,7 +79,7 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideRenderingJava RenderingJava_SRCS Rendering_SRCS)
+  VTK_WRAP_JAVA (vtkdevideRenderingJava RenderingJava_SRCS ${Rendering_SRCS})
   ADD_LIBRARY (vtkdevideRenderingJava SHARED RenderingJava_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingJava
                          vtkRenderingJava

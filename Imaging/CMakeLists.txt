@@ -19,7 +19,7 @@ SET (Imaging_SRCS
 # Create the vtkdevideImaging C++ library
 #
 
-ADD_LIBRARY (vtkdevideImaging Imaging_SRCS)
+ADD_LIBRARY (vtkdevideImaging ${Imaging_SRCS})
 
 #
 # Create the vtkdevideImaging Tcl library
@@ -27,7 +27,7 @@ ADD_LIBRARY (vtkdevideImaging Imaging_SRCS)
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideImagingTCL ImagingTCL_SRCS Imaging_SRCS)
+  VTK_WRAP_TCL (vtkdevideImagingTCL ImagingTCL_SRCS ${Imaging_SRCS})
   ADD_LIBRARY (vtkdevideImagingTCL SHARED ImagingTCL_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideImagingTCL 
                          vtkImagingTCL
@@ -41,12 +41,12 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideImagingPython ImagingPython_SRCS Imaging_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideImagingPython ImagingPython_SRCS ${Imaging_SRCS})
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdevideImagingPython MODULE ImagingPython_SRCS)
+    ADD_LIBRARY (vtkdevideImagingPython MODULE ${ImagingPython_SRCS})
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideImagingPython SHARED ImagingPython_SRCS)
+    ADD_LIBRARY (vtkdevideImagingPython SHARED ${ImagingPython_SRCS})
     TARGET_LINK_LIBRARIES (vtkdevideImagingPython
 			   vtkImagingPythonD)
   ENDIF (APPLE)
@@ -70,7 +70,7 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideImagingJava ImagingJava_SRCS Imaging_SRCS)
+  VTK_WRAP_JAVA (vtkdevideImagingJava ImagingJava_SRCS ${Imaging_SRCS})
   ADD_LIBRARY (vtkdevideImagingJava SHARED ImagingJava_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideImagingJava
 			 vtkImagingJava)

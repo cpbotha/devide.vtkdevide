@@ -23,11 +23,11 @@ ENDIF (HAS_DCMTK)
 #
 
 IF (WIN32)
-   ADD_LIBRARY (vtkdevideIO IO_SRCS)
+   ADD_LIBRARY (vtkdevideIO ${IO_SRCS})
 ELSE (WIN32)
    # under unix, we also want it to include a built-in dicom.dic
    # under windows, the Visual C++ builds already do this
-   ADD_LIBRARY (vtkdevideIO IO_SRCS dcdictzz)
+   ADD_LIBRARY (vtkdevideIO ${IO_SRCS} dcdictzz)
 ENDIF (WIN32)
 
 
@@ -37,7 +37,7 @@ ENDIF (WIN32)
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideIOTCL IOTCL_SRCS IO_SRCS)
+  VTK_WRAP_TCL (vtkdevideIOTCL IOTCL_SRCS ${IO_SRCS})
   ADD_LIBRARY (vtkdevideIOTCL SHARED IOTCL_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideIOTCL
                          vtkIOTCL 
@@ -51,12 +51,12 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideIOPython IOPython_SRCS IO_SRCS)
+  VTK_WRAP_PYTHON (vtkdevideIOPython IOPython_SRCS ${IO_SRCS})
 
   IF (APPLE)
-    ADD_LIBRARY (vtkdevideIOPython MODULE IOPython_SRCS)
+    ADD_LIBRARY (vtkdevideIOPython MODULE ${IOPython_SRCS})
   ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideIOPython SHARED IOPython_SRCS)
+    ADD_LIBRARY (vtkdevideIOPython SHARED ${IOPython_SRCS})
     TARGET_LINK_LIBRARIES (vtkdevideIOPython 
 	                   vtkIOPythonD)
   ENDIF (APPLE)
@@ -80,7 +80,7 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideIOJava IOJava_SRCS IO_SRCS)
+  VTK_WRAP_JAVA (vtkdevideIOJava IOJava_SRCS ${IO_SRCS})
   ADD_LIBRARY (vtkdevideIOJava SHARED IOJava_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideIOJava 
                          vtkIOJava)

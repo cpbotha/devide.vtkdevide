@@ -15,7 +15,7 @@ SET (External_SRCS
 # Create the vtkdevideExternal C++ library
 #
 
-ADD_LIBRARY (vtkdevideExternal External_SRCS)
+ADD_LIBRARY (vtkdevideExternal ${External_SRCS})
 
 #
 # Create the vtkdevideExternal Tcl library
@@ -23,7 +23,7 @@ ADD_LIBRARY (vtkdevideExternal External_SRCS)
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideExternalTCL ExternalTCL_SRCS External_SRCS)
+  VTK_WRAP_TCL (vtkdevideExternalTCL ExternalTCL_SRCS ${External_SRCS})
   ADD_LIBRARY (vtkdevideExternalTCL SHARED ExternalTCL_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideExternalTCL
                          ${TCL_LIBRARY})
@@ -54,7 +54,7 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideExternalJava ExternalJava_SRCS External_SRCS)
+  VTK_WRAP_JAVA (vtkdevideExternalJava ExternalJava_SRCS ${External_SRCS})
   ADD_LIBRARY (vtkdevideExternalJava SHARED ExternalJava_SRCS)
   TARGET_LINK_LIBRARIES (vtkdevideExternalJava)
 
