@@ -18,20 +18,29 @@ SET (Rendering_SRCS
 
 ADD_LIBRARY (vtkdevideRendering ${Rendering_SRCS})
 
+TARGET_LINK_LIBRARIES (
+  vtkdevideRendering
+  vtkRendering
+  vtkVolumeRendering
+  vtkFiltering
+  vtkCommon
+)
+
+
 #
 # Create the vtkdevideRendering Tcl library
 #
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideRenderingTCL RenderingTCL_SRCS ${Rendering_SRCS})
-  ADD_LIBRARY (vtkdevideRenderingTCL SHARED RenderingTCL_SRCS)
+  VTK_WRAP_TCL3 (vtkdevideRenderingTCL RenderingTCL_SRCS 
+                 "${Rendering_SRCS}" "")
+  ADD_LIBRARY (vtkdevideRenderingTCL ${RenderingTCL_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideRenderingTCL 
                          vtkRenderingTCL
 			 vtkVolumeRenderingTCL
 			 vtkFilteringTCL
-			 vtkCommonTCL
-                         ${TCL_LIBRARY})
+			 vtkCommonTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
@@ -41,35 +50,19 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideRenderingPython RenderingPython_SRCS ${Rendering_SRCS})
+  VTK_WRAP_PYTHON3 (vtkdevideRenderingPython RenderingPython_SRCS 
+                    "${Rendering_SRCS}")
 
-  IF (APPLE)
-    ADD_LIBRARY (vtkdevideRenderingPython MODULE ${RenderingPython_SRCS})
-  ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideRenderingPython SHARED ${RenderingPython_SRCS})
-    TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
+  ADD_LIBRARY (vtkdevideRenderingPythonD ${RenderingPython_SRCS})
+  ADD_LIBRARY (vtkdevideRenderingPython MODULE 
+               vtkdevideRenderingPythonInit.cxx)
+  TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
+                         vtkdevideRenderingPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideRenderingPythonD
 	                   vtkRenderingPythonD
 			   vtkVolumeRenderingPythonD
 			   vtkFilteringPythonD
 			   vtkCommonPythonD)
-  ENDIF (APPLE)
-
-  IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideRenderingPython 
-	                   vtkRenderingPythonD
-			   vtkVolumeRenderingPythonD
-			   vtkFilteringPythonD
-			   vtkCommonPythonD
-                           debug ${PYTHON_DEBUG_LIBRARY} 
-                           optimized ${PYTHON_LIBRARY})
-  ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideRenderingPython 
-	                   vtkRenderingPythonD
-			   vtkVolumeRenderingPythonD
-			   vtkFilteringPythonD
-			   vtkCommonPythonD
-                           ${PYTHON_LIBRARY})
-  ENDIF(WIN32)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
@@ -79,8 +72,8 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideRenderingJava RenderingJava_SRCS ${Rendering_SRCS})
-  ADD_LIBRARY (vtkdevideRenderingJava SHARED RenderingJava_SRCS)
+  VTK_WRAP_JAVA3 (vtkdevideRenderingJava RenderingJava_SRCS ${Rendering_SRCS})
+  ADD_LIBRARY (vtkdevideRenderingJava SHARED ${RenderingJava_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideRenderingJava
                          vtkRenderingJava
 			 #vtkVolumeRenderingPython
@@ -93,10 +86,3 @@ ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 # Link to VTK and local
 #
 
-LINK_LIBRARIES (
-  vtkdevideRendering
-  vtkRendering
-  vtkVolumeRendering
-  vtkFiltering
-  vtkCommon
-)

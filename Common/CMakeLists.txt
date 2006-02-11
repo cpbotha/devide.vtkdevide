@@ -15,17 +15,20 @@ SET (Common_SRCS vtkEventOutputWindow.cxx)
 
 ADD_LIBRARY (vtkdevideCommon ${Common_SRCS})
 
+TARGET_LINK_LIBRARIES (
+  vtkdevideCommon
+  vtkCommon
+)
+
 #
 # Create the vtkdevideCommon Tcl library
 #
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideCommonTCL CommonTCL_SRCS ${Common_SRCS})
-  ADD_LIBRARY (vtkdevideCommonTCL SHARED CommonTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdevideCommonTCL 
-                         vtkCommonTCL
-                         ${TCL_LIBRARY})
+  VTK_WRAP_TCL3 (vtkdevideCommonTCL CommonTCL_SRCS "${Common_SRCS}" "")
+  ADD_LIBRARY (vtkdevideCommonTCL ${CommonTCL_SRCS})
+  TARGET_LINK_LIBRARIES (vtkdevideCommonTCL vtkCommonTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
@@ -35,26 +38,16 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideCommonPython CommonPython_SRCS ${Common_SRCS})
-
-  IF (APPLE)
-    ADD_LIBRARY (vtkdevideCommonPython MODULE ${CommonPython_SRCS})
-  ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideCommonPython SHARED ${CommonPython_SRCS})
-    TARGET_LINK_LIBRARIES (vtkdevideCommonPython
-			   vtkCommonPythonD)
-  ENDIF (APPLE)
-
-  IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideCommonPython 
-	                   vtkCommonPythonD
-                           debug ${PYTHON_DEBUG_LIBRARY} 
-                           optimized ${PYTHON_LIBRARY})
-  ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideCommonPython 
-	                   vtkCommonPythonD
-                           ${PYTHON_LIBRARY})
-  ENDIF(WIN32)
+  VTK_WRAP_PYTHON3 (vtkdevideCommonPython CommonPython_SRCS
+                    "${Common_SRCS}")
+  # the D python lib contains the actual code
+  ADD_LIBRARY (vtkdevideCommonPythonD ${CommonPython_SRCS})
+  # and the non-D is just the Python import stub thingy
+  ADD_LIBRARY (vtkdevideCommonPython MODULE
+               vtkdevideCommonPythonInit.cxx)
+  # stub thingy has to link with the true contents of course
+  TARGET_LINK_LIBRARIES (vtkdevideCommonPython vtkdevideCommonPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideCommonPythonD vtkCommonPythonD)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
@@ -64,18 +57,10 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideCommonJava CommonJava_SRCS ${Common_SRCS})
-  ADD_LIBRARY (vtkdevideCommonJava SHARED CommonJava_SRCS)
+  VTK_WRAP_JAVA3 (vtkdevideCommonJava CommonJava_SRCS "${Common_SRCS}")
+  ADD_LIBRARY (vtkdevideCommonJava SHARED ${CommonJava_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideCommonJava
 			 vtkCommonJava)
 
 ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-#
-# Link to VTK and local
-#
-
-LINK_LIBRARIES (
-  vtkdevideCommon
-  vtkCommon
-)

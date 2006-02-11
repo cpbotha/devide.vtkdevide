@@ -17,19 +17,27 @@ SET (Hybrid_SRCS
 
 ADD_LIBRARY (vtkdevideHybrid ${Hybrid_SRCS})
 
+TARGET_LINK_LIBRARIES (
+  vtkdevideHybrid
+  vtkHybrid
+  vtkCommon
+  vtkRendering
+  vtkWidgets
+)
+
+
 #
 # Create the vtkdevideHybrid Tcl library
 #
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideHybridTCL HybridTCL_SRCS ${Hybrid_SRCS})
-  ADD_LIBRARY (vtkdevideHybridTCL SHARED HybridTCL_SRCS)
+  VTK_WRAP_TCL3 (vtkdevideHybridTCL HybridTCL_SRCS ${Hybrid_SRCS} "")
+  ADD_LIBRARY (vtkdevideHybridTCL ${HybridTCL_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideHybridTCL 
                          vtkHybridTCL
 			 vtkCommonTCL
-			 vtkWidgetsTCL
-                         ${TCL_LIBRARY})
+			 vtkWidgetsTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
@@ -39,30 +47,13 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideHybridPython HybridPython_SRCS ${Hybrid_SRCS})
-
-  IF (APPLE)
-    ADD_LIBRARY (vtkdevideHybridPython MODULE ${HybridPython_SRCS})
-  ELSE (APPLE)
-    ADD_LIBRARY (vtkdevideHybridPython SHARED ${HybridPython_SRCS})
-    TARGET_LINK_LIBRARIES (vtkdevideHybridPython
-	                   vtkHybridPythonD
-			   vtkCommonPythonD
-                           vtkWidgetsPythonD)
-  ENDIF (APPLE)
-
-  IF(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
-	                   vtkHybridPythonD
-			   vtkCommonPythonD
-                           debug ${PYTHON_DEBUG_LIBRARY} 
-                           optimized ${PYTHON_LIBRARY})
-  ELSE(WIN32)
-    TARGET_LINK_LIBRARIES (vtkdevideHybridPython 
-	                   vtkHybridPythonD
-			   vtkCommonPythonD
-                           ${PYTHON_LIBRARY})
-  ENDIF(WIN32)
+  VTK_WRAP_PYTHON3 (vtkdevideHybridPython HybridPython_SRCS "${Hybrid_SRCS}")
+  ADD_LIBRARY (vtkdevideHybridPythonD ${HybridPython_SRCS})
+  ADD_LIBRARY (vtkdevideHybridPython MODULE vtkdevideHybridPythonInit.cxx)
+  TARGET_LINK_LIBRARIES (vtkdevideHybridPython vtkdevideHybridPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideHybridPythonD
+	                 vtkHybridPythonD
+			 vtkCommonPythonD)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
@@ -72,22 +63,10 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideHybridJava HybridJava_SRCS ${Hybrid_SRCS})
-  ADD_LIBRARY (vtkdevideHybridJava SHARED HybridJava_SRCS)
+  VTK_WRAP_JAVA3 (vtkdevideHybridJava HybridJava_SRCS "${Hybrid_SRCS}")
+  ADD_LIBRARY (vtkdevideHybridJava SHARED ${HybridJava_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideHybridJava
                          vtkHybridJava
 			 vtkCommonJava)
 
 ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
-
-#
-# Link to VTK and local
-#
-
-LINK_LIBRARIES (
-  vtkdevideHybrid
-  vtkHybrid
-  vtkCommon
-  vtkRendering
-  vtkWidgets
-)

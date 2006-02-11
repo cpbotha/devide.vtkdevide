@@ -17,16 +17,25 @@ SET (External_SRCS
 
 ADD_LIBRARY (vtkdevideExternal ${External_SRCS})
 
+TARGET_LINK_LIBRARIES (
+  vtkdevideExternal
+  vtkFiltering
+  vtkGraphics
+  vtkImaging
+  vtkCommon
+)
+
+
 #
 # Create the vtkdevideExternal Tcl library
 #
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL (vtkdevideExternalTCL ExternalTCL_SRCS ${External_SRCS})
-  ADD_LIBRARY (vtkdevideExternalTCL SHARED ExternalTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdevideExternalTCL
-                         ${TCL_LIBRARY})
+  VTK_WRAP_TCL3 (vtkdevideExternalTCL ExternalTCL_SRCS
+                 "${External_SRCS}" "")
+  ADD_LIBRARY (vtkdevideExternalTCL ExternalTCL_SRCS)
+  TARGET_LINK_LIBRARIES (vtkdevideExternalTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
@@ -38,10 +47,14 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
-  VTK_WRAP_PYTHON (vtkdevideExternalPython ExternalPython_SRCS ${External_SRCS})
-  ADD_LIBRARY (vtkdevideExternalPython MODULE ${ExternalPython_SRCS})
-  TARGET_LINK_LIBRARIES (vtkdevideExternalPython 
-                         vtkdevideCommonPython 
+  VTK_WRAP_PYTHON3 (vtkdevideExternalPython ExternalPython_SRCS 
+                    "${External_SRCS}")
+  ADD_LIBRARY (vtkdevideExternalPythonD ${ExternalPython_SRCS})
+  ADD_LIBRARY (vtkdevideExternalPython MODULE
+                    vtkdevideExternalPythonInit.cxx)
+  TARGET_LINK_LIBRARIES (vtkdevideExternalPython vtkdevideExternalPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideExternalPythonD 
+                         vtkdevideCommonPythonD 
 			 vtkFilteringPythonD
                          vtkGraphicsPythonD
 			 vtkdevideExternal)
@@ -54,8 +67,8 @@ ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 IF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 
-  VTK_WRAP_JAVA (vtkdevideExternalJava ExternalJava_SRCS ${External_SRCS})
-  ADD_LIBRARY (vtkdevideExternalJava SHARED ExternalJava_SRCS)
+  VTK_WRAP_JAVA3 (vtkdevideExternalJava ExternalJava_SRCS "${External_SRCS}")
+  ADD_LIBRARY (vtkdevideExternalJava SHARED ${ExternalJava_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideExternalJava)
 
 ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
@@ -64,10 +77,3 @@ ENDIF (VTK_WRAP_JAVA AND VTKDEVIDE_WRAP_JAVA)
 # Link to VTK and local
 #
 
-LINK_LIBRARIES (
-  vtkdevideExternal
-  vtkFiltering
-  vtkGraphics
-  vtkImaging
-  vtkCommon
-)
