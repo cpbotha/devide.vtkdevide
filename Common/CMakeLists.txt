@@ -28,7 +28,7 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
   VTK_WRAP_TCL3 (vtkdevideCommonTCL CommonTCL_SRCS "${Common_SRCS}" "")
   ADD_LIBRARY (vtkdevideCommonTCL ${CommonTCL_SRCS})
-  TARGET_LINK_LIBRARIES (vtkdevideCommonTCL vtkCommonTCL)
+  TARGET_LINK_LIBRARIES (vtkdevideCommonTCL vtkdevideCommon vtkCommonTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 

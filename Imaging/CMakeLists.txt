@@ -37,6 +37,7 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
                  "${Imaging_SRCS}" "")
   ADD_LIBRARY (vtkdevideImagingTCL ${ImagingTCL_SRCS})
   TARGET_LINK_LIBRARIES (vtkdevideImagingTCL 
+                         vtkdevideImaging
                          vtkImagingTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
@@ -54,7 +55,8 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideImagingPython MODULE vtkdevideImagingPythonInit.cxx)
   TARGET_LINK_LIBRARIES (vtkdevideImagingPython
                          vtkdevideImagingPythonD)
-  TARGET_LINK_LIBRARIES (vtkdevideImagingPythonD vtkImagingPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideImagingPythonD vtkImagingPythonD
+                         vtkdevideImaging)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 

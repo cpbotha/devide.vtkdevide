@@ -1,3 +1,5 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
+
 #
 # Set the project name.
 #

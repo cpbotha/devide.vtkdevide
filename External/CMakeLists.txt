@@ -34,8 +34,9 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
   VTK_WRAP_TCL3 (vtkdevideExternalTCL ExternalTCL_SRCS
                  "${External_SRCS}" "")
-  ADD_LIBRARY (vtkdevideExternalTCL ExternalTCL_SRCS)
-  TARGET_LINK_LIBRARIES (vtkdevideExternalTCL)
+  ADD_LIBRARY (vtkdevideExternalTCL ${ExternalTCL_SRCS})
+  TARGET_LINK_LIBRARIES (vtkdevideExternalTCL vtkdevideExternal 
+                         vtkdevideCommonTCL vtkFilteringTCL vtkGraphicsTCL)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 

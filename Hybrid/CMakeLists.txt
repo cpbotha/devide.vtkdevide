@@ -32,9 +32,10 @@ TARGET_LINK_LIBRARIES (
 
 IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
-  VTK_WRAP_TCL3 (vtkdevideHybridTCL HybridTCL_SRCS ${Hybrid_SRCS} "")
+  VTK_WRAP_TCL3 (vtkdevideHybridTCL HybridTCL_SRCS "${Hybrid_SRCS}" "")
   ADD_LIBRARY (vtkdevideHybridTCL ${HybridTCL_SRCS})
-  TARGET_LINK_LIBRARIES (vtkdevideHybridTCL 
+  TARGET_LINK_LIBRARIES (vtkdevideHybridTCL
+                         vtkdevideHybrid 
                          vtkHybridTCL
 			 vtkCommonTCL
 			 vtkWidgetsTCL)
@@ -52,8 +53,9 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideHybridPython MODULE vtkdevideHybridPythonInit.cxx)
   TARGET_LINK_LIBRARIES (vtkdevideHybridPython vtkdevideHybridPythonD)
   TARGET_LINK_LIBRARIES (vtkdevideHybridPythonD
-	                 vtkHybridPythonD
-			 vtkCommonPythonD)
+	                 vtkWidgetsPythonD
+			 vtkCommonPythonD
+                         vtkdevideHybrid)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 

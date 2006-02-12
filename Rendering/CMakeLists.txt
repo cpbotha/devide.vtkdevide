@@ -40,7 +40,8 @@ IF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
                          vtkRenderingTCL
 			 vtkVolumeRenderingTCL
 			 vtkFilteringTCL
-			 vtkCommonTCL)
+			 vtkCommonTCL
+                         vtkdevideRendering)
 
 ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
@@ -59,10 +60,11 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
                          vtkdevideRenderingPythonD)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingPythonD
-	                   vtkRenderingPythonD
-			   vtkVolumeRenderingPythonD
-			   vtkFilteringPythonD
-			   vtkCommonPythonD)
+	                 vtkRenderingPythonD
+			 vtkVolumeRenderingPythonD
+			 vtkFilteringPythonD
+			 vtkCommonPythonD
+                         vtkdevideRendering)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
