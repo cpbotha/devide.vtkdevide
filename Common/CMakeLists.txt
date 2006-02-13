@@ -47,7 +47,8 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
                vtkdevideCommonPythonInit.cxx)
   # stub thingy has to link with the true contents of course
   TARGET_LINK_LIBRARIES (vtkdevideCommonPython vtkdevideCommonPythonD)
-  TARGET_LINK_LIBRARIES (vtkdevideCommonPythonD vtkCommonPythonD)
+  TARGET_LINK_LIBRARIES (vtkdevideCommonPythonD vtkCommonPythonD
+                         vtkdevideCommon)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
