@@ -11,6 +11,11 @@ ENDIF (${HAS_DCMTK})
 # --------------------------------------------------------------------------
 # You probably do not need to modify anything below this line
 
+# start setup of vtkdevideIO library
+# IO_LIB_SRCS will be a list of objects that need to be linked together
+SET(IO_LIB_SRCS ${IO_SRCS})
+
+
 IF (${HAS_DCMTK})
    # INCLUDE_ and LINK_ dirs **HAVE TO GO BEFORE THE TARGETS THAT THEY
    # APPLY TO**.
@@ -20,19 +25,21 @@ IF (${HAS_DCMTK})
    INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmjpeg)
    INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmimgle)
    LINK_DIRECTORIES (${DCMTK_LIB_PATH})
+
+   IF (NOT ${WIN32})
+      # under unix, we also want it to include a built-in dicom.dic
+      # under windows, the Visual C++ builds already do this
+      SET(IO_LIB_SRCS ${IO_LIB_SRCS} dcdictzz.cxx)
+   ENDIF (NOT ${WIN32})
+
 ENDIF (${HAS_DCMTK})
 
 #
 # Create the vtkdevideIO C++ library
 #
 
-IF (${WIN32})
-   ADD_LIBRARY (vtkdevideIO ${IO_SRCS})
-ELSE (${WIN32})
-   # under unix, we also want it to include a built-in dicom.dic
-   # under windows, the Visual C++ builds already do this
-   ADD_LIBRARY (vtkdevideIO ${IO_SRCS} dcdictzz.cxx)
-ENDIF (${WIN32})
+
+ADD_LIBRARY (vtkdevideIO ${IO_LIB_SRCS})
 
 IF (${HAS_DCMTK})
    # from dcmimgle onwards is for JPEG support

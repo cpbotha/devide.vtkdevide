@@ -161,8 +161,14 @@ FIND_PATH(DCMTK_LIB_PATH libdcmdata.a
 /usr/local/lib
 )
 
-IF(${DCMTK_INCLUDE_PATH})
-  IF(${DCMTK_LIB_PATH})
+# in this case the IF is used as:
+# IF(variable)
+# "True if the variable's value is not empty, 0, FALSE, OFF, or NOTFOUND."
+
+IF(DCMTK_INCLUDE_PATH)
+  IF(DCMTK_LIB_PATH)
      SET (HAS_DCMTK 1 CACHE INTERNAL "DCMTK available.")
-  ENDIF(${DCMTK_LIB_PATH})
-ENDIF(${DCMTK_INCLUDE_PATH})
+  ENDIF(DCMTK_LIB_PATH)
+ENDIF(DCMTK_INCLUDE_PATH)
+
+
