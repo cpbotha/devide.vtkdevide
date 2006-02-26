@@ -60,6 +60,9 @@ The vtkdevide config
 - Also modify the dcmtk project in MSVC++ to use /MD and not /MT.  You only
   have to build ofstd and dcmdata (when you import the DCMTK 3.5.3 workspace
   into MSVS.NET2003, this is already done)
+  * with DCMTK 3.5.4, you have to generate the CMake config, and then STILL
+    change the /MTd (RelWithDebInfo) to /MDd in the properties|C++|Code 
+    generation of dcmdata and ofstd.
 
 - Since VTK has started mangling zlib names in their zlib library (better this
   way), you must build dcmdata with the VTK zlib library: modify the "project|
@@ -78,11 +81,9 @@ The vtkdevide config
 
 - Now we have to make a pseudo install: 
   * create a new directory, e.g. dcmtkInstall with subdirs lib and include.
-  * copy dcmtk.lib and ofstd.lib into lib
-  * copy the dcmtk and the ofstd includes into respectively include/dcmtk
-    and include/ofstd
-  * then copy all .h files from dcmtksource/config/include to 
-    dcmtkInstall/include
+  * copy dcmdata.lib and ofstd.lib into lib
+  * copy the config, dcmdata and the ofstd include directories into 
+    include/dcmtk
 
 UNIMPORTANT REMINDER :)
 --------------------

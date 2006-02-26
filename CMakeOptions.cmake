@@ -153,10 +153,12 @@ ENDIF (VTK_WRAP_JAVA)
 # under unix, dcmtk 3.5.4 includes install to opt/dcmtk/include/dcmtk/
 # under this dir, you find dcmdata, config, etc.
 # dcmtk include files include other files with e.g. dcmtk/config/osconfig.h
+# we want that top-level include directory, i.e. opt/dcmtk/include/
 
-FIND_PATH(DCMTK_INCLUDE_PATH dcmtk/dcmdata/dctk.h
+FIND_PATH(DCMTK_INCLUDE_PATH dcmtk/dcmdata/dctk.h 
 /usr/include
 /usr/local/include
+DOC "Find the include directory containing dcmtk/dcmdata/dctk.h"
 )
 
 FIND_PATH(DCMTK_LIB_PATH libdcmdata.a
