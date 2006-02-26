@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.cxx,v 1.22 2005/11/21 13:54:00 cpbotha Exp $
+// $Id$
 // class for reading off-line DICOM datasets
 
 /*
@@ -156,7 +156,8 @@ int vtkDICOMVolumeReader::OpenDCMFile(dicom_file& dfile)
   // (group,element) data tag
   dfile.fileformat = new DcmFileFormat();
   E_TransferSyntax xfer = EXS_Unknown;
-  OFCondition cond = dfile.fileformat->loadFile(dfile.filename.c_str(), xfer, EGL_noChange, DCM_MaxReadLength, false);
+  OFCondition cond = dfile.fileformat->loadFile(dfile.filename.c_str());
+    //dfile.filename.c_str(), xfer, EGL_noChange, DCM_MaxReadLength, false);
   if (! cond.good())
     {
     vtkErrorMacro(<<"Unable to open/read DICOM file " << dfile.filename.c_str());
@@ -900,7 +901,7 @@ int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 
 
 static char const rcsid[] =
-"$Id: vtkDICOMVolumeReader.cxx,v 1.22 2005/11/21 13:54:00 cpbotha Exp $";
+"$Id$";
 
 const char *vtkDICOMVolumeReader_rcsid(void)
 {

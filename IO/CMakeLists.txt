@@ -16,23 +16,30 @@ ENDIF (${HAS_DCMTK})
 SET(IO_LIB_SRCS ${IO_SRCS})
 
 
-IF (${HAS_DCMTK})
+# it might be better to have the user selecting the directory
+# containing all the dcmtk include files, and then to strip off the
+# optional dcmtk...
+IF (HAS_DCMTK)
    # INCLUDE_ and LINK_ dirs **HAVE TO GO BEFORE THE TARGETS THAT THEY
    # APPLY TO**.
    INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH})
-   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/ofstd)
-   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmdata)
-   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmjpeg)
-   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmimgle)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk/config)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk/ofstd)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk/dcmdata)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk/dcmjpeg)
+   INCLUDE_DIRECTORIES(${DCMTK_INCLUDE_PATH}/dcmtk/dcmimgle)
    LINK_DIRECTORIES (${DCMTK_LIB_PATH})
 
-   IF (NOT ${WIN32})
+   IF (NOT WIN32)
       # under unix, we also want it to include a built-in dicom.dic
       # under windows, the Visual C++ builds already do this
       SET(IO_LIB_SRCS ${IO_LIB_SRCS} dcdictzz.cxx)
-   ENDIF (NOT ${WIN32})
+   ELSE (NOT WIN32)
+      SET(ENV{HAVE_CONFIG_H} 1)
+   ENDIF (NOT WIN32)
 
-ENDIF (${HAS_DCMTK})
+ENDIF (HAS_DCMTK)
 
 #
 # Create the vtkdevideIO C++ library
@@ -41,19 +48,15 @@ ENDIF (${HAS_DCMTK})
 
 ADD_LIBRARY (vtkdevideIO ${IO_LIB_SRCS})
 
-IF (${HAS_DCMTK})
+IF (HAS_DCMTK)
    # from dcmimgle onwards is for JPEG support
    TARGET_LINK_LIBRARIES(vtkdevideIO dcmdata ofstd)
    # dcmimgle dcmjpeg ijg12 ijg16 ijg8)
-ENDIF (${HAS_DCMTK})
+ENDIF (HAS_DCMTK)
 
-
-#GET_DIRECTORY_PROPERTY(MY_LL, INCLUDE_DIRECTORIES)
-#MESSAGE("${MY_LL}")
-
-IF (${WIN32})
+IF (WIN32)
    TARGET_LINK_LIBRARIES(vtkdevideIO wsock32 netapi32)
-ENDIF (${WIN32})
+ENDIF (WIN32)
 
 TARGET_LINK_LIBRARIES (
   vtkdevideIO
