@@ -243,12 +243,15 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     else
       {
       vtkDebugMacro(<< "New SeriesInstance " << SeriesInstanceUID_str.c_str() << " found.");
-      // do everything we need to do with a new instance (patient info, dataset info, etc)
-      // for now we assume that everything within an instance has to be the same
+      // do everything we need to do with a new instance (patient
+      // info, dataset info, ImageOrientationPatent, etc.)
+      // for now we assume that everything within an instance has to
+      // be the same
       series_instance temp_series_instance;
       temp_series_instance.SeriesInstanceUID = SeriesInstanceUID_str;
 
-      // now make sure SliceThickness, PixelSpacing, Rows, Columns are all present
+      // now make sure SliceThickness, PixelSpacing, Rows, Columns are
+      // all present
       double temp_SliceThickness, temp_SpacingBetweenSlices;
       double temp_PixelSpacingx, temp_PixelSpacingy;
       unsigned short temp_Rows, temp_Columns;
@@ -256,8 +259,11 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       unsigned short temp_PixelRepresentation;
 
       DcmStack SliceThickness_stack;
-      DcmElement* SliceThickness_obj = search_object(0x0018, 0x0050, *(temp_dicom_file.fileformat), SliceThickness_stack); // SliceThickness
-      if (!SliceThickness_obj || SliceThickness_obj->getFloat64(temp_SliceThickness) != EC_Normal)
+
+      DcmElement* SliceThickness_obj = search_object(
+	0x0018, 0x0050, *(temp_dicom_file.fileformat), SliceThickness_stack); 
+      if (!SliceThickness_obj ||
+	  SliceThickness_obj->getFloat64(temp_SliceThickness) != EC_Normal)
         {
         if (!this->GetLeniency())
           {
@@ -286,6 +292,29 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
         // in this case, we do like Atamai does and fabs it.
         temp_SpacingBetweenSlices = fabs(temp_SpacingBetweenSlices);
         }
+
+      // ---------------------------------------------------------------------
+      // we read the ImageOrientationPatient as we want to do
+      // something like:
+      // http://www.itk.org/pipermail/insight-users/2003-September/004762.html
+      DcmStack ImageOrientationPatient_stack;
+      DcmElement* ImageOrientationPatient_obj = search_object(
+	0x0020, 0x0037, *(temp_dicom_file.fileformat),
+	ImageOrientationPatient_stack);
+
+      double temp_iop[6];
+
+      if (!ImageOrientationPatient_obj ||
+	  ImageOrientationPatient_obj->getFloat64Array(&temp_iop) != EC_Normal)
+	{
+	vtkErrorMacro(
+	  <<"::ExecuteInfo() - could not read ImageOrientationPatient from "
+	  << temp_dicom_file.filename.c_str() << ", ignoring file.");
+
+	if (temp_dicom_file.fileformat)
+	  delete temp_dicom_file.fileformat;
+	continue;
+	}
          
 
       DcmStack PixelSpacing_stack;

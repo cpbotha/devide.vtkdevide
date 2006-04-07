@@ -1,6 +1,6 @@
 // vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
-// $Id: vtkDICOMVolumeReader.h,v 1.18 2004/03/05 10:12:02 cpbotha Exp $
+// $Id$
 // class for reading off-line DICOM datasets
 
 /*
@@ -77,13 +77,16 @@ public:
   //DcmFileStream* filestream;
   DcmFileFormat* fileformat;
   double SliceLocation;
+  // we calculate distance using the ImageOrientationPatient and
+  // ImagePositionPatient
+  double distance;
   /**
     * With this operator defined, we can use stl to sort a vector of
     * dicom_files according to SliceLocation.  This is very handy.
     */
   bool operator < (const dicom_file& other_file) const
   {
-    return SliceLocation < other_file.SliceLocation;
+    return distance < other_file.distance;
   }
 };
 
