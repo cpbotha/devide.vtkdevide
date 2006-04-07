@@ -302,10 +302,11 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 	0x0020, 0x0037, *(temp_dicom_file.fileformat),
 	ImageOrientationPatient_stack);
 
+      Float64 *iop_ptr;
       double temp_iop[6];
 
       if (!ImageOrientationPatient_obj ||
-	  ImageOrientationPatient_obj->getFloat64Array(&temp_iop) != EC_Normal)
+	  ImageOrientationPatient_obj->getFloat64Array(iop_ptr) != EC_Normal)
 	{
 	vtkErrorMacro(
 	  <<"::ExecuteInfo() - could not read ImageOrientationPatient from "
@@ -314,6 +315,11 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 	if (temp_dicom_file.fileformat)
 	  delete temp_dicom_file.fileformat;
 	continue;
+	}
+      else
+	{
+	for (int i = 0; i < 6; i++)
+	  temp_iop[i] = iop_ptr[i];
 	}
          
 
@@ -397,6 +403,18 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       // store all the other thingies we've just extracted
       temp_series_instance.SliceThickness = temp_SliceThickness;
       temp_series_instance.SpacingBetweenSlices = temp_SpacingBetweenSlices;
+
+      for (int i = 0; i < 6; i++)
+	temp_series_instance.ImageOrientationPatient[i] = temp_iop[i];
+
+      // calculate iop normal (z-normal) and store it
+      temp_series_instance.IOPNormal[0] = temp_iop[1]*temp_iop[5] - \
+	temp_iop[2]*temp_iop[4];
+      temp_series_instance.IOPNormal[1] = temp_iop[2]*temp_iop[3] - \
+	temp_iop[0]*temp_iop[5];
+      temp_series_instance.IOPNormal[2] = temp_iop[0]*temp_iop[4] - \
+	temp_iop[1]*temp_iop[3];
+      
       temp_series_instance.PixelSpacingx = temp_PixelSpacingx;
       temp_series_instance.PixelSpacingy = temp_PixelSpacingy;
       temp_series_instance.Rows = temp_Rows;
@@ -407,40 +425,85 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
       // make sure the dicom_files vector is empty
       temp_series_instance.dicom_files.clear();
-      // we now should have a complete series_instance, so we add it to the linked list
+      // we now should have a complete series_instance, so we add it
+      // to the linked list
       series_instances.push_back(temp_series_instance);
-      // we set si_iterator to the just push_back()ed series_instance so the following code doesn't have to be conditional
+      // we set si_iterator to the just push_back()ed series_instance
+      // so the following code doesn't have to be conditional
       si_iterator = series_instances.end();
       si_iterator--;
       } // if (si_found) ... else (new SI, iow)
 
-    // we get the found object (DcmObject -> DcmElement -> ?, in this case probably DcmFloatingPointDouble) from the stack
+    // we get the found object (DcmObject -> DcmElement -> ?, in this
+    // case probably DcmFloatingPointDouble) from the stack
     DcmStack SliceLocation_stack;
-    DcmElement* SliceLocation_obj = search_object(0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack); // SliceLocation
-    if (!SliceLocation_obj || (SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
+    DcmElement* SliceLocation_obj = search_object(
+      0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack);
+    
+    if (!SliceLocation_obj ||
+	(SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
       {
-      vtkWarningMacro(<<"vtkDICOMVolumeReader::ExecuteInfo() - Unable to extract SliceLocation from " << temp_dicom_file.filename.c_str() << ", assuming 0.");
+      vtkWarningMacro(
+	<< "vtkDICOMVolumeReader::ExecuteInfo() - "
+	<< "Unable to extract SliceLocation from "
+	<< temp_dicom_file.filename.c_str() << ", assuming 0.");
       temp_SliceLocation = 0;
       }
 
     // store the SliceLocation
-    temp_dicom_file.SliceLocation = temp_SliceLocation;
+    //temp_dicom_file.SliceLocation = temp_SliceLocation;
+
+    DcmStack ImagePositionPatient_stack;
+    DcmElement* ImagePositionPatient_obj = search_object(
+      0x0020, 0x0032, *(temp_dicom_file.fileformat),
+      ImagePositionPatient_stack);
+
+    Float64 *ipp_ptr;
+    //double temp_ipp[6];
+    double distance = 0;
+    
+    if (!ImagePositionPatient_obj ||
+	ImagePositionPatient_obj->getFloat64Array(ipp_ptr) != EC_Normal)
+	{
+	vtkErrorMacro(
+	  <<"::ExecuteInfo() - could not read ImagePositionPatient from "
+	  << temp_dicom_file.filename.c_str() << ", using SliceLocation.");
+
+	distance = temp_SliceLocation;
+
+	}
+    else
+      {
+      // this is the Right Way(tm) of calcing the distance!
+      for (int i = 0; i < 3; i++)
+	distance += (*si_iterator).IOPNormal[i] * ipp_ptr[i];
+
+      cout << "DISTANCE " << distance;
+      }
+
+
+    temp_dicom_file.distance = distance;
+    
       
-    // si_iterator is the series_instance where the current SeriesInstanceUID was found,
-    // so we need to store the dicom_file object
+    // si_iterator is the series_instance where the current
+    // SeriesInstanceUID was found, so we need to store the dicom_file
+    // object
     (*si_iterator).dicom_files.push_back(temp_dicom_file);
 
     // FIXME TEST
     //delete(temp_dicom_file.fileformat); temp_dicom_file.fileformat = NULL;
     } // for (i = 0; i < dicom_filenames.size(); i++) ...
 
-  for (si_iterator = series_instances.begin(); si_iterator != series_instances.end(); si_iterator++)
+  for (si_iterator = series_instances.begin();
+       si_iterator != series_instances.end(); si_iterator++)
     {
-    // sort dicom_files according to SliceLocation, hmmmmkay?
-    std::sort((*si_iterator).dicom_files.begin(), (*si_iterator).dicom_files.end());
+    // sort dicom_files according to "distance", hmmmmkay?
+    std::sort((*si_iterator).dicom_files.begin(),
+	      (*si_iterator).dicom_files.end());
+    
     vtkDebugMacro(<<"Sorted SeriesInstanceUID " << (*si_iterator).SeriesInstanceUID.c_str() << ", " << (*si_iterator).BitsAllocated << ", " << (*si_iterator).dicom_files.size() << " files.");
 
-    // also find "most popular" slice thickness according to SliceLocation
+    // also find "most popular" slice thickness according to "distance"
     std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
     std::vector<double > diffs;  diffs.clear();
     std::vector<int > diffCounts;  diffCounts.clear();
@@ -449,8 +512,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     for (int sliceIdx = 1; sliceIdx < dicom_files_p->size(); sliceIdx++)
       {
       tempDiff =
-        (*dicom_files_p)[sliceIdx].SliceLocation -
-        (*dicom_files_p)[sliceIdx-1].SliceLocation;
+        (*dicom_files_p)[sliceIdx].distance -
+        (*dicom_files_p)[sliceIdx-1].distance;
 
       // now find tempDiff in diffs
       diffFound = false;

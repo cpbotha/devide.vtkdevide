@@ -76,7 +76,7 @@ public:
   std::string filename;
   //DcmFileStream* filestream;
   DcmFileFormat* fileformat;
-  double SliceLocation;
+  //double SliceLocation;
   // we calculate distance using the ImageOrientationPatient and
   // ImagePositionPatient
   double distance;
@@ -108,6 +108,8 @@ public:
   std::string SeriesInstanceUID;
   double SliceThickness;
   double SpacingBetweenSlices;
+  double ImageOrientationPatient[6];
+  double IOPNormal[3];
   double EstimatedThickness;
   double PixelSpacingx;
   double PixelSpacingy;
