@@ -302,12 +302,32 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 	0x0020, 0x0037, *(temp_dicom_file.fileformat),
 	ImageOrientationPatient_stack);
 
-      Float64 *iop_ptr;
       double temp_iop[6];
 
-      if (!ImageOrientationPatient_obj ||
-	  ImageOrientationPatient_obj->getFloat64Array(iop_ptr) != EC_Normal)
+
+      // ARGH! ImageOrientationPatient_obj->getFloat64Array() errors.
+      // we HAVE to do it one by one with getFloat64Array(var, idx)
+
+      bool iop_success = true;
+      if (!ImageOrientationPatient_obj)
 	{
+	iop_success = false;
+	}
+      else
+	{
+	for (int i = 0; i < 6  && iop_success; i++)
+	  {
+	  if (ImageOrientationPatient_obj->getFloat64(
+		temp_iop[i], i) != EC_Normal)
+	    {
+	    iop_success = false;
+	    }
+	  }
+	}
+
+      if (!iop_success)
+      {
+
 	vtkErrorMacro(
 	  <<"::ExecuteInfo() - could not read ImageOrientationPatient from "
 	  << temp_dicom_file.filename.c_str() << ", ignoring file.");
@@ -315,13 +335,8 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 	if (temp_dicom_file.fileformat)
 	  delete temp_dicom_file.fileformat;
 	continue;
-	}
-      else
-	{
-	for (int i = 0; i < 6; i++)
-	  temp_iop[i] = iop_ptr[i];
-	}
-         
+      }
+
 
       DcmStack PixelSpacing_stack;
       DcmElement* PixelSpacing_obj = search_object(0x0028, 0x0030, *(temp_dicom_file.fileformat), PixelSpacing_stack); // PixelSpacing
@@ -458,29 +473,43 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       0x0020, 0x0032, *(temp_dicom_file.fileformat),
       ImagePositionPatient_stack);
 
-    Float64 *ipp_ptr;
-    //double temp_ipp[6];
+    double temp_ipp[3];
     double distance = 0;
+
+    bool ipp_success = true;
     
-    if (!ImagePositionPatient_obj ||
-	ImagePositionPatient_obj->getFloat64Array(ipp_ptr) != EC_Normal)
+    if (!ImagePositionPatient_obj)
+      {
+      ipp_success = false;
+      }
+
+    else
+      {
+      for (int i = 0; i < 3 && ipp_success; i++)
 	{
-	vtkErrorMacro(
-	  <<"::ExecuteInfo() - could not read ImagePositionPatient from "
-	  << temp_dicom_file.filename.c_str() << ", using SliceLocation.");
-
-	distance = temp_SliceLocation;
-
+	if (ImagePositionPatient_obj->getFloat64(temp_ipp[i],i) != EC_Normal)
+	  {
+	  ipp_success = false;
+	  }
 	}
+      }
+
+    if (!ipp_success)
+      {
+      vtkErrorMacro(
+	<<"::ExecuteInfo() - could not read ImagePositionPatient from "
+	<< temp_dicom_file.filename.c_str() << ", using SliceLocation.");
+
+      distance = temp_SliceLocation;
+
+      }
     else
       {
       // this is the Right Way(tm) of calcing the distance!
       for (int i = 0; i < 3; i++)
-	distance += (*si_iterator).IOPNormal[i] * ipp_ptr[i];
+	distance += (*si_iterator).IOPNormal[i] * temp_ipp[i];
 
-      cout << "DISTANCE " << distance;
       }
-
 
     temp_dicom_file.distance = distance;
     
@@ -490,8 +519,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     // object
     (*si_iterator).dicom_files.push_back(temp_dicom_file);
 
-    // FIXME TEST
-    //delete(temp_dicom_file.fileformat); temp_dicom_file.fileformat = NULL;
     } // for (i = 0; i < dicom_filenames.size(); i++) ...
 
   for (si_iterator = series_instances.begin();
