@@ -1,15 +1,9 @@
-// vtkDICOMVolumeReader.h copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
+// vtkDICOMVolumeReader.h copyright (c) 2001-2006 Charl P. Botha
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
 // $Id$
 // class for reading off-line DICOM datasets
 
 /*
- * This software is licensed exclusively for research use by Bart Kaptein
- * in the ModelBasedRSA package.  Any modifications made to this software
- * shall be sent to the author for possible inclusion in future versions.
- * Ownership and copyright of said modifications shall be ceded to the
- * author.
- *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -138,6 +132,9 @@ protected:
   int DataDimensions[3];
   /// Millimetre spacing between voxels on x, y and z axes.
   float DataSpacing[3];
+  /// Contains the ImageOrientationPatient of the current series.
+  /// Only valid after call of UpdateInformation.
+  double ImageOrientationPatient[6];
   /// List of all the DICOM image files that are going to be read by us.
   //BTX
   /// stores list of dicom filenames that are going to be read
@@ -243,6 +240,8 @@ public:
   vtkGetVectorMacro(DataDimensions,int,3);
   vtkSetVector3Macro(DataSpacing,float);
   vtkGetVectorMacro(DataSpacing,float,3);
+
+  vtkGetVectorMacro(ImageOrientationPatient,double,6);
 
   const char *GetSeriesInstanceUID(void);
   const char *GetStudyDescription(void);

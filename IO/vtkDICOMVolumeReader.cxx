@@ -1,15 +1,9 @@
-// vtkDICOMVolumeReader.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
+// vtkDICOMVolumeReader.cxx copyright (c) 2001-2006 Charl P. Botha
 // and the TU Delft Visualisation Group http://visualisation.tudelft.nl/
 // $Id$
 // class for reading off-line DICOM datasets
 
 /*
- * This software is licensed exclusively for research use by Bart Kaptein
- * in the ModelBasedRSA package.  Any modifications made to this software
- * shall be sent to the author for possible inclusion in future versions.
- * Ownership and copyright of said modifications shall be ceded to the
- * author.
- *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -68,7 +62,7 @@ vtkDICOMVolumeReader::vtkDICOMVolumeReader()
   DataSpacing[0] = DataSpacing[1] = DataSpacing[2] = 0.0;
   DataOrigin[0] = DataOrigin[1] = DataOrigin[2] = 0.0;
   DataDimensions[0] = DataDimensions[1] = DataDimensions[2] = 0;
-  WindowWidth = WindowCenter = 0.0;
+  this->WindowWidth = this->WindowCenter = 0.0;
 
   this->LeniencyOff();
   this->EstimateSliceThicknessOn();
@@ -172,19 +166,21 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::ExecuteInformation() - START");
 
-  // go through whole list of files, get SeriesInstanceUIDs, separate files into different lists
+  // go through whole list of files, get SeriesInstanceUIDs, separate
+  // files into different lists
 
-  // we have to make sure the DICOM dictionary is loaded (this requires a functioning DICOM installation)
+  // we have to make sure the DICOM dictionary is loaded (this
+  // requires a functioning DICOM installation)
   if (!dcmDataDict.isDictionaryLoaded())
     {
     vtkErrorMacro("ExecuteInformation(): The DICOM dictionary isn't loaded!");
     return;
     }
 
-  // check that the user/programmer has given us (effectively) a list of dicom image files
+  // check that the user/programmer has given us (effectively) a list
+  // of dicom image files
   if (dicom_filenames.size() <= 0)
     {
-    //vtkErrorMacro("ExecuteInformation(): Called with empty dicom_filenames vector");
     return;
     }
 
@@ -228,9 +224,9 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     std::string SeriesInstanceUID_str = std::string(SeriesInstanceUID_cp);
 
     // check if this series_instance exists...
-
     bool si_found = false;
-    for (si_iterator = series_instances.begin(); !si_found && si_iterator != series_instances.end(); si_iterator++)
+    for (si_iterator = series_instances.begin();
+	 !si_found && si_iterator != series_instances.end(); si_iterator++)
       {
       si_found = (*si_iterator).SeriesInstanceUID == SeriesInstanceUID_str;
       }
@@ -242,7 +238,9 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       } // if (si_found)
     else
       {
-      vtkDebugMacro(<< "New SeriesInstance " << SeriesInstanceUID_str.c_str() << " found.");
+      vtkDebugMacro(<< "New SeriesInstance "
+		    << SeriesInstanceUID_str.c_str() << " found.");
+      
       // do everything we need to do with a new instance (patient
       // info, dataset info, ImageOrientationPatent, etc.)
       // for now we assume that everything within an instance has to
@@ -267,21 +265,30 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
         {
         if (!this->GetLeniency())
           {
-          vtkErrorMacro(<<"::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", ignoring file.");
+          vtkErrorMacro(
+	    <<"::ExecuteInfo() - could not read SliceThickness from "
+	    << temp_dicom_file.filename.c_str() << ", ignoring file.");
           if (temp_dicom_file.fileformat)
             delete temp_dicom_file.fileformat;
           continue;
           }
         else
           {
-          vtkWarningMacro(<<"::ExecuteInfo() - could not read SliceThickness from " << temp_dicom_file.filename.c_str() << ", assuming 1mm.");
+          vtkWarningMacro(
+	    <<"::ExecuteInfo() - could not read SliceThickness from "
+	    << temp_dicom_file.filename.c_str() << ", assuming 1mm.");
           temp_SliceThickness = 1;
           }
         }
 
       DcmStack SpacingBetweenSlices_stack;
-      DcmElement* SpacingBetweenSlices_obj = search_object(0x0018, 0x0088, *(temp_dicom_file.fileformat), SpacingBetweenSlices_stack); // SpacingBetweenSlices
-      if (!SpacingBetweenSlices_obj || SpacingBetweenSlices_obj->getFloat64(temp_SpacingBetweenSlices) != EC_Normal)
+      DcmElement* SpacingBetweenSlices_obj = search_object(
+	0x0018, 0x0088, *(temp_dicom_file.fileformat),
+	SpacingBetweenSlices_stack); // SpacingBetweenSlices
+      
+      if (!SpacingBetweenSlices_obj ||
+	  SpacingBetweenSlices_obj->getFloat64(
+	    temp_SpacingBetweenSlices) != EC_Normal)
         {
         // this is normal: only some MRI datasets make use of this
         temp_SpacingBetweenSlices = -1;
@@ -307,7 +314,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
       // ARGH! ImageOrientationPatient_obj->getFloat64Array() errors.
       // we HAVE to do it one by one with getFloat64Array(var, idx)
-
       bool iop_success = true;
       if (!ImageOrientationPatient_obj)
 	{
@@ -339,7 +345,9 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
 
       DcmStack PixelSpacing_stack;
-      DcmElement* PixelSpacing_obj = search_object(0x0028, 0x0030, *(temp_dicom_file.fileformat), PixelSpacing_stack); // PixelSpacing
+      DcmElement* PixelSpacing_obj = search_object(
+	0x0028, 0x0030, *(temp_dicom_file.fileformat), PixelSpacing_stack);
+      
       if (!PixelSpacing_obj || 
           PixelSpacing_obj->getFloat64(temp_PixelSpacingx,0) != EC_Normal ||
           PixelSpacing_obj->getFloat64(temp_PixelSpacingy,1) != EC_Normal)
@@ -528,7 +536,11 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     std::sort((*si_iterator).dicom_files.begin(),
 	      (*si_iterator).dicom_files.end());
     
-    vtkDebugMacro(<<"Sorted SeriesInstanceUID " << (*si_iterator).SeriesInstanceUID.c_str() << ", " << (*si_iterator).BitsAllocated << ", " << (*si_iterator).dicom_files.size() << " files.");
+    vtkDebugMacro(
+      <<"Sorted SeriesInstanceUID "
+      << (*si_iterator).SeriesInstanceUID.c_str() << ", "
+      << (*si_iterator).BitsAllocated << ", "
+      << (*si_iterator).dicom_files.size() << " files.");
 
     // also find "most popular" slice thickness according to "distance"
     std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
@@ -600,13 +612,22 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
     si_iterator--;
     }
 
-  // after this loop, we have reached either the SeriesInstanceIdx'th series_instance or the highest, whichever comes first
-  // and we can set the data
-  DataDimensions[0] = (*si_iterator).Columns;
-  DataDimensions[1] = (*si_iterator).Rows;
-  DataDimensions[2] = (*si_iterator).dicom_files.size();
-  DataSpacing[0] = (*si_iterator).PixelSpacingx;
-  DataSpacing[1] = (*si_iterator).PixelSpacingy;
+  // after this loop, we have reached either the SeriesInstanceIdx'th
+  // series_instance or the highest, whichever comes first and we can
+  // set the data that has to be valid for the current series
+
+  // transfer IOP to ivar
+  for (int i = 0; i < 6; i++)
+    {
+    this->ImageOrientationPatient[i] =
+      (*si_iterator).ImageOrientationPatient[i];
+    }
+  
+  this->DataDimensions[0] = (*si_iterator).Columns;
+  this->DataDimensions[1] = (*si_iterator).Rows;
+  this->DataDimensions[2] = (*si_iterator).dicom_files.size();
+  this->DataSpacing[0] = (*si_iterator).PixelSpacingx;
+  this->DataSpacing[1] = (*si_iterator).PixelSpacingy;
    
   // SpacingBetweenSlices is preferred for the axial spacing.  It's mostly
   // only present in MRI datasets.  CT datasets have SliceThickness, but
@@ -632,7 +653,9 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
           (*si_iterator).EstimatedThickness - (*si_iterator).SliceThickness)
         > 0.1)
       {
-      vtkWarningMacro(<<"::ExecuteInfo: There is a large (>0.1mm) difference between SliceThickness and EstimatedThickness.");
+      vtkWarningMacro(
+	<<"::ExecuteInfo: There is a large (>0.1mm) difference between "
+	<< "SliceThickness and EstimatedThickness.");
       }
     }
 
@@ -647,43 +670,50 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
   output->SetSpacing(DataSpacing[0], DataSpacing[1], DataSpacing[2]);
   // and the origin (in physical coordinates)
   output->SetOrigin(DataOrigin[0], DataOrigin[1], DataOrigin[2]);
-  // and setup the WholeExtent to be the same as the extent (Extent is what's in mem, WholeExtent is everything)
-  output->SetWholeExtent(0, DataDimensions[0]-1, 0, DataDimensions[1]-1, 0, DataDimensions[2]-1);
+  // and setup the WholeExtent to be the same as the extent (Extent is
+  // what's in mem, WholeExtent is everything)
+  output->SetWholeExtent(
+    0, DataDimensions[0]-1, 0, DataDimensions[1]-1, 0, DataDimensions[2]-1);
 
-  if ((*si_iterator).PixelRepresentation == 0 && (*si_iterator).BitsStored == 16)
+  if ((*si_iterator).PixelRepresentation == 0 &&
+      (*si_iterator).BitsStored == 16)
     {
-    // this is a special case... by definition, it has to be the full 16 bits, so we
-    // have to use unsigneds.  You better hope that the rescaleIntercept is not
-    // negative, then this will break!
+    // this is a special case... by definition, it has to be the full
+    // 16 bits, so we have to use unsigneds.  You better hope that the
+    // rescaleIntercept is not negative, then this will break!
     output->SetScalarType(VTK_UNSIGNED_SHORT);
     }
   else
     {
-    // we try to have signed data wherever possible.  Even if the pixeldata is
-    // unsigned, the RescaleIntercept (or slope) could make us negative!
+    // we try to have signed data wherever possible.  Even if the
+    // pixeldata is unsigned, the RescaleIntercept (or slope) could
+    // make us negative!
     output->SetScalarType(VTK_SHORT);
     }
 
-  //output->SetScalarType((*si_iterator).BitsAllocated == 8 ? VTK_UNSIGNED_CHAR : VTK_SHORT);
-  // and we will have only one scalar component
+  //output->SetScalarType((*si_iterator).BitsAllocated == 8 ?
+  //VTK_UNSIGNED_CHAR : VTK_SHORT); and we will have only one scalar
+  //component
   output->SetNumberOfScalarComponents(1);
+  
 }
 
 void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::ExecuteData() - START");
 
-  // we have to make sure the DICOM dictionary is loaded (this requires a functioning DICOM installation)
+  // we have to make sure the DICOM dictionary is loaded (this
+  // requires a functioning DICOM installation)
   if (!dcmDataDict.isDictionaryLoaded())
     {
     vtkErrorMacro(<<"vtkDICOMVolumeReader::ExecuteData() - the DICOM dictionary isn't loaded!");
     return;
     }
 
-  // check that the user/programmer has given us (effectively) a list of dicom image files
+  // check that the user/programmer has given us (effectively) a list
+  // of dicom image files
   if (dicom_filenames.size() <= 0)
     {
-    //vtkErrorMacro(<<"vtkDICOMVolumeReader::ExecuteData() - Empty dicom_filenames vector.");
     return;
     }
 
@@ -694,17 +724,21 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
     return;
     }
 
-  // we're going to read the whole dataset, so make sure the extent is good
-  // we could just do SetExtent(output->GetUpdateExtent()), but then we would have to
-  // be more clever with our actual reading routines, i.e. only read the data necessary
-  // to create the UpdateExtent in the output
+  // we're going to read the whole dataset, so make sure the extent is
+  // good we could just do SetExtent(output->GetUpdateExtent()), but
+  // then we would have to be more clever with our actual reading
+  // routines, i.e. only read the data necessary to create the
+  // UpdateExtent in the output
   output->SetExtent(output->GetWholeExtent());
   int *e = output->GetWholeExtent();
-  cout << e[0] << ":" << e[1] << ":" << e[2] << ":" << e[3] << ":" << e[4] << ":" << e[5] << endl;
+  cout << e[0] << ":" << e[1] << ":"
+       << e[2] << ":" << e[3] << ":"
+       << e[4] << ":" << e[5] << endl;
   // AllocateScalars will make use of the information set on the output by 
   // ExecuteInformation() to perform the necessary allocation
   output->AllocateScalars();
-  cout << "MAXID: " << output->GetPointData()->GetScalars()->GetMaxId() << endl;
+  cout << "MAXID: " << output->GetPointData()->GetScalars()->GetMaxId()
+       << endl;
 
 
   // find a pointer that we can use
@@ -715,17 +749,19 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
   int numpixels_perslice = DataDimensions[0] * DataDimensions[1];
 
   // find the iterator corresponding to the current seriesinstance
-  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(
+    this->SeriesInstanceIdx);
+
   if (si_iterator == series_instances.end())
     si_iterator--;
 
   std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
    
-  // it's all sorted, so we can just load the pixel data and stuff it a slice at a time into our allocated memory
+  // it's all sorted, so we can just load the pixel data and stuff it
+  // a slice at a time into our allocated memory
   int last_progress_i = -1;
   for (unsigned i = 0; i < dicom_files_p->size(); i++)
     {
-    //cout << "starting slice " << i << " of " << dicom_files_p->size() - 1 << endl;
 
     double progress = (double)i / (double)dicom_files_p->size();
     // stupid way of only updating every 10 percent
@@ -750,10 +786,10 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       return;
       }
 
-    // ---------------------------------------------------------------------------------------------
-    // Now we have to figure out the pixel representation and packing so we know how to get out
-    // the SV (stored values)
-    // ---------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // Now we have to figure out the pixel representation and packing
+    // so we know how to get out the SV (stored values)
+    // ------------------------------------------------------------------
     DcmStack BitsStored_stack, HighBit_stack, PixelRepresentation_stack;
     DcmElement* BitsStored_obj = search_object(0x0028, 0x0101, *((*dicom_files_p)[i].fileformat), BitsStored_stack);
     DcmElement* HighBit_obj = search_object(0x0028, 0x0102, *((*dicom_files_p)[i].fileformat), HighBit_stack);
@@ -780,10 +816,12 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
     highbit_mask  >>= 1;
     //unsigned validbitsbuthigh_mask = validbits_mask >> 1; // bytemask
 
-    // ---------------------------------------------------------------------------------------------
-    // And then we extract the Rescale intercept and slope, because we need these to get the
-    // Hounsfield Units from extracted SVs (stored values): HU = slope * SV + intercept
-    // ---------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------
+    // And then we extract the Rescale intercept and slope, because we
+    // need these to get the Hounsfield Units from extracted SVs
+    // (stored values): HU = slope * SV + intercept
+    // ------------------------------------------------------------------
+    
     DcmStack RescaleIntercept_stack, RescaleSlope_stack;
     DcmElement* RescaleIntercept_obj = search_object(0x0028, 0x1052, *((*dicom_files_p)[i].fileformat), RescaleIntercept_stack); // RescaleIntercept
     DcmElement* RescaleSlope_obj = search_object(0x0028, 0x1053, *((*dicom_files_p)[i].fileformat), RescaleSlope_stack); // RescaleIntercept
@@ -798,16 +836,21 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
       temp_RescaleIntercept = 0.0;
       }
 
-    // ---------------------------------------------------------------------------------------------
-    // We extract WindowWidth and WindowCenter as well.  We don't need these for getting the HU values,
-    // but our vtkDEVIDEVolumeReader heritage requires that we have these available.
-    // ---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------
+    // We extract WindowWidth and WindowCenter as well.  We don't need
+    // these for getting the HU values, but our vtkDEVIDEVolumeReader
+    // heritage requires that we have these available.
+    // ---------------------------------------------------------------------
+    
     DcmStack WindowCenter_stack, WindowWidth_stack;
-    DcmElement* WindowCenter_obj = search_object(0x0028, 0x1050, *((*dicom_files_p)[i].fileformat), WindowCenter_stack);
-    DcmElement* WindowWidth_obj = search_object(0x0028, 0x1051, *((*dicom_files_p)[i].fileformat), WindowWidth_stack);
+    DcmElement* WindowCenter_obj = search_object(
+      0x0028, 0x1050, *((*dicom_files_p)[i].fileformat), WindowCenter_stack);
+    DcmElement* WindowWidth_obj = search_object(
+      0x0028, 0x1051, *((*dicom_files_p)[i].fileformat), WindowWidth_stack);
+    
     if (!WindowCenter_obj || !WindowWidth_obj || 
-        WindowCenter_obj->getFloat64(WindowCenter) != EC_Normal ||
-        WindowWidth_obj->getFloat64(WindowWidth) != EC_Normal)
+        WindowCenter_obj->getFloat64(this->WindowCenter) != EC_Normal ||
+        WindowWidth_obj->getFloat64(this->WindowWidth) != EC_Normal)
       {
       vtkErrorMacro(<<"Could not extract Window{Center,Width}.");
       return;
@@ -973,7 +1016,9 @@ const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 {
   // we have to make sure that our data-structures are up-to-date
   this->UpdateInformation();
-  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(
+    this->SeriesInstanceIdx);
+  
   if (si_iterator == this->series_instances.end())
     {
     return NULL;
@@ -987,7 +1032,9 @@ const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 const char *vtkDICOMVolumeReader::GetStudyDescription(void)
 {
   this->UpdateInformation();
-  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(
+    this->SeriesInstanceIdx);
+  
   if (si_iterator == this->series_instances.end())
     {
     return NULL;
@@ -1001,7 +1048,9 @@ const char *vtkDICOMVolumeReader::GetStudyDescription(void)
 const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 {
   this->UpdateInformation();
-  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
+  std::list<series_instance>::iterator si_iterator = this->find_si_iterator(
+    this->SeriesInstanceIdx);
+  
   if (si_iterator == this->series_instances.end())
     {
     return NULL;
