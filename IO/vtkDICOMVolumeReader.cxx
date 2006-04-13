@@ -187,7 +187,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
   // make sure we start from scratch
   this->deinit_dcmtk();
 
-  double temp_SliceLocation;
+  
   char* SeriesInstanceUID_cp;
   std::list<series_instance>::iterator si_iterator;
 
@@ -459,22 +459,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
     // we get the found object (DcmObject -> DcmElement -> ?, in this
     // case probably DcmFloatingPointDouble) from the stack
-    DcmStack SliceLocation_stack;
-    DcmElement* SliceLocation_obj = search_object(
-      0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack);
-    
-    if (!SliceLocation_obj ||
-	(SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
-      {
-      vtkWarningMacro(
-	<< "vtkDICOMVolumeReader::ExecuteInfo() - "
-	<< "Unable to extract SliceLocation from "
-	<< temp_dicom_file.filename.c_str() << ", assuming 0.");
-      temp_SliceLocation = 0;
-      }
 
-    // store the SliceLocation
-    //temp_dicom_file.SliceLocation = temp_SliceLocation;
 
     DcmStack ImagePositionPatient_stack;
     DcmElement* ImagePositionPatient_obj = search_object(
@@ -504,9 +489,23 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
     if (!ipp_success)
       {
-      vtkErrorMacro(
+      vtkWarningMacro(
 	<<"::ExecuteInfo() - could not read ImagePositionPatient from "
 	<< temp_dicom_file.filename.c_str() << ", using SliceLocation.");
+
+      double temp_SliceLocation;
+      DcmStack SliceLocation_stack;
+      DcmElement* SliceLocation_obj = search_object(
+	0x0020, 0x1041, *(temp_dicom_file.fileformat), SliceLocation_stack);
+    
+      if (!SliceLocation_obj ||
+	  (SliceLocation_obj->getFloat64(temp_SliceLocation) != EC_Normal))
+	{
+	vtkWarningMacro(
+	  <<"::ExecuteInfo() - could not read SliceLocation from "
+	  << temp_dicom_file.filename.c_str() << ", using 0.");
+	temp_SliceLocation = 0;
+	}
 
       distance = temp_SliceLocation;
 
@@ -629,11 +628,11 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
   this->DataSpacing[0] = (*si_iterator).PixelSpacingx;
   this->DataSpacing[1] = (*si_iterator).PixelSpacingy;
    
-  // SpacingBetweenSlices is preferred for the axial spacing.  It's mostly
-  // only present in MRI datasets.  CT datasets have SliceThickness, but
-  // it seems that SliceThickness often does not concur with
-  // SliceLocations.  So, if this is the case, we use the SliceLocations
-  // derived thickness (i.e. EstimatedThickness)
+  // SpacingBetweenSlices is preferred for the axial spacing.  It's
+  // mostly only present in MRI datasets.  CT datasets have
+  // SliceThickness, but it seems that SliceThickness often does not
+  // concur with IPP-derived distance.  So, if this is the case, we
+  // use the IPP/distance derived thickness (i.e. EstimatedThickness)
   if ((*si_iterator).SpacingBetweenSlices > 0)
     {
     DataSpacing[2] = (*si_iterator).SpacingBetweenSlices;

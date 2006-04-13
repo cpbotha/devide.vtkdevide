@@ -70,7 +70,6 @@ public:
   std::string filename;
   //DcmFileStream* filestream;
   DcmFileFormat* fileformat;
-  //double SliceLocation;
   // we calculate distance using the ImageOrientationPatient and
   // ImagePositionPatient
   double distance;
