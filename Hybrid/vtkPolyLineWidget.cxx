@@ -1242,7 +1242,7 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
       {
       for (i=0; i<this->NumberOfHandles; i++)
         {
-        this->CurrentRenderer->AddProp(this->Handle[i]);
+        this->CurrentRenderer->AddViewProp(this->Handle[i]);
         }
       }
       this->Interactor->Render();
@@ -1264,7 +1264,7 @@ void vtkPolyLineWidget::Initialize(void)
       {
       for (i=0; i<this->NumberOfHandles; i++)
         {
-        this->CurrentRenderer->RemoveProp(this->Handle[i]);
+        this->CurrentRenderer->RemoveViewProp(this->Handle[i]);
         }
       }
     }
