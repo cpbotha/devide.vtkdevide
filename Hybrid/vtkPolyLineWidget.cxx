@@ -576,7 +576,7 @@ void vtkPolyLineWidget::OnLeftButtonDown()
   path = this->HandlePicker->GetPath();
   if ( path != NULL )
     {
-    this->CurrentHandleIndex = this->HighlightHandle(path->GetFirstNode()->GetProp());
+    this->CurrentHandleIndex = this->HighlightHandle(path->GetFirstNode()->GetViewProp());
     }
   else
     {
