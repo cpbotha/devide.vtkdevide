@@ -940,6 +940,17 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
           } // else 16 BitsAllocated
         } // else two's complement
       } // else we have a dicom_pixeldata_pointer
+
+    // we really won't be using this again, so we delete all
+    // fileformats so that we can have our memory back
+    // (for years and years, this reader was using double the memory
+    // it actually required)
+    if ((*dicom_files_p)[i].fileformat)
+      {
+      delete (*dicom_files_p)[i].fileformat;
+      (*dicom_files_p)[i].fileformat = NULL;
+      }
+    
     } // for (unsigned i = 0; i < dicom_files_p->size(); i++) ...
 }
 
