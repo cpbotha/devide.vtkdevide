@@ -1,5 +1,5 @@
 // vtkEventOutputWindow.cxx copyright (c) 2003 Charl P. Botha cpbotha@ieee.org
-// $Id: vtkEventOutputWindow.cxx,v 1.2 2003/09/23 14:35:52 cpbotha Exp $
+// $Id$
 // vtkOutputWindow derivative that InvokeEvents instead of trying to display by itself
 
 #include "vtkEventOutputWindow.h"
@@ -42,7 +42,7 @@ void vtkEventOutputWindow::DisplayText(const char *text)
   // set us up for just text
   this->TextType = 0;
   // finally invoke the event
-  this->InvokeEvent(vtkCommand::WarningEvent);
+  this->InvokeEvent(vtkCommand::WarningEvent, (void*)text);
 }
 
 void vtkEventOutputWindow::DisplayErrorText(const char *text)
@@ -56,7 +56,7 @@ void vtkEventOutputWindow::DisplayErrorText(const char *text)
   // set us up for just text
   this->TextType = 1;
   // finally invoke the event
-  this->InvokeEvent(vtkCommand::ErrorEvent);
+  this->InvokeEvent(vtkCommand::ErrorEvent, (void*)text);
 }
 
 void vtkEventOutputWindow::DisplayWarningText(const char *text)
@@ -70,7 +70,7 @@ void vtkEventOutputWindow::DisplayWarningText(const char *text)
   // set us up for just text
   this->TextType = 2;
   // finally invoke the event
-  this->InvokeEvent(vtkCommand::WarningEvent);
+  this->InvokeEvent(vtkCommand::WarningEvent, (void*)text);
 }
 
 void vtkEventOutputWindow::DisplayGenericWarningText(const char *text)
@@ -84,7 +84,7 @@ void vtkEventOutputWindow::DisplayGenericWarningText(const char *text)
   // set us up for just text
   this->TextType = 3;
   // finally invoke the event
-  this->InvokeEvent(vtkCommand::WarningEvent);
+  this->InvokeEvent(vtkCommand::WarningEvent, (void*)text);
 
 }
 
@@ -99,7 +99,7 @@ void vtkEventOutputWindow::DisplayDebugText(const char *text)
   // set us up for just text
   this->TextType = 4;
   // finally invoke the event
-  this->InvokeEvent(vtkCommand::WarningEvent);
+  this->InvokeEvent(vtkCommand::WarningEvent, (void*)text);
 
 }
 
