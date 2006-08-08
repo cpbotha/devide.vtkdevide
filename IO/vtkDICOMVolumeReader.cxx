@@ -47,6 +47,7 @@
 
 #define INTROUND(a) (int)(a + 0.5f)
 
+// ##########################################################################
 vtkDICOMVolumeReader::vtkDICOMVolumeReader()
 {
   // try this again for jpeg stuff
@@ -68,11 +69,13 @@ vtkDICOMVolumeReader::vtkDICOMVolumeReader()
   this->EstimateSliceThicknessOn();
 }
 
+// ##########################################################################
 vtkDICOMVolumeReader::~vtkDICOMVolumeReader()
 {
   deinit_dcmtk();
 }
 
+// ##########################################################################
 vtkDICOMVolumeReader* vtkDICOMVolumeReader::New()
 {
   vtkObject* ret = vtkObjectFactory::CreateInstance("vtkDICOMVolumeReader");
@@ -83,6 +86,7 @@ vtkDICOMVolumeReader* vtkDICOMVolumeReader::New()
   return new vtkDICOMVolumeReader;
 }
 
+// ##########################################################################
 void vtkDICOMVolumeReader::deinit_dcmtk(void)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::deinit_dcmtk() - START.");
@@ -111,6 +115,7 @@ void vtkDICOMVolumeReader::deinit_dcmtk(void)
   vtkDebugMacro(<<"vtkDICOMVolumeReader::deinit_dcmtk() - DONE.");
 }
 
+// ##########################################################################
 DcmElement* vtkDICOMVolumeReader::search_object(int group, int elem, DcmObject& haystack, DcmStack &stack)
 {
   DcmTagKey search_key;
@@ -141,6 +146,7 @@ DcmElement* vtkDICOMVolumeReader::search_object(int group, int elem, DcmObject& 
     }
 }
 
+// ##########################################################################
 int vtkDICOMVolumeReader::OpenDCMFile(dicom_file& dfile)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::OpenDCMFile(" << dfile.filename.c_str() << ") - START.");
@@ -162,6 +168,7 @@ int vtkDICOMVolumeReader::OpenDCMFile(dicom_file& dfile)
   return 1;
 }
 
+// ##########################################################################
 void vtkDICOMVolumeReader::ExecuteInformation(void)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::ExecuteInformation() - START");
@@ -697,6 +704,7 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
   
 }
 
+// ##########################################################################
 void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
 {
   vtkDebugMacro(<<"vtkDICOMVolumeReader::ExecuteData() - START");
@@ -954,6 +962,7 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
     } // for (unsigned i = 0; i < dicom_files_p->size(); i++) ...
 }
 
+// ##########################################################################
 unsigned long vtkDICOMVolumeReader::GetMTime(void)
 {
   // this is what our parent would want
@@ -990,6 +999,7 @@ std::list<series_instance>::iterator vtkDICOMVolumeReader::find_si_iterator(int 
   // if the index wasn't found, si_iterator will be == series_instances.end()
 }
 
+// ##########################################################################
 void vtkDICOMVolumeReader::add_dicom_filename(const char* dicom_filename)
 {
   // only the buffer changes, so we do not update MTime yet... only when
@@ -998,17 +1008,21 @@ void vtkDICOMVolumeReader::add_dicom_filename(const char* dicom_filename)
   dicom_filenames_buffer.push_back(std::string(dicom_filename));
 }
 
+// ##########################################################################
 void vtkDICOMVolumeReader::clear_dicom_filenames(void)
 {
   // we only clear the buffer list, not the internal one.  
   this->dicom_filenames_buffer.clear();
 }
 
+
+// ##########################################################################
 int vtkDICOMVolumeReader::get_number_of_dicom_filenames(void)
 {
   return dicom_filenames_buffer.size();
 }
 
+// ##########################################################################
 const char *vtkDICOMVolumeReader::get_dicom_filename(int idx)
 {
   if (idx < dicom_filenames_buffer.size())
@@ -1021,7 +1035,7 @@ const char *vtkDICOMVolumeReader::get_dicom_filename(int idx)
     }
 }
 
-
+// ##########################################################################
 const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
 {
   // we have to make sure that our data-structures are up-to-date
@@ -1039,6 +1053,7 @@ const char* vtkDICOMVolumeReader::GetSeriesInstanceUID(void)
     }
 }
 
+// ##########################################################################
 const char *vtkDICOMVolumeReader::GetStudyDescription(void)
 {
   this->UpdateInformation();
@@ -1055,6 +1070,7 @@ const char *vtkDICOMVolumeReader::GetStudyDescription(void)
     }
 }
 
+// ##########################################################################
 const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
 {
   this->UpdateInformation();
@@ -1071,6 +1087,7 @@ const char *vtkDICOMVolumeReader::GetReferringPhysician(void)
     }
 }
 
+// ##########################################################################
 int vtkDICOMVolumeReader::GetMaximumSeriesInstanceIdx(void)
 {
   this->UpdateInformation();
