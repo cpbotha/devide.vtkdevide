@@ -655,14 +655,6 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
       DataSpacing[2] = (*si_iterator).SliceThickness;
       }
 
-    if (fabs(
-          (*si_iterator).EstimatedThickness - (*si_iterator).SliceThickness)
-        > 0.1)
-      {
-      vtkWarningMacro(
-	<<"::ExecuteInfo: There is a large (>0.1mm) difference between "
-	<< "SliceThickness and EstimatedThickness.");
-      }
     }
 
   // get pointer to our output vtkStructuredPoints
