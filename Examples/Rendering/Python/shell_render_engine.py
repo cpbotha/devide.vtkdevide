@@ -1,7 +1,8 @@
-# $Id: shell_render_engine.py,v 1.12 2005/05/27 10:00:49 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
-from vtkpython import *
+import vtk
+from vtk import *
 from vtkdevide import *
 import time
 
