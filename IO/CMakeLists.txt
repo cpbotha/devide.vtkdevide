@@ -4,8 +4,10 @@
 # Here is where you can add the name of your local IO classes.
 #
 
+# if DCMTK is not found, IO won't be built (there are currently no other
+# classes in the IO package)
 IF (${HAS_DCMTK})
-   SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
+  SET (IO_SRCS ${IO_SRCS} vtkDICOMVolumeReader.cxx)
 ENDIF (${HAS_DCMTK})
 
 # --------------------------------------------------------------------------

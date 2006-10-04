@@ -38,10 +38,13 @@ IF (VTKDEVIDE_CAN_BUILD)
     Common
     Hybrid
     Imaging
-    IO
     Rendering
     External
   )
+
+IF (${HAS_DCMTK})
+  SUBDIRS (IO)
+ENDIF (${HAS_DCMTK})
 
   #
   # You can put your include path(s) here
