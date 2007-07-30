@@ -63,7 +63,11 @@ The vtkdevide config
   * with DCMTK 3.5.4, you have to generate the CMake config, and then STILL
     change the /MTd (RelWithDebInfo) to /MDd in the properties|C++|Code 
     generation of dcmdata and ofstd.
-
+	
+- With MS VS 2008 (8.0) and DCMTK 3.5.4, edit the DCMTK CMakeLists, changing 
+  all applicable occurrences of /MT into /MD and /MTd into /MDd.  Also see:
+  http://forum.dcmtk.org/viewtopic.php?t=35
+	
 - Since VTK has started mangling zlib names in their zlib library (better this
   way), you must build dcmdata with the VTK zlib library: modify the "project|
   settings| c/c++" in VC and add VTKSourceDir/Utilities/vtkzlib and
