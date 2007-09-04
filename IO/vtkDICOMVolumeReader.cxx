@@ -612,10 +612,19 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
   // the following depends on the currently selected SeriesInstanceIdx
   si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
   // if it's not found, si_iterator == series_instances.end()
-  // we have to yield something, so let's show the last series instance then
   if (si_iterator == series_instances.end())
     {
-    si_iterator--;
+		if (si_iterator == series_instances.begin())
+		{
+			// this means we have NO valid images, so we need to abort
+			vtkErrorMacro(<<"No valid DICOM images to process.");
+			return;
+		}
+		else
+		{
+			// pick the previous valid image
+			si_iterator--;
+		}
     }
 
   // after this loop, we have reached either the SeriesInstanceIdx'th
@@ -752,7 +761,20 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
     this->SeriesInstanceIdx);
 
   if (si_iterator == series_instances.end())
-    si_iterator--;
+  {
+	  if (si_iterator == series_instances.begin())
+	  {
+		  // this means that the list is empty.
+		  vtkErrorMacro(<<"No valid DICOM images to load.");
+		  return;
+	  }
+
+  }
+  else
+  {
+	  // couldn't find the requested iterator, we take the previous valid one.
+	  si_iterator--;
+  }
 
   std::vector<dicom_file>* dicom_files_p = &((*si_iterator).dicom_files);
    
