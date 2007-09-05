@@ -609,23 +609,22 @@ void vtkDICOMVolumeReader::ExecuteInformation(void)
 
   // ------------------------------------------------------------------------
 
+  if (this->series_instances.empty())
+  {
+	  // this means we have NO valid images, so we need to abort
+    vtkErrorMacro(<<"No valid DICOM images to process.");
+	  return;
+  }
+
   // the following depends on the currently selected SeriesInstanceIdx
   si_iterator = this->find_si_iterator(this->SeriesInstanceIdx);
   // if it's not found, si_iterator == series_instances.end()
   if (si_iterator == series_instances.end())
-    {
-		if (si_iterator == series_instances.begin())
-		{
-			// this means we have NO valid images, so we need to abort
-			vtkErrorMacro(<<"No valid DICOM images to process.");
-			return;
-		}
-		else
-		{
-			// pick the previous valid image
-			si_iterator--;
-		}
-    }
+  {
+	  // pick the previous valid image
+    // we know that there has to be one valid due to the empty() check up above.
+	  si_iterator--;
+  }
 
   // after this loop, we have reached either the SeriesInstanceIdx'th
   // series_instance or the highest, whichever comes first and we can
@@ -725,6 +724,12 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
     return;
     }
 
+  // we can't do anything if there the list of series_instances is empty.
+  if (this->series_instances.empty())
+  {
+	  return;
+  }
+
   vtkStructuredPoints* output = vtkStructuredPoints::SafeDownCast(out);
   if (!output)
     {
@@ -760,19 +765,11 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
   std::list<series_instance>::iterator si_iterator = this->find_si_iterator(
     this->SeriesInstanceIdx);
 
-  if (si_iterator == series_instances.end())
-  {
-	  if (si_iterator == series_instances.begin())
-	  {
-		  // this means that the list is empty.
-		  vtkErrorMacro(<<"No valid DICOM images to load.");
-		  return;
-	  }
-
-  }
-  else
+  if (si_iterator == this->series_instances.end())
   {
 	  // couldn't find the requested iterator, we take the previous valid one.
+	  // if we're here, we know that there has to be at least ONE entry
+	  // due to the empty() check up above.
 	  si_iterator--;
   }
 
@@ -873,8 +870,11 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
         WindowCenter_obj->getFloat64(this->WindowCenter) != EC_Normal ||
         WindowWidth_obj->getFloat64(this->WindowWidth) != EC_Normal)
       {
-      vtkErrorMacro(<<"Could not extract Window{Center,Width}.");
-      return;
+        // not all DICOM datasets have Window and Level
+        // downstream filters should at least know that a negative Window
+        // means that it's invalid.
+        this->WindowCenter = -999999;
+        this->WindowWidth = -999999;
       }
 
     //unsigned short* dicom_pixeldata_pointer;      
