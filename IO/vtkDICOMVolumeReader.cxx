@@ -721,12 +721,14 @@ void vtkDICOMVolumeReader::ExecuteData(vtkDataObject* out)
   // of dicom image files
   if (dicom_filenames.size() <= 0)
     {
-    return;
+      vtkErrorMacro(<<"No DICOM files to attempt loading.");
+      return;
     }
 
   // we can't do anything if there the list of series_instances is empty.
   if (this->series_instances.empty())
   {
+    vtkErrorMacro(<<"No valid DICOM files to load.");
 	  return;
   }
 
