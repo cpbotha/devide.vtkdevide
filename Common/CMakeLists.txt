@@ -51,7 +51,7 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
                          vtkdevideCommon)
 
   # on Python 2.5 on Windows does not recognise DLL extensions
-  # anymore, only PYD !
+  # anymore, only PYD !  Previous versions support this.
   IF(WIN32 AND NOT CYGWIN)
       SET_TARGET_PROPERTIES(vtkdevideCommonPython 
           PROPERTIES SUFFIX ".pyd")

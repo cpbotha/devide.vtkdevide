@@ -92,6 +92,12 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideIOPython MODULE vtkdevideIOPythonInit.cxx)
   TARGET_LINK_LIBRARIES (vtkdevideIOPython vtkdevideIOPythonD)
   TARGET_LINK_LIBRARIES (vtkdevideIOPythonD vtkIOPythonD vtkdevideIO)
+  # on Python 2.5 on Windows does not recognise DLL extensions
+  # anymore, only PYD !  Previous versions support this.
+  IF(WIN32 AND NOT CYGWIN)
+      SET_TARGET_PROPERTIES(vtkdevideIOPython 
+          PROPERTIES SUFFIX ".pyd")
+  ENDIF(WIN32 AND NOT CYGWIN)
 
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
