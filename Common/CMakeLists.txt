@@ -50,6 +50,13 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   TARGET_LINK_LIBRARIES (vtkdevideCommonPythonD vtkCommonPythonD
                          vtkdevideCommon)
 
+  # on Python 2.5 on Windows does not recognise DLL extensions
+  # anymore, only PYD !
+  IF(WIN32 AND NOT CYGWIN)
+      SET_TARGET_PROPERTIES(vtkdevideCommonPython 
+          PROPERTIES SUFFIX ".pyd")
+  ENDIF(WIN32 AND NOT CYGWIN)
+
 ENDIF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
 #
