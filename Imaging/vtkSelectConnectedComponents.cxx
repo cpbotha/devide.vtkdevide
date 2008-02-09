@@ -106,8 +106,8 @@ void vtkSelectConnectedComponents::ExecuteData(vtkDataObject *)
   vtkImageData *outData = this->GetOutput();
   vtkImageConnectorSeed *seed;
   int idx0, idx1, idx2;
-  int inInc0, inInc1, inInc2;
-  int outInc0, outInc1, outInc2;
+  vtkIdType inInc0, inInc1, inInc2;
+  vtkIdType outInc0, outInc1, outInc2;
   int min0, max0, min1, max1, min2, max2;
   unsigned long *inPtr0, *inPtr1, *inPtr2;
   unsigned char *outPtr0, *outPtr1, *outPtr2;
