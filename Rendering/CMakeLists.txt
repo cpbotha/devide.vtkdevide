@@ -5,7 +5,6 @@
 #
 
 SET (Rendering_SRCS 
-     vtkDVTextActor3D.cxx
      vtkShellExtractor.cxx
      vtkOpenGLVolumeShellSplatMapper.cxx
      vtkInteractorStyleTrackballActorConstrained.cxx)
@@ -25,6 +24,8 @@ TARGET_LINK_LIBRARIES (
   vtkVolumeRendering
   vtkFiltering
   vtkCommon
+  vtkftgl
+  ${VTK_FREETYPE_LIBRARIES}
 )
 
 
