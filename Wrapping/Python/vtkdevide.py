@@ -1,11 +1,12 @@
 """
-Code greatly simplified (more manual) so that McMillan installer has an
-easier time finding the imports.
-
-$Id$
+Module to import vtkdevide libraries.
 """
 
 import os
+
+# change this file and commit if you want this updated
+stamp = '20080629-2155'
+version = "$Revision: 313 $"
 
 try:
     if os.name == 'posix':
