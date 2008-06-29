@@ -6,7 +6,7 @@ import os
 
 # change this file and commit if you want this updated
 stamp = '20080629-2155'
-version = "$Revision: 313 $"
+version = "$Revision$"
 
 try:
     if os.name == 'posix':
