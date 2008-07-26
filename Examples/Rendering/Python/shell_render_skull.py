@@ -1,4 +1,4 @@
-# $Id: shell_render_skull.py,v 1.1 2003/01/08 14:07:29 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *

@@ -1,4 +1,4 @@
-# $Id: shell_render_stanford_head.py,v 1.8 2004/07/02 10:22:51 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
 from vtk import *

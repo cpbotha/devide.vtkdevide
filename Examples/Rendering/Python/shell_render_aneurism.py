@@ -1,4 +1,4 @@
-# $Id: shell_render_aneurism.py,v 1.6 2004/07/02 10:22:20 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
 from vtkpython import *

@@ -1,4 +1,4 @@
-# $Id: shell_render_zuydweg.py,v 1.3 2004/01/15 11:00:53 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
 from vtk import *

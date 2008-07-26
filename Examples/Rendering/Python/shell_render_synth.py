@@ -1,4 +1,4 @@
-# $Id: shell_render_synth.py,v 1.5 2004/04/05 15:02:27 cpbotha Exp $
+# $Id$
 # example to test shell renderer (*shudder*)
 
 import vtk
