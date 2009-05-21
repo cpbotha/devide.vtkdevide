@@ -6,6 +6,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
 PROJECT (VTKDEVIDE)
 
+if(COMMAND cmake_policy)
+    cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
+
 #
 # Assume everything is set up correctly for build.
 #
@@ -80,5 +84,16 @@ ENDIF (${HAS_DCMTK})
   )
 
   INCLUDE_DIRECTORIES(${VTKDEVIDE_BINARY_DIR})
+
+  # specify installation
+  # get all files in the lib output path (dlls and such)
+  FILE(GLOB libs ${LIBRARY_OUTPUT_PATH}/*)
+  # copy them all to the output dir in lib/
+  INSTALL(FILES ${libs} 
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  # copy our python wrapping to the output dir in lib/
+  INSTALL(FILES ${VTKDEVIDE_SOURCE_DIR}/Wrapping/Python/vtkdevide.py
+      DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+
 
 ENDIF (VTKDEVIDE_CAN_BUILD)
