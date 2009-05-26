@@ -86,14 +86,12 @@ ENDIF (${HAS_DCMTK})
   INCLUDE_DIRECTORIES(${VTKDEVIDE_BINARY_DIR})
 
   # specify installation
-  # get all files in the lib output path (dlls and such)
-  FILE(GLOB libs ${LIBRARY_OUTPUT_PATH}/*)
-  # copy them all to the output dir in lib/
-  INSTALL(FILES ${libs} 
-      DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+  # copy all libs to the output dir in lib/; relative DESTINATION dir
+  # is interpreted relative to CMAKE_INSTALL_PREFIX
+  INSTALL(DIRECTORY ${LIBRARY_OUTPUT_PATH}/
+      DESTINATION lib)
   # copy our python wrapping to the output dir in lib/
   INSTALL(FILES ${VTKDEVIDE_SOURCE_DIR}/Wrapping/Python/vtkdevide.py
       DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
-
 
 ENDIF (VTKDEVIDE_CAN_BUILD)
