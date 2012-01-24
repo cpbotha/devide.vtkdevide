@@ -90,6 +90,11 @@ IF (VTK_WRAP_PYTHON)
          ON)
 
   IF (VTKDEVIDE_WRAP_PYTHON)
+    # since VTK 5.8, we need this line:
+    SET(VTK_WRAP_PYTHON_FIND_LIBS ON)
+    # and in each of the kits in the Python wrapping clause an explicit
+    # INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_PATH}")
+
     SET(VTK_WRAP_PYTHON3_INIT_DIR "${VTKDEVIDE_SOURCE_DIR}/Wrapping")
     INCLUDE(${VTK_CMAKE_DIR}/vtkWrapPython.cmake)
     IF (WIN32)

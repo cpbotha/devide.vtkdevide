@@ -48,6 +48,7 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
 
+  INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_PATH}")
   VTK_WRAP_PYTHON3 (vtkdevideExternalPython ExternalPython_SRCS 
                     "${External_SRCS}")
   ADD_LIBRARY (vtkdevideExternalPythonD ${ExternalPython_SRCS})

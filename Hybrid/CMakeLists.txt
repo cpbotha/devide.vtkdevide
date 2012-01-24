@@ -47,7 +47,7 @@ ENDIF (VTK_WRAP_TCL AND VTKDEVIDE_WRAP_TCL)
 #
 
 IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
-
+  INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_PATH}")
   VTK_WRAP_PYTHON3 (vtkdevideHybridPython HybridPython_SRCS "${Hybrid_SRCS}")
   ADD_LIBRARY (vtkdevideHybridPythonD ${HybridPython_SRCS})
   ADD_LIBRARY (vtkdevideHybridPython MODULE vtkdevideHybridPythonInit.cxx)
