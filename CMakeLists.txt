@@ -39,26 +39,19 @@ IF (VTKDEVIDE_CAN_BUILD)
   #
 
   SUBDIRS (
-    Common
     Hybrid
     Imaging
     Rendering
     External
   )
 
-IF (${HAS_DCMTK})
-  SUBDIRS (IO)
-ENDIF (${HAS_DCMTK})
-
   #
   # You can put your include path(s) here
   #
 
-  INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Common)
   INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/External)
   INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Hybrid)
   INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Imaging)
-  INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/IO)
   INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Rendering)
   INCLUDE_DIRECTORIES(${VTKDEVIDE_SOURCE_DIR}/Testing)  
   
@@ -66,7 +59,7 @@ ENDIF (${HAS_DCMTK})
   # are we going to build the examples?
   #
   
-  OPTION(BUILD_EXAMPLES "Build examples." ON)
+  OPTION(BUILD_EXAMPLES "Build examples." OFF)
   IF (BUILD_EXAMPLES)
     SUBDIRS(Examples)
   ENDIF (BUILD_EXAMPLES)
