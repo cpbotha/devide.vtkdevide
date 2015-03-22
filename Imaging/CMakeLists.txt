@@ -5,11 +5,12 @@
 #
 
 SET (Imaging_SRCS
-     vtkHistogramLookupTable.cxx
+     #vtkHistogramLookupTable.cxx # TODO: update to VTK6 API
      vtkImageBorderMask.cxx
-     vtkImageGreyscaleReconstruct3D.cxx
-     vtkImageHistogram2D.cxx
-     vtkSelectConnectedComponents.cxx)
+     #vtkImageGreyscaleReconstruct3D.cxx # TODO: update to VTK6 API
+     #vtkImageHistogram2D.cxx # TODO: update to VTK6 API
+     #vtkSelectConnectedComponents.cxx # TODO: update to VTK6 API
+)
 
 
 # --------------------------------------------------------------------------
@@ -23,7 +24,6 @@ ADD_LIBRARY (vtkdevideImaging ${Imaging_SRCS})
 
 TARGET_LINK_LIBRARIES (
   vtkdevideImaging
-  vtkImaging
 )
 
 
@@ -56,7 +56,7 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideImagingPython MODULE vtkdevideImagingPythonInit.cxx)
   TARGET_LINK_LIBRARIES (vtkdevideImagingPython
                          vtkdevideImagingPythonD)
-  TARGET_LINK_LIBRARIES (vtkdevideImagingPythonD vtkImagingPythonD
+  TARGET_LINK_LIBRARIES (vtkdevideImagingPythonD #vtkImagingPythonD
                          vtkdevideImaging)
   # on Python 2.5 on Windows does not recognise DLL extensions
   # anymore, only PYD !  Previous versions support this.

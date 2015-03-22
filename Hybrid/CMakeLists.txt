@@ -19,10 +19,6 @@ ADD_LIBRARY (vtkdevideHybrid ${Hybrid_SRCS})
 
 TARGET_LINK_LIBRARIES (
   vtkdevideHybrid
-  vtkHybrid
-  vtkCommon
-  vtkRendering
-  vtkWidgets
 )
 
 
@@ -53,8 +49,7 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   ADD_LIBRARY (vtkdevideHybridPython MODULE vtkdevideHybridPythonInit.cxx)
   TARGET_LINK_LIBRARIES (vtkdevideHybridPython vtkdevideHybridPythonD)
   TARGET_LINK_LIBRARIES (vtkdevideHybridPythonD
-	                 vtkWidgetsPythonD
-			 vtkCommonPythonD
+	                 vtkInteractionWidgetsPythonD
                          vtkdevideHybrid)
 
   # on Python 2.5 on Windows does not recognise DLL extensions

@@ -42,7 +42,7 @@ IF (VTKDEVIDE_CAN_BUILD)
     Hybrid
     Imaging
     Rendering
-    External
+    #External # TODO: if we still need, update for VTK6
   )
 
   #

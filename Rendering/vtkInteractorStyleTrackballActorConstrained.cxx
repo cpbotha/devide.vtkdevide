@@ -2,7 +2,7 @@
 #include <vtkSystemIncludes.h> // this should give us stl thingies
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
-#include <vtkstd/algorithm>
+#include <algorithm>
 
 vtkCxxRevisionMacro(vtkInteractorStyleTrackballActorConstrained, "$Revision: 1.3 $");
 vtkStandardNewMacro(vtkInteractorStyleTrackballActorConstrained);
@@ -26,8 +26,8 @@ void vtkInteractorStyleTrackballActorConstrained::AddActiveProp(vtkProp3D *thePr
       return;
    }
 
-   vtkstd::vector<vtkProp3D *>::iterator ii;
-   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+   std::vector<vtkProp3D *>::iterator ii;
+   ii = std::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
 
    if (ii == this->ActiveProps.end())
    {
@@ -43,8 +43,8 @@ void vtkInteractorStyleTrackballActorConstrained::RemoveActiveProp(vtkProp3D *th
       return;
    }
 
-   vtkstd::vector<vtkProp3D *>::iterator ii;
-   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+   std::vector<vtkProp3D *>::iterator ii;
+   ii = std::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
 
    if (ii != this->ActiveProps.end())
    {
@@ -68,8 +68,8 @@ void vtkInteractorStyleTrackballActorConstrained::SetActiveProp(vtkProp3D *thePr
 
 bool vtkInteractorStyleTrackballActorConstrained::IsPropActive(vtkProp3D *theProp)
 {
-   vtkstd::vector<vtkProp3D *>::iterator ii;
-   ii = vtkstd::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
+   std::vector<vtkProp3D *>::iterator ii;
+   ii = std::find(this->ActiveProps.begin(), this->ActiveProps.end(), theProp);
 
    return (ii != this->ActiveProps.end());
 }

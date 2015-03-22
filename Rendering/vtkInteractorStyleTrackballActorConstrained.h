@@ -7,7 +7,7 @@
 
 #include <vtkInteractorStyleTrackballActor.h>
 #include <vtkObjectFactory.h>
-#include <vtkstd/vector>
+#include <vector>
 #include "vtkdevideRenderingWin32Header.h"
 
 class vtkProp3D;
@@ -66,7 +66,7 @@ protected:
    bool IsPropActive(vtkProp3D *theProp);
 
 //BTX
-   vtkstd::vector<vtkProp3D *> ActiveProps;
+   std::vector<vtkProp3D *> ActiveProps;
 //ETX
 
 private:

@@ -5,8 +5,8 @@
 #
 
 SET (Rendering_SRCS 
-     vtkShellExtractor.cxx
-     vtkOpenGLVolumeShellSplatMapper.cxx
+     #vtkShellExtractor.cxx # TODO: vtk6
+     #vtkOpenGLVolumeShellSplatMapper.cxx # TODO: vtk6
      vtkInteractorStyleTrackballActorConstrained.cxx)
 
 # --------------------------------------------------------------------------
@@ -20,10 +20,6 @@ ADD_LIBRARY (vtkdevideRendering ${Rendering_SRCS})
 
 TARGET_LINK_LIBRARIES (
   vtkdevideRendering
-  vtkRendering
-  vtkVolumeRendering
-  vtkFiltering
-  vtkCommon
   vtkftgl
   ${VTK_FREETYPE_LIBRARIES}
 )
@@ -63,10 +59,6 @@ IF (VTK_WRAP_PYTHON AND VTKDEVIDE_WRAP_PYTHON)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingPython
                          vtkdevideRenderingPythonD)
   TARGET_LINK_LIBRARIES (vtkdevideRenderingPythonD
-	                 vtkRenderingPythonD
-			 vtkVolumeRenderingPythonD
-			 vtkFilteringPythonD
-			 vtkCommonPythonD
                          vtkdevideRendering)
   # on Python 2.5 on Windows does not recognise DLL extensions
   # anymore, only PYD !  Previous versions support this.

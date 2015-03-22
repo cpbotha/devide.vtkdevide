@@ -1,7 +1,7 @@
 // .NAME vtkImageBorderMask - Simple example of an image-image filter.
 // .SECTION Description
-// This is an example of a simple image-image filter. It copies it's input
-// to it's output (point by point). It shows how templates can be used
+// This is an example of a simple image-image filter. It copies its input
+// to its output (point by point). It shows how templates can be used
 // to support various data types.
 // .SECTION See also
 // vtkImageBorderMask

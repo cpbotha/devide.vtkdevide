@@ -58,8 +58,8 @@ void vtkImageBorderMaskExecute(vtkImageData* input,
     }
 
   // get the input up to date
-  input->Update();
-  
+  // VTK6 does not have this available; data decoupled from pipeline
+  //input->Update(); 
 
   int dims[3];
   input->GetDimensions(dims);
@@ -171,13 +171,12 @@ void vtkImageBorderMask::SimpleExecute(vtkImageData* input,
 
   switch(output->GetScalarType())
     {
-    // This is simple a #define for a big case list. It handles
-    // all data types vtk can handle.
-    vtkTemplateMacro9(vtkImageBorderMaskExecute, input, output,
-                      (VTK_TT *)(inPtr), (VTK_TT *)(outPtr),
-                      this->BorderMode, this->BorderValue,
-                      this->Borders,
-                      this->InteriorMode, this->InteriorValue);
+    // This is simply a #define for a big case list. It handles all
+    // data types VTK supports.
+    vtkTemplateMacro(vtkImageBorderMaskExecute(input, output, static_cast<VTK_TT *>(inPtr), static_cast<VTK_TT *>(outPtr),
+                                               this->BorderMode, this->BorderValue,
+                                               this->Borders,
+                                               this->InteriorMode, this->InteriorValue));
     default:
       vtkGenericWarningMacro("Execute: Unknown input ScalarType");
       return;

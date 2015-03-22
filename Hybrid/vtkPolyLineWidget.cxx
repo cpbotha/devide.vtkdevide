@@ -72,7 +72,7 @@ vtkPolyLineWidget::vtkPolyLineWidget()
     this->HandleGeometry[i]->SetThetaResolution(16);
     this->HandleGeometry[i]->SetPhiResolution(8);
     this->HandleMapper[i] = vtkPolyDataMapper::New();
-    this->HandleMapper[i]->SetInput(this->HandleGeometry[i]->GetOutput());
+    this->HandleMapper[i]->SetInputConnection(this->HandleGeometry[i]->GetOutputPort());
     this->Handle[i] = vtkActor::New();
     this->Handle[i]->SetMapper(this->HandleMapper[i]);
     position = i / (this->NumberOfHandles - 1.0);
@@ -100,7 +100,8 @@ vtkPolyLineWidget::vtkPolyLineWidget()
   lines->Delete();
 
   this->LineMapper = vtkPolyDataMapper::New();
-  this->LineMapper->SetInput( this->LineData ) ;
+  // LineData is data only (i.e. no producing algo), so we use SetInputData
+  this->LineMapper->SetInputData( this->LineData ) ;
   this->LineMapper->ImmediateModeRenderingOn();
   this->LineMapper->SetResolveCoincidentTopologyToPolygonOffset();
 
@@ -1150,7 +1151,7 @@ void vtkPolyLineWidget::SetNumberOfHandles(int npts)
     this->HandleGeometry[i]->SetThetaResolution(16);
     this->HandleGeometry[i]->SetPhiResolution(8);
     this->HandleMapper[i] = vtkPolyDataMapper::New();
-    this->HandleMapper[i]->SetInput(this->HandleGeometry[i]->GetOutput());
+    this->HandleMapper[i]->SetInputConnection(this->HandleGeometry[i]->GetOutputPort());
     this->Handle[i] = vtkActor::New();
     this->Handle[i]->SetMapper(this->HandleMapper[i]);
     this->Handle[i]->SetProperty(this->HandleProperty);
