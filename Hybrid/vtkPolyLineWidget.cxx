@@ -101,7 +101,11 @@ vtkPolyLineWidget::vtkPolyLineWidget()
 
   this->LineMapper = vtkPolyDataMapper::New();
   // LineData is data only (i.e. no producing algo), so we use SetInputData
+#if (VTK_MAJOR_VERSION < 6)
+  this->LineMapper->SetInput( this->LineData ) ;
+#else
   this->LineMapper->SetInputData( this->LineData ) ;
+#endif
   this->LineMapper->ImmediateModeRenderingOn();
   this->LineMapper->SetResolveCoincidentTopologyToPolygonOffset();
 
